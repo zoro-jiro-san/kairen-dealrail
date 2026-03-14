@@ -1,6 +1,6 @@
 # Hackathon Info — The Synthesis
 
-_Last updated: 2026-03-14 (Planning Phase Complete)_
+_Last updated: 2026-03-14 (Sponsor tracks refresh)_
 
 ## Role & Ownership
 - **Point of contact (agent):** Zoro
@@ -11,14 +11,15 @@ _Last updated: 2026-03-14 (Planning Phase Complete)_
 
 ## Event Snapshot
 - Event: **The Synthesis** (AI agents + humans building together)
-- Official ideas/themes: https://synthesis.devfolio.co/themes.md
-- API/agent spec: https://synthesis.devfolio.co/skill.md
+- Official themes: https://synthesis.devfolio.co/themes.md
+- Agent/API spec: https://synthesis.devfolio.co/skill.md
+- Prize catalog (tracks + sponsor bounties): https://synthesis.devfolio.co/catalog/prizes.md
 - Main site: https://synthesis.md/
 - Updates group: https://nsb.dev/synthesis-updates
 
 ---
 
-## Core Themes (from brief)
+## Core Themes (base tracks)
 1. Agents that pay
 2. Agents that trust
 3. Agents that cooperate
@@ -29,7 +30,7 @@ _Last updated: 2026-03-14 (Planning Phase Complete)_
 ## Selected Project Direction
 **Kairen DealRail**
 
-Primary theme fit:
+Primary fit:
 - **Agents that cooperate**
 
 Secondary fit:
@@ -41,95 +42,74 @@ Working thesis:
 
 ---
 
-## Current Status
-- [x] Project idea doc created (`IDEA.md`)
-- [x] Public repo created
-- [x] Research phase complete (Kairen Protocol + DealRail analysis)
-- [x] Hackathon strategy documented (`HACKATHON_STRATEGY.md`)
-- [x] Architecture diagrams created (`ARCHITECTURE_DIAGRAMS.md`)
-- [x] 7-day roadmap finalized (`ROADMAP.md`)
-- [ ] Day 1: Foundation & scaffolding
-- [ ] Day 2-3: Smart contracts implementation
-- [ ] Day 4: Backend API + settlement proofs
-- [ ] Day 5: Frontend UI
-- [ ] Day 6: Testnet deployment + demo
-- [ ] Day 7: Kairen integration + submission
+## Sponsor/Prize Track Updates (new)
+Based on latest prize catalog, these are the highest-relevance sponsor tracks for DealRail:
+
+### P0 (highest priority)
+1. **Agents With Receipts — ERC-8004 (Protocol Labs)**
+   - Direct fit with onchain accountability and verifiable execution.
+2. **🤖 Let the Agent Cook — No Humans Required (Protocol Labs)**
+   - Strong fit if we show full autonomous loop with guardrails.
+3. **Synthesis Open Track**
+   - Broad fit for core DealRail narrative + working demo.
+
+### P1 (strong optional)
+4. **Agentic Finance — Best Uniswap API Integration (Uniswap)**
+   - Add swap/payment path if it improves core demo (avoid scope creep).
+5. **Best Use of Delegations (MetaMask)**
+   - Excellent fit if delegation boundaries become load-bearing in flow.
+6. **Build with AgentCash (Merit Systems)** / **Best Use of Locus** / **Bankr LLM Gateway**
+   - Only pursue if integration is core to demo, not decorative.
+
+### P2 (good but only if low overhead)
+7. **Best Agent on Celo**
+8. **OpenServ track**
+9. **Self Agent ID**
+
+**Rule:** prioritize tracks where integration is essential to product behavior, not a checklist add-on.
 
 ---
 
-## Deliverables We Need
-1. Working MVP demo (not just architecture)
-2. Onchain component(s) deployed/tested
-3. Clear human-agent collaboration evidence
-4. Public codebase and docs
-5. Submission narrative with proof artifacts
+## Repo Status Check (latest)
+I pulled your latest repo updates and confirmed major progress docs/code landed (backend, frontend, contracts, strategy docs, deployment docs).
+
+No changes made outside this file per your instruction.
 
 ---
 
-## Planned Build Phases
-### Phase 1 — Foundation
-- finalize interfaces and module boundaries
-- scaffold contracts/services/docs
-
-### Phase 2 — Core Rail
-- escrow state machine
-- bounded negotiation policy
-- settlement verification pathway
-
-### Phase 3 — Demo + Proof
-- end-to-end scripted demo (success + dispute path)
-- timeline/audit evidence
-
-### Phase 4 — Submission
-- final docs
-- architecture visuals
-- concise pitch narrative + walkthrough
+## Current Build Status (high-level)
+- [x] Idea + architecture + strategy docs expanded
+- [x] Research + technical blueprint + tx safety opinion prepared
+- [x] Repo now includes backend/frontend/contracts scaffolding
+- [ ] Lock final sponsor track targets (P0/P1)
+- [ ] Align final demo storyline to chosen track(s)
+- [ ] Submission packaging (video, proof artifacts, narrative)
 
 ---
 
-## Open Questions (to resolve)
-1. Which chain for demo default? (Base likely)
-2. How minimal should dispute path be for MVP?
-3. Which identity proof level is mandatory vs optional?
-4. What exact metrics will we show judges (latency, success, safety)?
-
----
-
-## Risk Register
-- **Over-scope risk:** high → keep strict MVP
-- **Contract bug risk:** medium/high → keep minimal state machine + tests
-- **Demo fragility:** medium → script deterministic paths
-- **Integration churn:** medium → wrap existing infra, avoid migrations
+## Immediate Next Actions (recommended)
+1. Pick **2 primary targets**: one core + one sponsor (max 3 total tracks).
+2. Freeze MVP scope by those tracks only.
+3. Ensure every claimed integration is visible in live demo path.
+4. Collect onchain artifacts early (tx hashes/events) for submission proof.
 
 ---
 
 ## Update Protocol (for Sarthi)
 I will keep this file updated with:
-- track/theme changes
-- timeline/deadline updates
-- rule updates
+- track/theme updates
+- sponsor/prize track opportunities
+- timeline/deadline changes
 - submission requirements
-- blockers + required actions from you
-
-If immediate action is needed, I’ll also message directly.
+- blockers needing manual help
 
 ---
 
 ## Quick Links
 - Idea: `IDEA.md`
-- Hackathon Strategy: `HACKATHON_STRATEGY.md` ← START HERE
-- Architecture Diagrams: `ARCHITECTURE_DIAGRAMS.md`
-- Development Roadmap: `ROADMAP.md`
-- Technical Architecture: `docs/ARCHITECTURE.md`
-- Repo root: `README.md`
+- Strategy: `HACKATHON_STRATEGY.md`
+- Track mapping: `HACKATHON_TRACKS.md`
+- Architecture: `docs/ARCHITECTURE.md`
 - Themes: https://synthesis.devfolio.co/themes.md
+- Prize catalog: https://synthesis.devfolio.co/catalog/prizes.md
 - Agent API: https://synthesis.devfolio.co/skill.md
-- Kairen index: https://kairen.xyz/skill.md
-
----
-
-## Planning Artifacts (Day 0 - Complete)
-1. **HACKATHON_STRATEGY.md** - Complete strategy for keeping Kairen private while submitting DealRail publicly
-2. **ARCHITECTURE_DIAGRAMS.md** - 11 visual diagrams (Mermaid) showing system architecture, data flows, integration points
-3. **ROADMAP.md** - Detailed 7-day build plan with hour-by-hour tasks, checklists, and success criteria
-
