@@ -1,5 +1,5 @@
 // Prisma schema for DealRail
-// Database: PostgreSQL
+// Database: PostgreSQL (Supabase)
 
 generator client {
   provider = "prisma-client-js"

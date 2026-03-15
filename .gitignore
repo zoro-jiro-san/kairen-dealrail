@@ -1,10 +1,11 @@
 # Dependencies
 node_modules/
 
-# Environment
+# Environment & Secrets
 .env
 .env.*
 !.env.example
+.wallets.json
 
 # OS
 .DS_Store
@@ -33,6 +34,8 @@ contracts/cache/
 contracts/out/
 contracts/broadcast/*/31337/
 contracts/broadcast/**/dry-run/
+contracts/broadcast/**/*.json
+deployments/
 
 # Next.js (frontend)
 frontend/.next/
@@ -43,6 +46,15 @@ frontend/.vercel
 *.db
 *.db-journal
 
+# Test artifacts & scripts (if you want to keep them local)
+# backend/tests/*.ts
+# backend/tests/*.js
+
+# Temporary files
+*.tmp
+*.temp
+
 # Misc
 *.pem
 .vercel
+.turbo

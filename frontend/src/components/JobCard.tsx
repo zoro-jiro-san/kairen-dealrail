@@ -1,8 +1,8 @@
 'use client';
 
 import { Job } from '@/lib/api';
-import { formatEther } from 'viem';
 import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
 
 interface JobCardProps {
   job: Job;
@@ -10,22 +10,19 @@ interface JobCardProps {
 }
 
 const stateColors: Record<string, string> = {
-  OPEN: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  FUNDED: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  SUBMITTED: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  COMPLETED: 'bg-green-500/20 text-green-400 border-green-500/30',
-  REJECTED: 'bg-red-500/20 text-red-400 border-red-500/30',
-  EXPIRED: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  Open: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  Funded: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  Submitted: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  Completed: 'bg-green-500/20 text-green-400 border-green-500/30',
+  Rejected: 'bg-red-500/20 text-red-400 border-red-500/30',
+  Expired: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
 };
 
 export function JobCard({ job, currentAddress }: JobCardProps) {
   const isClient = job.client.toLowerCase() === currentAddress?.toLowerCase();
-  const isProvider =
-    job.provider.toLowerCase() === currentAddress?.toLowerCase();
-  const isEvaluator =
-    job.evaluator.toLowerCase() === currentAddress?.toLowerCase();
+  const isProvider = job.provider.toLowerCase() === currentAddress?.toLowerCase();
+  const isEvaluator = job.evaluator.toLowerCase() === currentAddress?.toLowerCase();
 
-  const budgetEth = job.budget !== '0' ? formatEther(BigInt(job.budget)) : '0';
   const expiryDate = new Date(job.expiry);
   const timeUntilExpiry = formatDistanceToNow(expiryDate, { addSuffix: true });
 
@@ -66,7 +63,7 @@ export function JobCard({ job, currentAddress }: JobCardProps) {
       <div className="border-t border-gray-700 pt-4">
         <div className="text-sm text-gray-400">Budget</div>
         <div className="text-2xl font-bold text-white mt-1">
-          {budgetEth} ETH
+          {job.budget}
         </div>
       </div>
 
@@ -100,9 +97,12 @@ export function JobCard({ job, currentAddress }: JobCardProps) {
 
       {/* Actions */}
       <div className="border-t border-gray-700 pt-4">
-        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors">
+        <Link
+          href={`/jobs/${job.jobId}`}
+          className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors text-center"
+        >
           View Details
-        </button>
+        </Link>
       </div>
     </div>
   );

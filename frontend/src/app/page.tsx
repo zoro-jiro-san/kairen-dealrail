@@ -1,12 +1,28 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { JobsList } from '@/components/JobsList';
 import { CreateJobButton } from '@/components/CreateJobButton';
+import { healthCheck, HealthCheckResponse } from '@/lib/api';
 
 export default function Home() {
   const { address, isConnected } = useAccount();
+  const [health, setHealth] = useState<HealthCheckResponse | null>(null);
+
+  useEffect(() => {
+    checkBackendHealth();
+  }, []);
+
+  async function checkBackendHealth() {
+    try {
+      const healthData = await healthCheck();
+      setHealth(healthData);
+    } catch (error) {
+      console.error('Backend health check failed:', error);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
@@ -69,23 +85,137 @@ export default function Home() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Backend Status Banner */}
+            {health ? (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse" />
+                  <div className="flex-1">
+                    <div className="text-green-400 font-semibold">
+                      Backend Connected
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      Chain ID: {health.blockchain.chainId} | Escrow:{' '}
+                      {health.blockchain.escrowAddress.slice(0, 6)}...
+                      {health.blockchain.escrowAddress.slice(-4)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-3 w-3 bg-red-500 rounded-full" />
+                  <div className="flex-1">
+                    <div className="text-red-400 font-semibold">
+                      Backend Disconnected
+                    </div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      Make sure the API is running on http://localhost:3001
+                    </div>
+                  </div>
+                  <button
+                    onClick={checkBackendHealth}
+                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded transition-colors text-sm"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Stats Bar */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-                <div className="text-sm text-gray-400 mb-1">Your Address</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-400">Your Address</div>
+                  <svg
+                    className="w-5 h-5 text-blue-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
                 <div className="text-lg font-mono text-blue-400">
                   {address?.slice(0, 6)}...{address?.slice(-4)}
                 </div>
               </div>
+
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-                <div className="text-sm text-gray-400 mb-1">Network</div>
-                <div className="text-lg font-semibold">Base Sepolia</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-400">Network</div>
+                  <svg
+                    className="w-5 h-5 text-purple-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                    />
+                  </svg>
+                </div>
+                <div className="text-lg font-semibold text-purple-400">
+                  Base Sepolia
+                </div>
               </div>
+
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-                <div className="text-sm text-gray-400 mb-1">Status</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-400">Contract</div>
+                  <svg
+                    className="w-5 h-5 text-cyan-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <div className="text-sm font-mono text-cyan-400">
+                  {health?.blockchain.escrowAddress
+                    ? `${health.blockchain.escrowAddress.slice(0, 6)}...${health.blockchain.escrowAddress.slice(-4)}`
+                    : '0x53d3...33ce'}
+                </div>
+              </div>
+
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-gray-400">Status</div>
+                  <svg
+                    className="w-5 h-5 text-green-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
                 <div className="flex items-center">
                   <div className="h-2 w-2 bg-green-500 rounded-full mr-2 animate-pulse" />
-                  <span className="text-lg font-semibold">Connected</span>
+                  <span className="text-lg font-semibold text-green-400">
+                    Connected
+                  </span>
                 </div>
               </div>
             </div>
@@ -93,6 +223,27 @@ export default function Home() {
             {/* Action Buttons */}
             <div className="flex gap-4">
               <CreateJobButton />
+              <a
+                href={`https://sepolia.basescan.org/address/${health?.blockchain.escrowAddress || '0x53d368b5467524F7d674B70F00138a283e1533ce'}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+                View Contract
+              </a>
             </div>
 
             {/* Jobs List */}

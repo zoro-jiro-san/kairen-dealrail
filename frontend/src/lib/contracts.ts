@@ -1,10 +1,16 @@
 // Contract addresses and ABIs
 import { Address } from 'viem';
 
-// Contract addresses (update after deployment)
+// Contract addresses - DealRail deployment on Base Sepolia
 export const ESCROW_ADDRESSES: Record<number, Address> = {
-  84532: '0x0000000000000000000000000000000000000000', // Base Sepolia (placeholder)
-  8453: '0x0000000000000000000000000000000000000000', // Base Mainnet (placeholder)
+  84532: '0x53d368b5467524F7d674B70F00138a283e1533ce', // Base Sepolia - EscrowRail
+  8453: '0x0000000000000000000000000000000000000000', // Base Mainnet (not deployed)
+};
+
+// USDC addresses
+export const USDC_ADDRESSES: Record<number, Address> = {
+  84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia - Mock USDC
+  8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base Mainnet - Native USDC
 };
 
 // EscrowRail ABI (minimal for frontend)
@@ -182,3 +188,29 @@ export const JobStateNames: Record<number, string> = {
 export function getEscrowAddress(chainId: number): Address {
   return ESCROW_ADDRESSES[chainId] || ESCROW_ADDRESSES[84532];
 }
+
+// Helper to get USDC address for current chain
+export function getUSDCAddress(chainId: number): Address {
+  return USDC_ADDRESSES[chainId] || USDC_ADDRESSES[84532];
+}
+
+// USDC ABI (minimal for approval)
+export const USDC_ABI = [
+  {
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    name: 'approve',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'account', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;

@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useContractWrite, useWaitForTransactionReceipt } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi';
 import { ESCROW_ABI, getEscrowAddress } from '@/lib/contracts';
-import { parseEther, Address } from 'viem';
-import { useChainId } from 'wagmi';
+import { Address } from 'viem';
 
 export function CreateJobButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,12 +12,11 @@ export function CreateJobButton() {
   const [expiry, setExpiry] = useState('');
   const chainId = useChainId();
 
-  const { data: hash, writeContract, isPending } = useContractWrite();
+  const { data: hash, writeContract, isPending, error } = useWriteContract();
 
-  const { isLoading: isConfirming, isSuccess } =
-    useWaitForTransactionReceipt({
-      hash,
-    });
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,14 +46,25 @@ export function CreateJobButton() {
     }
   };
 
-  if (isSuccess) {
-    setTimeout(() => {
-      setIsOpen(false);
-      setProvider('');
-      setEvaluator('');
-      setExpiry('');
-    }, 2000);
-  }
+  // Reset form on success
+  useEffect(() => {
+    if (isSuccess) {
+      const timer = setTimeout(() => {
+        setIsOpen(false);
+        setProvider('');
+        setEvaluator('');
+        setExpiry('');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess]);
+
+  // Show error if transaction fails
+  useEffect(() => {
+    if (error) {
+      alert(`Transaction failed: ${error.message}`);
+    }
+  }, [error]);
 
   return (
     <>

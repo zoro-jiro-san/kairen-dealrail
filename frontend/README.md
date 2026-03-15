@@ -28,19 +28,19 @@ cp .env.example .env.local
 ```
 
 Required variables:
-- `NEXT_PUBLIC_API_URL` - Backend API URL (default: http://localhost:3000)
-- `NEXT_PUBLIC_CHAIN_ID` - Chain ID (84532 for Base Sepolia)
+- `NEXT_PUBLIC_API_URL` - Backend API URL (default: http://localhost:3001)
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` - Get from [WalletConnect Cloud](https://cloud.walletconnect.com)
 
-### 3. Update Contract Address
+### 3. Contract Addresses (Already Configured)
 
-After deploying contracts, update the address in `src/lib/contracts.ts`:
+The following contracts are deployed on Base Sepolia:
 
 ```typescript
-export const ESCROW_ADDRESSES: Record<number, Address> = {
-  84532: '0xYourDeployedContractAddress', // Base Sepolia
-};
+Escrow: 0x53d368b5467524F7d674B70F00138a283e1533ce
+USDC:   0x036CbD53842c5426634e7929541eC2318f3dCF7e
 ```
+
+These are already configured in `src/lib/contracts.ts`.
 
 ### 4. Start Development Server
 
@@ -89,15 +89,23 @@ frontend/
 - **Responsive Design**: Mobile-first TailwindCSS styling
 - **Type Safety**: Full TypeScript coverage
 
-### 🔄 In Progress
+### ✅ Newly Completed
 
-- Job detail view with full lifecycle management
-- Fund job with ETH
-- Submit work deliverables
-- Approve/reject submissions (evaluator)
+- **Job Detail View**: Full job information page with state timeline
+- **Backend Health Check**: Real-time backend connectivity monitoring
+- **Enhanced Dashboard**: Polished stats display with icons
+- **Simplified API Integration**: Works with blockchain-reading backend
+- **Error Boundaries**: Graceful error handling throughout
+
+### 🔄 Future Enhancements
+
+- Fund job with USDC (via backend proxy)
+- Submit work deliverables (via backend proxy)
+- Approve/reject submissions (evaluator, via backend proxy)
 - Claim refunds for expired jobs
-- Artifact upload and viewing
+- Artifact upload and viewing (IPFS)
 - Settlement proof display
+- Real-time blockchain event listening
 
 ## Components
 
