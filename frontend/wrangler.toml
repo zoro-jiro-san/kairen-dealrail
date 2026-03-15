@@ -1,0 +1,9 @@
+name = "kairen-dealrail-frontend"
+compatibility_flags = ["nodejs_compat"]
+compatibility_date = "2025-01-01"
+
+# Cloudflare Pages configuration
+pages_build_output_dir = ".vercel/output/static"
+
+# This file helps ensure consistent environment settings
+# The nodejs_compat flag enables Node.js API compatibility in the Edge Runtime
