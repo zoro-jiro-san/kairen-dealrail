@@ -1,115 +1,166 @@
 # Hackathon Info — The Synthesis
 
-_Last updated: 2026-03-14 (Sponsor tracks refresh)_
+_Last updated: 2026-03-15 (detailed tracks + eligibility + judging update)_
 
-## Role & Ownership
-- **Point of contact (agent):** Zoro
-- **Human lead:** Sarthi
-- **Project repo:** https://github.com/zoro-jiro-san/kairen-dealrail
-
----
-
-## Event Snapshot
-- Event: **The Synthesis** (AI agents + humans building together)
-- Official themes: https://synthesis.devfolio.co/themes.md
+## 1) Canonical Sources
+- Main: https://synthesis.md/
 - Agent/API spec: https://synthesis.devfolio.co/skill.md
-- Prize catalog (tracks + sponsor bounties): https://synthesis.devfolio.co/catalog/prizes.md
-- Main site: https://synthesis.md/
-- Updates group: https://nsb.dev/synthesis-updates
-
----
-
-## Core Themes (base tracks)
-1. Agents that pay
-2. Agents that trust
-3. Agents that cooperate
-4. Agents that keep secrets
-
----
-
-## Selected Project Direction
-**Kairen DealRail**
-
-Primary fit:
-- **Agents that cooperate**
-
-Secondary fit:
-- Agents that pay
-- Agents that trust
-
-Working thesis:
-- Negotiate offchain, commit onchain, settle by proof.
-
----
-
-## Sponsor/Prize Track Updates (new)
-Based on latest prize catalog, these are the highest-relevance sponsor tracks for DealRail:
-
-### P0 (highest priority)
-1. **Agents With Receipts — ERC-8004 (Protocol Labs)**
-   - Direct fit with onchain accountability and verifiable execution.
-2. **🤖 Let the Agent Cook — No Humans Required (Protocol Labs)**
-   - Strong fit if we show full autonomous loop with guardrails.
-3. **Synthesis Open Track**
-   - Broad fit for core DealRail narrative + working demo.
-
-### P1 (strong optional)
-4. **Agentic Finance — Best Uniswap API Integration (Uniswap)**
-   - Add swap/payment path if it improves core demo (avoid scope creep).
-5. **Best Use of Delegations (MetaMask)**
-   - Excellent fit if delegation boundaries become load-bearing in flow.
-6. **Build with AgentCash (Merit Systems)** / **Best Use of Locus** / **Bankr LLM Gateway**
-   - Only pursue if integration is core to demo, not decorative.
-
-### P2 (good but only if low overhead)
-7. **Best Agent on Celo**
-8. **OpenServ track**
-9. **Self Agent ID**
-
-**Rule:** prioritize tracks where integration is essential to product behavior, not a checklist add-on.
-
----
-
-## Repo Status Check (latest)
-I pulled your latest repo updates and confirmed major progress docs/code landed (backend, frontend, contracts, strategy docs, deployment docs).
-
-No changes made outside this file per your instruction.
-
----
-
-## Current Build Status (high-level)
-- [x] Idea + architecture + strategy docs expanded
-- [x] Research + technical blueprint + tx safety opinion prepared
-- [x] Repo now includes backend/frontend/contracts scaffolding
-- [ ] Lock final sponsor track targets (P0/P1)
-- [ ] Align final demo storyline to chosen track(s)
-- [ ] Submission packaging (video, proof artifacts, narrative)
-
----
-
-## Immediate Next Actions (recommended)
-1. Pick **2 primary targets**: one core + one sponsor (max 3 total tracks).
-2. Freeze MVP scope by those tracks only.
-3. Ensure every claimed integration is visible in live demo path.
-4. Collect onchain artifacts early (tx hashes/events) for submission proof.
-
----
-
-## Update Protocol (for Sarthi)
-I will keep this file updated with:
-- track/theme updates
-- sponsor/prize track opportunities
-- timeline/deadline changes
-- submission requirements
-- blockers needing manual help
-
----
-
-## Quick Links
-- Idea: `IDEA.md`
-- Strategy: `HACKATHON_STRATEGY.md`
-- Track mapping: `HACKATHON_TRACKS.md`
-- Architecture: `docs/ARCHITECTURE.md`
 - Themes: https://synthesis.devfolio.co/themes.md
 - Prize catalog: https://synthesis.devfolio.co/catalog/prizes.md
-- Agent API: https://synthesis.devfolio.co/skill.md
+- Updates channel: https://nsb.dev/synthesis-updates
+
+---
+
+## 2) Project & Ownership
+- **Project:** Kairen DealRail
+- **Repo:** https://github.com/zoro-jiro-san/kairen-dealrail
+- **Point of contact (agent):** Zoro
+- **Human lead:** Sarthi
+
+---
+
+## 3) Core Hackathon Themes (official)
+1. **Agents that pay**
+2. **Agents that trust**
+3. **Agents that cooperate**
+4. **Agents that keep secrets**
+
+### DealRail fit
+- **Primary:** Agents that cooperate
+- **Secondary:** Agents that pay, Agents that trust
+
+---
+
+## 4) Eligibility & Participation Requirements
+Based on the official skill/spec:
+
+### Mandatory
+- Registered participant agent with platform API key
+- Working project/demo (not idea-only)
+- Open-source code by deadline
+- Meaningful agent contribution (not superficial wrapper)
+- Onchain artifacts strongly encouraged (contracts, txs, attestations)
+- Collaboration/process documented (conversation log/history)
+
+### Team/Project model
+- Participant = registered AI agent
+- Team = collaborators on one project
+- Project = submission tied to one team
+- Project can target one or more tracks
+
+---
+
+## 5) Judging Signals (practical)
+From themes + rules + guidance:
+
+1. **Working > speculative**
+   - A functioning, scoped demo beats broad architecture-only claims.
+
+2. **Problem-solution coherence**
+   - Judges prioritize whether project solves a real problem over integration count.
+
+3. **Onchain verifiability**
+   - Clear, inspectable onchain actions materially strengthen submission.
+
+4. **Agent autonomy with human control**
+   - Strong entries show autonomous execution within human-defined safety bounds.
+
+5. **Clarity of evidence**
+   - tx hashes, event logs, architecture docs, and reproducible demo steps.
+
+---
+
+## 6) Sponsor/Prize Track Landscape (what to watch)
+> There are 100+ prizes across many sponsor tracks. We focus only on tracks with strong product coherence for DealRail.
+
+### P0 (must target)
+1. **Synthesis Open Track**
+2. **Agents With Receipts — ERC-8004 (Protocol Labs)**
+3. **Let the Agent Cook — No Humans Required (Protocol Labs)**
+
+### P1 (strong optional — choose max 1 or 2)
+4. **Best Use of Delegations (MetaMask)**
+5. **Agentic Finance (Uniswap API)**
+6. **Best Bankr LLM Gateway Use (Bankr)**
+
+### P2 (only if low overhead)
+7. **Build with AgentCash (Merit Systems)**
+8. **Best Use of Locus (Locus)**
+9. **Best Agent on Celo (Celo)**
+
+### Track selection rule
+- Do not chase too many tracks.
+- Target **2–3 tracks total** where integration is load-bearing in the demo path.
+
+---
+
+## 7) Recommended Track Lock (for DealRail)
+
+### Proposed lock
+- **Primary:** Agents With Receipts — ERC-8004
+- **Primary:** Synthesis Open Track
+- **Optional third:** Best Use of Delegations (if implemented as core authorization boundary)
+
+### Rationale
+- Best alignment with DealRail’s core value: verifiable commitments + auditable settlement.
+- Keeps scope focused while still sponsor-competitive.
+
+---
+
+## 8) Submission Readiness Parameters (our checklist)
+
+### Product completeness
+- [ ] End-to-end happy path works
+- [ ] Dispute/failure path demonstrable
+- [ ] Human policy boundaries enforceable
+
+### Onchain evidence
+- [ ] Contract deployed (testnet/mainnet as planned)
+- [ ] Real transactions executed
+- [ ] Event timeline captured
+
+### Agent quality
+- [ ] Meaningful autonomous contribution shown
+- [ ] Safety guardrails documented
+- [ ] Irreversible actions confirm-gated
+
+### Documentation quality
+- [ ] Architecture doc
+- [ ] README with run instructions
+- [ ] Demo script
+- [ ] Collaboration log / development narrative
+
+### Open-source compliance
+- [ ] Public repository
+- [ ] Build/test instructions
+- [ ] No secrets in repo/history
+
+---
+
+## 9) Current Status Snapshot
+- [x] Idea + strategy docs
+- [x] Architecture + technical blueprint
+- [x] TX safety model
+- [x] Backend/frontend/contracts scaffolding present
+- [ ] Track lock finalized
+- [ ] Final demo narrative frozen
+- [ ] Submission bundle finalized
+
+---
+
+## 10) Immediate Next Actions
+1. Finalize track lock (max 3)
+2. Freeze MVP scope against selected tracks
+3. Ensure each selected track has explicit demo proof
+4. Gather onchain artifacts early for submission evidence
+
+---
+
+## 11) Notes on Updates
+This file is the single source of truth for:
+- track updates
+- sponsor opportunities
+- eligibility/rules summary
+- judging-oriented execution checks
+
+If sponsor tracks or rules shift, this file gets updated first.
