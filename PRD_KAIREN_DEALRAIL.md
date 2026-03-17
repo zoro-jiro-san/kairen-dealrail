@@ -1,7 +1,7 @@
 # Kairen DealRail — Product Requirements Document (PRD)
 
-**Version:** 2.0
-**Date:** 2026-03-15
+**Version:** 2.1
+**Date:** 2026-03-17
 **Status:** Active Build (Hackathon: March 13–22, 2026)
 **Project:** Kairen DealRail
 **Repo:** https://github.com/zoro-jiro-san/kairen-dealrail
@@ -31,6 +31,20 @@
 18. [Submission Checklist](#18-submission-checklist)
 19. [Risk Register & Mitigations](#19-risk-register--mitigations)
 20. [Glossary](#20-glossary)
+
+---
+
+## Latest Iteration Update (March 17, 2026)
+
+Current implementation includes:
+- Reverse-auction rounds in negotiation flow
+- Offer batching + explicit deal confirmation
+- Savings receipt generation
+- Live activity feed for negotiation lifecycle
+- Dual payment rails (`x402` simple pay-per-call + `x402n` negotiated flow)
+
+Reference architecture for this iteration:
+- `docs/architecture/ARCHITECTURE_LATEST_ITERATION_MAR17.md`
 
 ---
 
