@@ -1,6 +1,6 @@
 # Hackathon Info — The Synthesis
 
-_Last updated: 2026-03-15 (detailed tracks + eligibility + judging update)_
+_Last updated: 2026-03-17 (tracks + workshop/status check refresh)_
 
 ## 1) Canonical Sources
 - Main: https://synthesis.md/
@@ -164,3 +164,20 @@ This file is the single source of truth for:
 - judging-oriented execution checks
 
 If sponsor tracks or rules shift, this file gets updated first.
+
+
+## 12) Latest Update Check (2026-03-17)
+Checked official pages for workshops/sessions/schedule updates:
+- `themes.md`
+- `skill.md`
+- `catalog/prizes.md`
+- main site
+
+### Result
+- No clearly published standalone workshop schedule page was found in these endpoints.
+- Core themes and sponsor prize catalog remain the primary actionable sources.
+- Continue monitoring the official updates channel: `https://nsb.dev/synthesis-updates`.
+
+### Action for us
+- Keep docs submission-ready without waiting on workshops.
+- If workshop/office-hour details appear, add them here immediately with date and link.
