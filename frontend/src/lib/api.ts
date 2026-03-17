@@ -68,6 +68,20 @@ export interface NegotiationSession {
   acceptedOfferId: string | null;
 }
 
+export interface ProviderCandidate {
+  providerAddress: string;
+  evaluatorAddress: string;
+  source: 'x402n' | 'virtuals' | 'near' | 'mock';
+  serviceId: string | null;
+  serviceName: string;
+  description: string;
+  endpoint: string | null;
+  basePriceUsdc: string | null;
+  reputationScore: number | null;
+  erc8004AgentId: string | null;
+  erc8004Registered: boolean;
+}
+
 export interface CreateJobRequest {
   provider: string;
   evaluator: string;
@@ -243,6 +257,14 @@ export const integrationsApi = {
     allowedMethods: string[];
   }) => {
     const response = await api.post('/integrations/metamask/delegation/build', payload);
+    return response.data;
+  },
+  listProviders: async (params?: {
+    query?: string;
+    minReputation?: number;
+    maxBasePriceUsdc?: number;
+  }): Promise<{ success: boolean; useCase: string; providers: ProviderCandidate[] }> => {
+    const response = await api.get('/discovery/providers', { params });
     return response.data;
   },
 };

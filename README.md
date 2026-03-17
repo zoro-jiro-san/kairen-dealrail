@@ -66,6 +66,15 @@ npm run dev
 - [ ] 3 ERC-8004 agent registrations on Base Mainnet (pending final wallet ops)
 - [ ] Final demo video (2-4 min with onchain evidence)
 
+## 🎯 End Goal Use Case
+
+DealRail is the trust/execution layer, not the full marketplace:
+1. Discovery: find providers via x402n services + ERC-8004 reputation context.
+2. Negotiation: run RFO/offer flow.
+3. Commitment: create and fund escrow job onchain.
+4. Verification: evaluator decides complete/reject.
+5. Settlement ops: optional post-settlement routing (Uniswap/Locus).
+
 ## 🧩 Standards Coverage
 
 | Standard | Status | Where |

@@ -59,6 +59,18 @@ export function CreateJobButton() {
     }
   }, [isSuccess]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const prefProvider = localStorage.getItem('dealrail.prefProvider');
+    const prefEvaluator = localStorage.getItem('dealrail.prefEvaluator');
+    if (prefProvider && /^0x[a-fA-F0-9]{40}$/.test(prefProvider)) {
+      setProvider(prefProvider);
+    }
+    if (prefEvaluator && /^0x[a-fA-F0-9]{40}$/.test(prefEvaluator)) {
+      setEvaluator(prefEvaluator);
+    }
+  }, [isOpen]);
+
   // Show error if transaction fails
   useEffect(() => {
     if (error) {

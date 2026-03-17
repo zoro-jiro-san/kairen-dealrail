@@ -9,6 +9,7 @@ import { x402nService } from './services/x402n.service';
 import { uniswapService } from './services/uniswap.service';
 import { locusService } from './services/locus.service';
 import { delegationService } from './services/delegation.service';
+import { discoveryService } from './services/discovery.service';
 
 const app: Express = express();
 
@@ -656,6 +657,73 @@ app.post('/api/v1/integrations/metamask/delegation/build', async (req: Request, 
       return;
     }
     res.status(500).json({ error: 'Failed to build delegation payload', details: (error as Error).message });
+    return;
+  }
+});
+
+// GET /api/v1/discovery/providers
+app.get('/api/v1/discovery/providers', async (req: Request, res: Response) => {
+  const schema = z.object({
+    query: z.string().optional(),
+    minReputation: z
+      .string()
+      .transform((value) => Number(value))
+      .pipe(z.number().int().min(0).max(1000))
+      .optional(),
+    maxBasePriceUsdc: z
+      .string()
+      .transform((value) => Number(value))
+      .pipe(z.number().positive())
+      .optional(),
+  });
+
+  try {
+    const params = schema.parse({
+      query: req.query.query,
+      minReputation: req.query.minReputation,
+      maxBasePriceUsdc: req.query.maxBasePriceUsdc,
+    });
+
+    const providers = await discoveryService.listProviderCandidates({
+      query: params.query,
+      minReputation: params.minReputation,
+      maxBasePriceUsdc: params.maxBasePriceUsdc,
+    });
+
+    res.json({
+      success: true,
+      useCase: 'Find qualified provider agents before x402n negotiation and escrow commit',
+      providers,
+    });
+    return;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid query params', details: error.issues });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to fetch providers', details: (error as Error).message });
+    return;
+  }
+});
+
+// GET /api/v1/agents/:address - ERC-8004 identity source of truth
+app.get('/api/v1/agents/:address', async (req: Request, res: Response) => {
+  const address = req.params.address;
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    res.status(400).json({ error: 'Invalid address' });
+    return;
+  }
+
+  try {
+    const identity = await discoveryService.getAgentIdentity(address);
+    res.json({
+      success: true,
+      source: 'erc-8004',
+      identity,
+    });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to resolve agent identity', details: (error as Error).message });
     return;
   }
 });

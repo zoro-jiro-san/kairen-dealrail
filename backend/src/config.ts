@@ -87,6 +87,19 @@ export const config = {
       mockMode: getEnv('LOCUS_MOCK_MODE', 'true').toLowerCase() !== 'false',
       sendUsdcTool: getEnv('LOCUS_SEND_USDC_TOOL', 'send_usdc'),
     },
+    erc8004: {
+      identityRegistry: getEnv('ERC8004_IDENTITY_REGISTRY', '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432'),
+      reputationRegistry: getEnv('ERC8004_REPUTATION_REGISTRY', '0x8004BAa17C55a88189AE136b182e5fdA19dE9b63'),
+      baseMainnetRpc: getEnv('BASE_MAINNET_RPC', 'https://mainnet.base.org'),
+    },
+    discovery: {
+      x402nEnabled: getEnv('DISCOVERY_X402N_ENABLED', 'true').toLowerCase() !== 'false',
+      virtualsEnabled: getEnv('DISCOVERY_VIRTUALS_ENABLED', 'false').toLowerCase() === 'true',
+      nearEnabled: getEnv('DISCOVERY_NEAR_ENABLED', 'false').toLowerCase() === 'true',
+      virtualsServicesUrl: getEnv('DISCOVERY_VIRTUALS_SERVICES_URL', ''),
+      nearServicesUrl: getEnv('DISCOVERY_NEAR_SERVICES_URL', ''),
+      timeoutMs: parseInt(getEnv('DISCOVERY_TIMEOUT_MS', '3500'), 10),
+    },
   },
   x402n: {
     baseUrl: getEnv('X402N_BASE_URL', 'https://x402n.kairen.xyz/api/v1'),

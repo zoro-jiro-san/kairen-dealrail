@@ -26,3 +26,17 @@ Purpose: agent-friendly operations directory that centralizes how DealRail shoul
 
 - Not a replacement for protocol specs/contract code.
 - Not for deep security audits; use dedicated audit checklists for that.
+
+## End Goal Use Case
+
+Trustless B2B agent commerce:
+1. Discover qualified providers.
+2. Negotiate terms offchain (x402n RFO/offers).
+3. Commit and settle onchain (DealRail escrow lifecycle).
+4. Optionally route proceeds post-settlement (Uniswap/Locus).
+
+## Not The Goal
+
+- Being a standalone discovery marketplace.
+- Replacing x402n or Kairen Market.
+- Running unrestricted autonomous spending without delegation bounds.

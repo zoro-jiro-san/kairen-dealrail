@@ -7,6 +7,7 @@ import { JobsList } from '@/components/JobsList';
 import { CreateJobButton } from '@/components/CreateJobButton';
 import { DealPipelineDashboard } from '@/components/DealPipelineDashboard';
 import { IntegrationsWorkbench } from '@/components/IntegrationsWorkbench';
+import { ProviderDiscoveryPanel } from '@/components/ProviderDiscoveryPanel';
 import { healthCheck, HealthCheckResponse } from '@/lib/api';
 
 export default function Home() {
@@ -249,6 +250,7 @@ export default function Home() {
             </div>
 
             <DealPipelineDashboard />
+            <ProviderDiscoveryPanel />
             <IntegrationsWorkbench />
 
             {/* Jobs List */}
