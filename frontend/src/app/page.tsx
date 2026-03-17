@@ -31,7 +31,7 @@ export default function Home() {
     const chainId = health?.blockchain.chainId;
     if (chainId === 84532) return 'Base Sepolia';
     if (chainId === 8453) return 'Base Mainnet';
-    if (chainId === 44787) return 'Celo Alfajores';
+    if (chainId === 11142220) return 'Celo Sepolia';
     if (chainId === 42220) return 'Celo Mainnet';
     return chainId ? `Chain ${chainId}` : 'Unknown';
   }
@@ -40,7 +40,7 @@ export default function Home() {
     const chainId = health?.blockchain.chainId;
     if (chainId === 84532) return `https://sepolia.basescan.org/address/${address}`;
     if (chainId === 8453) return `https://basescan.org/address/${address}`;
-    if (chainId === 44787) return `https://alfajores.celoscan.io/address/${address}`;
+    if (chainId === 11142220) return `https://celo-sepolia.blockscout.com/address/${address}`;
     if (chainId === 42220) return `https://celoscan.io/address/${address}`;
     return `https://sepolia.basescan.org/address/${address}`;
   }

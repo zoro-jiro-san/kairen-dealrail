@@ -340,7 +340,7 @@ export const integrationsApi = {
     fromAgentId: string;
     toAddress: string;
     amountUsdc: string;
-    chain: 'base' | 'base-sepolia' | 'celo' | 'celo-alfajores';
+    chain: 'base' | 'base-sepolia' | 'celo' | 'celo-sepolia';
     memo?: string;
   }) => {
     const response = await api.post('/integrations/locus/send-usdc', payload);

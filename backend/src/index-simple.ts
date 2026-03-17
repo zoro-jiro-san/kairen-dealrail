@@ -22,8 +22,8 @@ app.use(express.json());
 const stateNames = ['Open', 'Funded', 'Submitted', 'Completed', 'Rejected', 'Expired'];
 
 function getExplorerBaseUrl(): string {
-  return config.activeChainConfig.chainId === 44787
-    ? 'https://alfajores.celoscan.io'
+  return config.activeChainConfig.chainId === 11142220
+    ? 'https://celo-sepolia.blockscout.com'
     : 'https://sepolia.basescan.org';
 }
 
@@ -747,7 +747,7 @@ app.post('/api/v1/integrations/locus/send-usdc', async (req: Request, res: Respo
     fromAgentId: z.string().min(1),
     toAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
     amountUsdc: z.string().min(1),
-    chain: z.enum(['base', 'base-sepolia', 'celo', 'celo-alfajores']),
+    chain: z.enum(['base', 'base-sepolia', 'celo', 'celo-sepolia']),
     memo: z.string().max(200).optional(),
   });
 

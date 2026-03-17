@@ -32,22 +32,32 @@ export const config = {
       },
       usdcAddress: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
     },
-    // Celo Alfajores (pending deployment)
-    celoAlfajores: {
-      chainId: 44787,
-      rpcUrl: getEnv('CELO_ALFAJORES_RPC', 'https://alfajores-forno.celo-testnet.org'),
+    // Celo Sepolia (active Celo testnet)
+    celoSepolia: {
+      chainId: 11142220,
+      rpcUrl: getEnv('CELO_SEPOLIA_RPC', getEnv('CELO_ALFAJORES_RPC', 'https://forno.celo-sepolia.celo-testnet.org')),
       contracts: {
-        escrowRail: getEnv('ESCROW_RAIL_CELO_ALFAJORES', ''),
-        escrowRailERC20: getEnv('ESCROW_RAIL_ERC20_CELO_ALFAJORES', ''),
-        dealRailHook: getEnv('DEALRAIL_HOOK_CELO_ALFAJORES', ''),
-        erc8004Verifier: getEnv('ERC8004_VERIFIER_CELO_ALFAJORES', ''),
+        escrowRail: getEnv('ESCROW_RAIL_CELO_SEPOLIA', getEnv('ESCROW_RAIL_CELO_ALFAJORES', '')),
+        escrowRailERC20: getEnv(
+          'ESCROW_RAIL_ERC20_CELO_SEPOLIA',
+          getEnv('ESCROW_RAIL_ERC20_CELO_ALFAJORES', '')
+        ),
+        dealRailHook: getEnv('DEALRAIL_HOOK_CELO_SEPOLIA', getEnv('DEALRAIL_HOOK_CELO_ALFAJORES', '')),
+        erc8004Verifier: getEnv(
+          'ERC8004_VERIFIER_CELO_SEPOLIA',
+          getEnv('ERC8004_VERIFIER_CELO_ALFAJORES', '')
+        ),
       },
-      cusdAddress: '0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1',
+      cusdAddress: getEnv(
+        'CELO_SEPOLIA_STABLE_TOKEN',
+        // Circle USDC testnet on Celo Sepolia
+        '0x01C5C0122039549AD1493B8220cABEdD739BC44E'
+      ),
     },
     // Default active chain
-    activeChain: (getEnv('ACTIVE_CHAIN', 'baseSepolia')) as 'baseSepolia' | 'celoAlfajores',
+    activeChain: (getEnv('ACTIVE_CHAIN', 'baseSepolia')) as 'baseSepolia' | 'celoSepolia',
     get activeChainConfig() {
-      return this.activeChain === 'baseSepolia' ? this.baseSepolia : this.celoAlfajores;
+      return this.activeChain === 'baseSepolia' ? this.baseSepolia : this.celoSepolia;
     },
     get chainId() {
       return this.activeChainConfig.chainId;
@@ -111,7 +121,7 @@ export const config = {
   get activeChainConfig() {
     return this.blockchain.activeChain === 'baseSepolia'
       ? this.blockchain.baseSepolia
-      : this.blockchain.celoAlfajores;
+      : this.blockchain.celoSepolia;
   },
   get chainId() {
     return this.activeChainConfig.chainId;

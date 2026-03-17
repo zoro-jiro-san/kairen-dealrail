@@ -1,10 +1,10 @@
 # Kairen DealRail
 
-**Agentic Commerce Escrow Protocol** implementing EIP-8183 for machine-native deal execution on Base Sepolia and Celo Alfajores.
+**Agentic Commerce Escrow Protocol** implementing EIP-8183 for machine-native deal execution on Base Sepolia and Celo Sepolia.
 
 **Status:** 🚧 P0 Pipeline In Progress (updated March 17, 2026)
 **Hackathon:** The Synthesis (March 13-22, 2026)
-**Networks:** Base Sepolia (deployed), Celo Alfajores (pending)
+**Networks:** Base Sepolia (deployed), Celo Sepolia (deployed)
 
 ---
 
@@ -157,7 +157,7 @@ Explorer links:
 - [x] MetaMask delegation payload builder (ERC-7710 caveat structure)
 - [ ] WebSocket real-time updates
 - [ ] Analytics dashboard
-- [ ] Celo Alfajores deployment
+- [x] Celo Sepolia deployment
 - [x] Uniswap quote + tx builder endpoints (Base Mainnet QuoterV2 + SwapRouter02)
 - [x] Locus MCP payment bridge endpoint (mock/live modes)
 

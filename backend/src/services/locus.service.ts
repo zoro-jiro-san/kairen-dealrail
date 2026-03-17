@@ -4,7 +4,7 @@ export interface LocusSendUsdcInput {
   fromAgentId: string;
   toAddress: string;
   amountUsdc: string;
-  chain: 'base' | 'base-sepolia' | 'celo' | 'celo-alfajores';
+  chain: 'base' | 'base-sepolia' | 'celo' | 'celo-sepolia';
   memo?: string;
 }
 

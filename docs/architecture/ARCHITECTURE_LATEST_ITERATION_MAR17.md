@@ -39,7 +39,7 @@ flowchart LR
   NEG --> FEED[Live Activity Feed]
 
   API --> ESC[EscrowRail ERC-8183 Contract]
-  ESC --> CHAIN[(Base Sepolia / Celo Alfajores)]
+  ESC --> CHAIN[(Base Sepolia / Celo Sepolia)]
 
   API --> X4[x402 Proxy Adapter]
   API --> UNI[Uniswap Adapter]
@@ -122,18 +122,13 @@ sequenceDiagram
 ## Track Mapping
 - Open Synthesis: full end-to-end pipeline with real autonomous decision points
 - ERC-8004: identity + reputation lookup/enrichment path in discovery and agent endpoint
-- Celo: chain config path available; pending full Celo contract address finalization and demo run
+- Celo: deployed on Celo Sepolia with stable-token escrow path enabled
 - MetaMask Delegation: ERC-7710 payload builder and typed-sign flow integrated
 - Integrations: x402, x402n, Uniswap, Locus adapters exposed
 
 ## What Is Still Manual / External
-1. Celo deployment addresses are still required in `.env` for active Celo end-to-end demo:
-- `ESCROW_RAIL_CELO_ALFAJORES`
-- `ESCROW_RAIL_ERC20_CELO_ALFAJORES`
-- `DEALRAIL_HOOK_CELO_ALFAJORES`
-- `ERC8004_VERIFIER_CELO_ALFAJORES`
-2. `LOCUS_API_KEY` is optional when mock mode is enabled, required for live Locus calls.
-3. `PINATA_JWT` is optional until IPFS pinning is used in the flow.
+1. `LOCUS_API_KEY` is optional when mock mode is enabled, required for live Locus calls.
+2. `PINATA_JWT` is optional until IPFS pinning is used in the flow.
 
 ## Frontend Build Status
 - Updated to Next.js `16.1.7`

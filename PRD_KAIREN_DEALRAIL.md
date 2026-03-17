@@ -204,7 +204,7 @@ Each track targets a **distinct layer** of the DealRail architecture. No artific
 - **Prizes:** 1st: $3,000 | 2nd: $2,000
 - **Integration:** Deploy EscrowRail on Celo with cUSD settlement token
 - **What judges want:** Real agentic application on Celo demonstrating real-world utility
-- **DealRail fit:** Celo's sub-cent fees make it ideal for high-frequency agent deals; cUSD provides stable settlement; Alfajores testnet for development
+- **DealRail fit:** Celo's sub-cent fees make it ideal for high-frequency agent deals; cUSD provides stable settlement; Celo Sepolia testnet for development
 - **Note:** Hackathon co-organizer (sodofi) is Celo DevRel Engineering Lead
 
 #### Track 4: Best Use of Delegations (MetaMask)
@@ -397,7 +397,7 @@ Each track targets a **distinct layer** of the DealRail architecture. No artific
 **Standard:** ERC-8183 Agentic Commerce Protocol
 **Solidity:** ^0.8.20
 **Framework:** Foundry
-**Chains:** Base Sepolia (dev) → Base Mainnet + Celo Alfajores (dev) → Celo Mainnet
+**Chains:** Base Sepolia (dev) → Base Mainnet + Celo Sepolia (dev) → Celo Mainnet
 
 #### Interface
 
@@ -484,7 +484,7 @@ interface IIdentityVerifier {
 |-------|---------|----------|-----------------|
 | Base | Sepolia (testnet) | EscrowRail + Verifiers | ETH / test USDC |
 | Base | Mainnet (demo) | EscrowRail + Verifiers | USDC |
-| Celo | Alfajores (testnet) | EscrowRail + Verifiers | test cUSD |
+| Celo | Celo Sepolia (testnet) | EscrowRail + Verifiers | test cUSD |
 | Celo | Mainnet (demo) | EscrowRail + Verifiers | cUSD |
 
 ---
@@ -780,7 +780,7 @@ Payment released                   (automatic via contract)
 
 **Implementation:**
 
-1. Deploy EscrowRail.sol on Celo Alfajores (testnet) and optionally Celo Mainnet
+1. Deploy EscrowRail.sol on Celo Sepolia (testnet) and optionally Celo Mainnet
 2. Use cUSD as settlement token (modify contract for ERC-20 instead of native ETH)
 3. Demonstrate mobile-friendly agent interaction (reference MiniPay)
 4. Show sub-cent transaction costs in demo
@@ -979,7 +979,7 @@ kairen-dealrail/
 │   └── deployments/                   # Deployed addresses
 │       ├── base-sepolia.json
 │       ├── base-mainnet.json
-│       ├── celo-alfajores.json
+│       ├── celo-sepolia.json
 │       └── celo-mainnet.json
 │
 ├── backend/                           # API server
@@ -1128,7 +1128,7 @@ DELETE /policy/delegation/:id    Revoke delegation
 | EscrowRailERC20.sol (ERC-20 variant for cUSD) | P0 | Agent | 3h |
 | DealRailHook.sol (reputation + delegation gates) | P0 | Agent | 4h |
 | Deploy to Base Sepolia | P0 | Agent | 1h |
-| Deploy to Celo Alfajores | P0 | Agent | 1h |
+| Deploy to Celo Sepolia | P0 | Agent | 1h |
 | Backend scaffolding (Express + TypeScript) | P0 | Agent | 3h |
 | Contract event listener | P0 | Agent | 2h |
 | Basic job lifecycle API endpoints | P0 | Agent | 4h |
@@ -1267,7 +1267,7 @@ DELETE /policy/delegation/:id    Revoke delegation
 
 **Integration Tests (Fork Testing):**
 - Fork Base Sepolia and test against live ERC-8004 contracts
-- Fork Celo Alfajores and test with real cUSD
+- Fork Celo Sepolia and test with real cUSD
 - Full deal lifecycle with hooks enabled
 
 **Target:** > 90% coverage, all edge cases documented
@@ -1363,7 +1363,7 @@ DELETE /policy/delegation/:id    Revoke delegation
 ### Onchain Evidence
 
 - [ ] Contracts deployed on Base Sepolia
-- [ ] Contracts deployed on Celo Alfajores
+- [ ] Contracts deployed on Celo Sepolia
 - [ ] ERC-8004 agent registrations on Base Mainnet
 - [ ] Real transactions executed (at least 5 deal lifecycles)
 - [ ] Event timeline captured and linked to block explorer
@@ -1451,7 +1451,7 @@ DELETE /policy/delegation/:id    Revoke delegation
 | **AgentCash** | x402 payment gateway by Merit Systems |
 | **Alkahest** | Arkhai's natural-language-agreement escrow system |
 | **Pinata** | IPFS pinning service for deliverable storage |
-| **Alfajores** | Celo testnet |
+| **Celo Sepolia** | Celo testnet |
 | **Base Sepolia** | Base testnet |
 
 ---
