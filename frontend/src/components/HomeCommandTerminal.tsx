@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, KeyboardEvent, useState } from 'react';
-import { healthCheck } from '@/lib/api';
+import { healthCheck, integrationsApi } from '@/lib/api';
 import { pushTerminalRun, TerminalActionKind } from '@/lib/terminalLedger';
 
 type LineTone = 'system' | 'user' | 'ok' | 'warn';
@@ -23,10 +23,10 @@ type Props = {
 };
 
 const EXAMPLES = [
-  'need benchmark report under 0.12 usdc in 24h',
-  'find providers for smart contract audit',
-  'create job with preferred provider',
-  'open integrations and setup delegation',
+  'buyer: need api integration sprint under 0.10 usdc in 24h',
+  'market: show provider supply for automation',
+  'integrations: show live rails',
+  'provider: offer workflow automation with 24h delivery',
   'status',
 ];
 
@@ -76,7 +76,10 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
       const note = 'Commands: help | status | clear | market | buyer | provider | evaluator | integrations';
       appendMany([
         { tone: 'system', text: note },
-        { tone: 'system', text: 'Plain language works: "need a benchmark report under 0.12 usdc in 24h".' },
+        { tone: 'system', text: 'Examples:' },
+        { tone: 'system', text: 'buyer: need API integration sprint under 0.10 usdc in 24h' },
+        { tone: 'system', text: 'market: show provider supply for automation' },
+        { tone: 'system', text: 'integrations: show live rails' },
       ]);
       emit('help', command, note);
       setRunning(false);
@@ -103,6 +106,10 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
             tone: 'ok',
             text: `escrow=${health.blockchain.escrowAddress.slice(0, 8)}...${health.blockchain.escrowAddress.slice(-6)}`,
           },
+          {
+            tone: health.integrations?.x402nMockMode ? 'warn' : 'ok',
+            text: `x402n mode=${health.integrations?.x402nMockMode ? 'mock' : 'live'}`,
+          },
         ]);
         emit('status', command, note);
       } catch {
@@ -115,26 +122,59 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
     }
 
     if (normalized === 'market' || normalized.includes('find providers') || normalized.includes('scan market')) {
-      const note = 'Market scan queued: reading discovery sources and ranking providers.';
-      appendMany([
-        { tone: 'ok', text: 'scanning discovery rails...' },
-        { tone: 'ok', text: 'collecting price / reputation / execution metadata...' },
-        { tone: 'ok', text: note },
-      ]);
-      emit('market_scan', command, note);
+      try {
+        const query = command.includes(':') ? command.split(':').slice(1).join(':').trim() : command.replace(/market/i, '').trim();
+        const result = await integrationsApi.listProviders({ query: query || undefined });
+        const top = result.providers.slice(0, 3);
+        const note = `Market scan complete: ${result.providers.length} providers returned`;
+        appendMany([
+          { tone: 'ok', text: 'scanning discovery rails...' },
+          { tone: 'ok', text: `query=${query || 'all providers'}` },
+          { tone: 'ok', text: note },
+          ...top.map((provider) => ({
+            tone: (provider.source === 'mock' ? 'warn' : 'ok') as LineTone,
+            text: `${provider.serviceName} | ${provider.basePriceUsdc ?? 'n/a'} USDC | rep ${provider.reputationScore ?? 'n/a'} | source=${provider.source}`,
+          })),
+        ]);
+        if (top.length === 0) {
+          append('warn', 'No providers matched that request.');
+        }
+        emit('market_scan', command, note);
+      } catch {
+        const note = 'Market scan failed';
+        append('warn', `${note}. Discovery endpoint did not respond.`);
+        emit('market_scan', command, note);
+      }
       setRunning(false);
       return;
     }
 
     if (normalized === 'buyer' || normalized.includes('need') || normalized.includes('want') || normalized.includes('service')) {
       prefillFlow(command);
-      const note = 'Buyer flow staged: policy captured, providers can now be ranked and auctioned.';
-      appendMany([
-        { tone: 'ok', text: 'classifying role: buyer / operator' },
-        { tone: 'ok', text: 'saving service policy...' },
-        { tone: 'ok', text: 'next: scan market -> start reverse auction -> confirm settlement path' },
-      ]);
-      emit('role_buyer', command, note);
+      try {
+        const query = command.replace(/^buyer:/i, '').trim();
+        const result = await integrationsApi.listProviders({ query: query || undefined });
+        const top = result.providers.slice(0, 2);
+        const note = `Buyer flow staged: ${result.providers.length} matching providers available for ranking`;
+        appendMany([
+          { tone: 'ok', text: 'classifying role: buyer / operator' },
+          { tone: 'ok', text: 'saving service policy...' },
+          { tone: 'ok', text: note },
+          ...top.map((provider) => ({
+            tone: (provider.source === 'mock' ? 'warn' : 'ok') as LineTone,
+            text: `candidate=${provider.serviceName} | price=${provider.basePriceUsdc ?? 'n/a'} | source=${provider.source}`,
+          })),
+          { tone: 'ok', text: 'next: scan market -> start reverse auction -> confirm settlement path' },
+        ]);
+        emit('role_buyer', command, note);
+      } catch {
+        const note = 'Buyer flow staged, but provider lookup failed';
+        appendMany([
+          { tone: 'ok', text: 'classifying role: buyer / operator' },
+          { tone: 'warn', text: note },
+        ]);
+        emit('role_buyer', command, note);
+      }
       setRunning(false);
       return;
     }
@@ -185,12 +225,31 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
     }
 
     if (normalized === 'integrations' || normalized.includes('delegation') || normalized.includes('x402') || normalized.includes('locus') || normalized.includes('uniswap')) {
-      const note = 'Integration strategy staged: payment and execution rails ready to inspect.';
-      appendMany([
-        { tone: 'ok', text: 'loading integration strategies...' },
-        { tone: 'ok', text: 'next: choose x402, x402n, delegation, locus, or uniswap' },
-      ]);
-      emit('open_integrations', command, note);
+      try {
+        const [health, execution, locus, discovery] = await Promise.all([
+          healthCheck().catch(() => null),
+          integrationsApi.listExecutionProviders().catch(() => ({ providers: [] })),
+          integrationsApi.listLocusTools().catch(() => ({ tools: { mode: 'fallback' as const, error: 'unavailable' } })),
+          integrationsApi.listProviders().catch(() => ({ providers: [] })),
+        ]);
+        const locusMode = Array.isArray(locus.tools) ? 'live' : locus.tools?.mode || 'fallback';
+        const discoveryMode = discovery.providers.every((provider) => provider.source === 'mock') ? 'mock' : 'live';
+        const note = 'Integration status loaded';
+        appendMany([
+          { tone: 'ok', text: note },
+          { tone: health?.integrations?.x402nMockMode ? 'warn' : 'ok', text: `x402n negotiation=${health?.integrations?.x402nMockMode ? 'mock' : 'live'}` },
+          { tone: discoveryMode === 'mock' ? 'warn' : 'ok', text: `provider market=${discoveryMode} (${discovery.providers.length} providers)` },
+          { tone: locusMode === 'live' ? 'ok' : 'warn', text: `locus payout=${locusMode}` },
+          { tone: 'ok', text: `delegation builder=live (${execution.providers.some((provider) => provider.id === 'wallet') ? 'wallet path ready' : 'check config'})` },
+          { tone: 'ok', text: 'uniswap tx builder=live on Base Mainnet' },
+          { tone: 'ok', text: 'next: open Integrations page to use a specific rail with guided inputs' },
+        ]);
+        emit('open_integrations', command, note);
+      } catch {
+        const note = 'Integration status failed to load';
+        append('warn', note);
+        emit('open_integrations', command, note);
+      }
       setRunning(false);
       return;
     }

@@ -170,6 +170,10 @@ export interface HealthCheckResponse {
     escrowAddress: string;
     usdcAddress: string;
   };
+  integrations?: {
+    x402nMockMode?: boolean;
+    x402nBaseUrl?: string;
+  };
 }
 
 // ============ API Functions ============
@@ -346,7 +350,16 @@ export const integrationsApi = {
     const response = await api.post('/integrations/locus/send-usdc', payload);
     return response.data;
   },
-  listLocusTools: async () => {
+  listLocusTools: async (): Promise<{
+    success: boolean;
+    tools:
+      | {
+          mode?: 'mock' | 'live' | 'fallback';
+          tools?: Array<{ name?: string; description?: string }>;
+          error?: string;
+        }
+      | Array<{ name?: string; description?: string }>;
+  }> => {
     const response = await api.get('/integrations/locus/tools');
     return response.data;
   },

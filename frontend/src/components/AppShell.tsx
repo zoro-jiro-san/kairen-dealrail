@@ -11,8 +11,6 @@ const NAV = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/docs', label: 'Docs' },
   { href: '/integrations', label: 'Integrations' },
-  { href: '/flow', label: 'Flow' },
-  { href: '/ops', label: 'Ops' },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -42,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="mt-1 text-base font-semibold">Agent Deal Desk</div>
             <div className="text-xs text-[var(--terminal-muted)]">Negotiate {'->'} escrow {'->'} settle {'->'} record</div>
           </div>
-          <nav className="ml-auto flex flex-wrap items-center gap-2">
+          <nav className="ml-auto flex items-center gap-2 overflow-x-auto whitespace-nowrap">
             {NAV.map((item) => {
               const active = pathname === item.href;
               return (

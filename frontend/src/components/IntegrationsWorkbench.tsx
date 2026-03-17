@@ -99,7 +99,7 @@ export function IntegrationsWorkbench() {
           integrationsApi.listExecutionProviders().catch(() => ({ providers: [] })),
           integrationsApi.getX402Status().catch(() => ({ endpoints: [] })),
         ]);
-        setLocusTools(locus.tools || []);
+        setLocusTools(Array.isArray(locus.tools) ? locus.tools : locus.tools?.tools || []);
         setExecutionProviders(execution.providers || []);
         setX402Endpoints(x402.endpoints || []);
       } catch {
