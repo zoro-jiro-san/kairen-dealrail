@@ -126,15 +126,15 @@ DealRail supports multi-source integration:
 ### Base Sepolia (Chain ID: 84532)
 | Contract | Address |
 |----------|---------|
-| **EscrowRailERC20** | `0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835` |
-| **DealRailHook** | `0x0CF133C9cE602854269CA6e49A4E8697Ef392c76` |
-| **ERC8004Verifier** | `0xEd943E74001e1129546FEde0484Ec1C0F1419815` |
+| **EscrowRailERC20** | `0xE25B10057556e9714d2ac60992b68f4E61481cF9` |
+| **DealRailHook** | `0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e` |
+| **ERC8004Verifier** | `0xDB23657606957B32B385eC0A917d2818156668AC` |
 | **USDC (Test)** | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
 
 Explorer links:
-- EscrowRailERC20: https://sepolia.basescan.org/address/0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835
-- DealRailHook: https://sepolia.basescan.org/address/0x0CF133C9cE602854269CA6e49A4E8697Ef392c76
-- ERC8004Verifier: https://sepolia.basescan.org/address/0xEd943E74001e1129546FEde0484Ec1C0F1419815
+- EscrowRailERC20: https://sepolia.basescan.org/address/0xE25B10057556e9714d2ac60992b68f4E61481cF9
+- DealRailHook: https://sepolia.basescan.org/address/0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e
+- ERC8004Verifier: https://sepolia.basescan.org/address/0xDB23657606957B32B385eC0A917d2818156668AC
 
 ---
 

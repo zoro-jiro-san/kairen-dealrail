@@ -3,8 +3,8 @@ import { Address } from 'viem';
 
 // Contract addresses - latest deployment (Base Sepolia + Celo Sepolia)
 export const ESCROW_ADDRESSES: Record<number, Address> = {
-  84532: '0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835', // Base Sepolia - EscrowRailERC20
-  11142220: '0x03e36985D6497BEf550aFAF8b7105301Ea19C890', // Celo Sepolia - EscrowRailERC20
+  84532: '0xE25B10057556e9714d2ac60992b68f4E61481cF9', // Base Sepolia - EscrowRailERC20
+  11142220: '0xB9dfa53326016415ca6fb9eb16A0f050c8d15C74', // Celo Sepolia - EscrowRailERC20
   8453: '0x0000000000000000000000000000000000000000', // Base Mainnet (not deployed)
 };
 
@@ -16,8 +16,8 @@ export const USDC_ADDRESSES: Record<number, Address> = {
 };
 
 export const HOOK_ADDRESSES: Record<number, Address> = {
-  84532: '0x0CF133C9cE602854269CA6e49A4E8697Ef392c76',
-  11142220: '0x4F7Ed262F1675cdffB5D63eE5E2B0FCb95C0015f',
+  84532: '0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e',
+  11142220: '0x04B0D16f790A5F83dc48c7e4D05467ff2eA57519',
 };
 
 // EscrowRail ABI (minimal for frontend)

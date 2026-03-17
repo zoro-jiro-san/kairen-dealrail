@@ -250,9 +250,7 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
 
     function _callAfterAction(uint256 jobId, bytes4 action, bytes memory data, address hook) internal {
         if (hook == address(0)) return;
-        try IACPHook(hook).afterAction(jobId, action, data) {} catch {
-            emit HookAfterActionFailed(jobId, hook, action);
-        }
+        IACPHook(hook).afterAction(jobId, action, data);
     }
 
     // ============ View Functions ============

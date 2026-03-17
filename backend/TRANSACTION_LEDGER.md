@@ -11,25 +11,25 @@ Purpose: canonical reference for all live demo onchain transactions used in subm
 These addresses are the current canonical deployment for both Base Sepolia and Celo Sepolia.
 
 Contracts:
-- NullVerifier: `0x9cF6eE9c8606988525ACa24023E3293130A25f1B` (Base), `0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835` (Celo)
-- ERC8004Verifier: `0xEd943E74001e1129546FEde0484Ec1C0F1419815` (Base), `0x0CF133C9cE602854269CA6e49A4E8697Ef392c76` (Celo)
-- EscrowRail (native): `0x7F992E25A7de4269bf6acB187C140920593C2b98` (Base), `0x3FC242a428e612c54Dd7F81181bdDcC295BecEe6` (Celo)
-- EscrowRailERC20 (USDC): `0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835` (Base), `0x03e36985D6497BEf550aFAF8b7105301Ea19C890` (Celo)
-- DealRailHook: `0x0CF133C9cE602854269CA6e49A4E8697Ef392c76` (Base), `0x4F7Ed262F1675cdffB5D63eE5E2B0FCb95C0015f` (Celo)
+- NullVerifier: `0xA61a57fF5570bF989a3a565B87b6421413995317` (Base), `0x8728dDDD3c1D7B901c62E9D6a232F17462a931E2` (Celo)
+- ERC8004Verifier: `0xDB23657606957B32B385eC0A917d2818156668AC` (Base), `0x2700e5B26909301967DFeECE9cb931B9bA3bA2df` (Celo)
+- EscrowRail (native): `0x8c55C2BB6A396D3654f214726230D81e6fa22b69` (Base), `0x684D32E03642870B88134A3722B0b094666EF42e` (Celo)
+- EscrowRailERC20 (USDC): `0xE25B10057556e9714d2ac60992b68f4E61481cF9` (Base), `0xB9dfa53326016415ca6fb9eb16A0f050c8d15C74` (Celo)
+- DealRailHook: `0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e` (Base), `0x04B0D16f790A5F83dc48c7e4D05467ff2eA57519` (Celo)
 
 ### Celo Sepolia deployment txs (upgraded)
-- NullVerifier deploy: `0x239105b357e4be409cfe54e9dc5405327c6a7498f9fa9e84bbc3ea87b98421c5`
-- ERC8004Verifier deploy: `0x4bda1f86e3d42c7eb419209ed0ad2b928a9fedfc383a8a32ad72a89aa1d8cbe3`
-- EscrowRail deploy: `0x61d57236eac7b4a42448e9f2c6839d09f3bded4cbaca0d64705efa851b8fe8db`
-- EscrowRailERC20 deploy: `0x81fb34c8d13f7e477e4292398702ededadeda41278cd46b4a682e22489776512`
-- DealRailHook deploy: `0x9989150ca05a7e613c128c0515e5270468a11520c91b245929d90be55b6a9e68`
+- NullVerifier deploy: `0xdb0a54023ca6c50d4b2795a8b25f57d7e8f8f5e32858783ef7a8fd1c432c4dce`
+- ERC8004Verifier deploy: `0x5f34297426ef0d178c8b6260c5062f37a52fcb551670a1e93af0d20d49d6bb82`
+- EscrowRail deploy: `0xddad46da87454ea533b943f9674a34c959ca4ac5a20add04c4eb818fc9fd1931`
+- EscrowRailERC20 deploy: `0x25e7be0e876a35e5c72d116e14ade975b6e987b46c09bd47e2eed95b683155c3`
+- DealRailHook deploy: `0x97dac6c595e6295f70859245747ccc5168a5ed536f591eda910c069af6dea518`
 
 ### Base Sepolia deployment txs (upgraded)
-- NullVerifier deploy: `0x15f2a9c54c675cf518b73bd00222f8d49f0a7c39b54acbbe0daf1a35e6c9f4f1`
-- ERC8004Verifier deploy: `0x518ff6ca2ddb8913f662155d3c956b1f4c66d0177c7b6ac6d3557a891616308d`
-- EscrowRail deploy: `0xd665b65207bdb5c50164e78181d0dd6f963d48e2a12822ff8abcde63a1748d89`
-- EscrowRailERC20 deploy: `0x6389dbf42591837019fd5671469cf2d983a70ac35be2f7f0186e6e2ce1ba0c5c`
-- DealRailHook deploy: `0xa71ffbb0104ba89319c26f69ddba1a32934b2adc836c3d6c7459f5220f4e70a0`
+- NullVerifier deploy: `0xe5d84323f3262f83edd41625fd09f6ebf3069f2ad8394c7bc9f60b6f0cc0fece`
+- ERC8004Verifier deploy: `0x9c788a94fb7e27d5ed3dcf8247c0906970f0ea40b2ed625ab5ad1a43344ce471`
+- EscrowRail deploy: `0xb0c771b175392d41824f815f000933de022ccc9f7d4fd22732dc086ac328c033`
+- EscrowRailERC20 deploy: `0x541075d8bbb701cd35a8955c70cd45bcaeb65e9aaf7ab360cfef6b38a82f0c3a`
+- DealRailHook deploy: `0x47f17a897be483ef872ac1f4588f80bbbd73bd824d5a13c3dc927ff464a703cf`
 
 ## Celo Sepolia Deployment (March 17, 2026, initial)
 Contracts:

@@ -62,6 +62,9 @@ contract DealRailHook is IACPHook, Ownable {
 
     error UnauthorizedCaller();
     error InsufficientReputation(address provider, uint256 current, uint256 required);
+    error ReputationLookupUnavailable(address provider, uint256 agentId);
+    error ProviderNotRegistered(address provider);
+    error FeedbackWriteFailed(uint256 agentId, bool positive);
 
     // ============ Modifiers ============
 
@@ -127,13 +130,13 @@ contract DealRailHook is IACPHook, Ownable {
         uint256 agentId = _resolveAgentId(job.provider);
         if (agentId == 0) {
             emit ProviderUnregistered(jobId, job.provider);
-            return;
+            revert ProviderNotRegistered(job.provider);
         }
 
         (bool ok, uint256 reputation) = _resolveReputation(agentId);
         if (!ok) {
             emit ReputationLookupFailed(jobId, job.provider, agentId);
-            return;
+            revert ReputationLookupUnavailable(job.provider, agentId);
         }
 
         if (reputation < minimumReputation) {
@@ -170,7 +173,7 @@ contract DealRailHook is IACPHook, Ownable {
         if (agentId == 0) {
             emit ProviderUnregistered(jobId, provider);
             emit ReputationWriteResult(jobId, provider, 0, positive, false);
-            return;
+            revert ProviderNotRegistered(provider);
         }
 
         int128 score = positive ? int128(10) : int128(-10);
@@ -178,6 +181,9 @@ contract DealRailHook is IACPHook, Ownable {
 
         bool success = _submitFeedback(agentId, score, signalName, "");
         emit ReputationWriteResult(jobId, provider, agentId, positive, success);
+        if (!success) {
+            revert FeedbackWriteFailed(agentId, positive);
+        }
     }
 
     function _resolveAgentId(address provider) internal view returns (uint256 agentId) {
