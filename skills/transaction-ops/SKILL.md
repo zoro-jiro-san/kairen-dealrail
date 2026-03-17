@@ -1,37 +1,31 @@
-# Skill: Transaction Ops
+---
+name: transaction-ops
+description: Use for deterministic transaction execution across DealRail escrow and adapters with strict preflight checks and auditable outputs.
+---
 
-## Goal
-Execute DealRail transactions safely and predictably.
+# Transaction Ops
 
-## Use Cases
-- Funding escrow jobs.
-- Completing/rejecting jobs.
-- Building and executing post-settlement Uniswap approve+swap txs.
-- Triggering Locus payment bridge calls.
-
-## Do Not Use For
-- Security-sensitive key management decisions.
-- Governance/admin contract actions not in DealRail runbooks.
+## Use When
+- Executing live chain transactions in buyer/provider/evaluator workflows.
 
 ## Preconditions
 - Correct chain selected.
-- Wallet funded for gas.
-- Contract addresses verified against repo config.
-- Role ownership confirmed (client/provider/evaluator).
+- Role wallet funded for gas.
+- Contract addresses match repo env/config.
 
 ## Procedure
-1. Validate input payloads and addresses.
-2. Simulate/quote where possible.
-3. Execute smallest safe transaction first (approve before swap).
-4. Record tx hash and explorer link.
-5. Confirm state transition onchain.
+1. Validate payload and role authority.
+2. Quote/simulate when available.
+3. Execute smallest safe step first.
+4. Record tx hash + explorer link.
+5. Confirm state transition.
 
-## Required Outputs
+## Required Output
 - tx hash
-- explorer link
-- resulting job state
-- any follow-up action needed
+- explorer URL
+- resulting state
+- next required action
 
 ## Failure Handling
-- Revert with reason: stop and correct parameters.
-- Partial flow (approve succeeded, swap failed): retry only the missing step.
+- Revert: stop, fix params, retry once.
+- Partial multi-step failure: retry only missing step.

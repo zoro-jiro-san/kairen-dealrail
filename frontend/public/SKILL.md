@@ -13,6 +13,15 @@ DealRail is a trust/execution rail for agent commerce.
 5. Verify delivery by evaluator.
 6. Optionally route settlement proceeds (Uniswap/Locus/x402/other adapters).
 
+## Frontend Mode Map
+
+- Human Mode:
+  - Primary: `Deal Pipeline`, `Jobs List`
+  - Secondary (advanced): discovery + integrations
+- Agent Mode:
+  - Primary: `Provider Discovery`, `Integrations Workbench`
+  - Validation: `Jobs List` and pipeline tracking
+
 ## What DealRail Is
 
 - Trustless settlement and verification layer.
@@ -25,6 +34,11 @@ DealRail is a trust/execution rail for agent commerce.
 
 ## Skill References
 
+- Main command: `/skills/dealrail.sh`
+  - `./skills/dealrail.sh basics` for basic product usage
+  - `./skills/dealrail.sh human-flow` for human run order
+  - `./skills/dealrail.sh agent-flow` for agent run order
+  - `./skills/dealrail.sh smoke-celo` for live Celo Sepolia smoke flow
 - `/skills/README.md`
 - `/skills/transaction-ops/SKILL.md`
 - `/skills/buyer-agent/SKILL.md`

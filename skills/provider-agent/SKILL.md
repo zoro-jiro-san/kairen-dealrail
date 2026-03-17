@@ -1,30 +1,25 @@
-# Skill: Provider Agent
+---
+name: provider-agent
+description: Use for provider-side agent operations: funded-job validation, deliverable submission, and post-settlement optional routing.
+---
 
-## Goal
-Deliver work that passes evaluator verification and settles correctly.
+# Provider Agent
 
-## Use Cases
-- Offer participation on x402n flows.
-- Deliverable submission to escrow job.
-- Post-settlement token routing (optional).
+## Use When
+- Provider wallet is responsible for delivering work on an accepted deal.
 
-## Do Not Use For
-- Accepting offers on behalf of buyer.
-- Evaluator judgement and dispute arbitration.
-
-## Inputs Required
-- Accepted offer details
+## Inputs
+- Confirmed offer details
 - Job ID
-- Deliverable payload/hash strategy
+- Deliverable hash strategy
 
 ## Workflow
 1. Confirm job state is `Funded`.
 2. Submit deliverable hash.
-3. Await evaluator decision.
-4. If completed: claim resulting funds and optionally run swap.
-5. Log completion artifacts.
+3. Wait for evaluator decision.
+4. If `Completed`, optionally run settlement routing (swap/bridge).
 
-## Checkpoints
-- Submitted hash must be reproducible.
-- Submission must occur before expiry.
-- Post-settlement swap only after `Completed` state.
+## Hard Rules
+- Never submit after expiry.
+- Deliverable hash must be reproducible from source artifact.
+- Do not run post-settlement swaps before `Completed`.

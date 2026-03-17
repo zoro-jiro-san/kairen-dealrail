@@ -2,7 +2,20 @@
 
 Purpose: agent-friendly operations directory that centralizes how DealRail should be run by role.
 
+Trigger policy:
+- Pick one primary role skill (`buyer-agent`, `provider-agent`, or `evaluator-agent`).
+- Add `transaction-ops` for any live onchain execution.
+- Add `checkpoints` before demo/submission runs.
+- Add `client-frontend` for UX/navigation or operator flow questions.
+
+Main skills command:
+- `./skills/dealrail.sh`
+- Start here for navigation, preflight, flow guidance, and smoke execution.
+
 ## Available Skills
+
+- `skills/dealrail.sh` (executable command)
+  - `help`, `basics`, `preflight`, `human-flow`, `agent-flow`, `smoke-celo`, `ledger`, `where`
 
 - `skills/transaction-ops/SKILL.md`
   - Build, validate, and execute transaction payloads (escrow, Uniswap, Locus).

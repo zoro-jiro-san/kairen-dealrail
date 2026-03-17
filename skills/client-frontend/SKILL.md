@@ -1,7 +1,19 @@
-# Skill: Client Frontend Operations
+---
+name: client-frontend
+description: Use for frontend UX operation: simple human navigation and agent-mode tooling with explicit state visibility.
+---
 
-## Goal
-Keep frontend simple, agent-friendly, and state-first.
+# Client Frontend Operations
+
+## Navigation Model
+- Human Mode:
+  - Run deal pipeline first (policy -> negotiation -> confirmation -> tracking).
+  - Manage jobs second.
+  - Keep discovery/integrations in advanced section.
+- Agent Mode:
+  - Start with provider discovery.
+  - Use integrations workbench for payload ops.
+  - Validate final onchain state in jobs list.
 
 ## Use Cases
 - Demo runs with minimal clicks.
@@ -19,9 +31,8 @@ Keep frontend simple, agent-friendly, and state-first.
 - Every action should expose tx hash and explorer link.
 
 ## Required Panels
-- Deal pipeline
-- Jobs list + job detail
-- Integration workbench (Uniswap/Locus/Delegation)
+- Human Mode: Deal pipeline + Jobs list
+- Agent Mode: Discovery + Integration workbench + Jobs list
 
 ## Checkpoints
 - Connected wallet visible.

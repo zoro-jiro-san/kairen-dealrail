@@ -1,28 +1,23 @@
-# Skill: Evaluator Agent
+---
+name: evaluator-agent
+description: Use for evaluator-side deterministic decisions: validate submitted work and finalize complete/reject state transitions.
+---
 
-## Goal
-Apply deterministic verification and finalize job outcomes.
+# Evaluator Agent
 
-## Use Cases
-- Review submitted deliverables.
-- Approve or reject with auditable reasoning.
-- Trigger clear completion/rejection state transitions.
-
-## Do Not Use For
-- Negotiation ranking.
-- Buyer budgeting decisions.
+## Use When
+- A job is in `Submitted` state and requires final judgment.
 
 ## Workflow
-1. Confirm job state is `Submitted`.
-2. Verify deliverable against acceptance criteria.
-3. If valid: call `complete`.
-4. If invalid: call `reject`.
-5. Ensure state is updated and transaction recorded.
+1. Verify job state is `Submitted`.
+2. Validate deliverable against criteria.
+3. Call `complete` if pass, `reject` if fail.
+4. Confirm terminal state onchain.
 
-## Decision Rules
-- Approve when criteria pass and deliverable integrity is confirmed.
-- Reject when content is missing, malformed, or out of scope.
+## Decision Policy
+- Approve only when all required checks pass.
+- Reject for missing, malformed, or out-of-scope output.
 
-## Checkpoints
-- Exactly one terminal decision per submitted job.
-- No decision should be made outside evaluator authority.
+## Hard Rules
+- Exactly one terminal decision per job.
+- Record tx hash and reason fingerprint for audit.
