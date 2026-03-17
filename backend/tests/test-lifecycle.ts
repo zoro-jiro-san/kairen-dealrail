@@ -1,13 +1,17 @@
 // Full Job Lifecycle Test
 import { ethers } from 'ethers';
+import dotenv from 'dotenv';
+import { resolve } from 'path';
 
-const BASE_SEPOLIA_RPC = 'https://base-sepolia.g.alchemy.com/v2/JB7IYC9GSIzz-JMoQcnq2';
-const ESCROW_ADDRESS = '0x53d368b5467524F7d674B70F00138a283e1533ce';
-const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
+dotenv.config({ path: resolve(__dirname, '../../.env') });
 
-const DEPLOYER_KEY = '0xece73f45df44cc1748e06cf3762d895ba6878085081c685e03fd2bbc46efea4d';
-const AGENT_KEY = '0xbc4d780784d2bcda1043ad58272aab996d19cc7e0aa3dc025c0cdbde7a01bad8';
-const EVALUATOR_KEY = '0x3e59deaa1b4eae55932c3c245d389bc7c0bbfb3836810202ad3098db21205e33';
+const BASE_SEPOLIA_RPC = process.env.BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
+const ESCROW_ADDRESS = process.env.ESCROW_RAIL_ERC20_BASE_SEPOLIA || '';
+const USDC_ADDRESS = process.env.BASE_SEPOLIA_USDC || '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
+
+const DEPLOYER_KEY = process.env.DEPLOYER_PRIVATE_KEY || '';
+const AGENT_KEY = process.env.AGENT_PRIVATE_KEY || '';
+const EVALUATOR_KEY = process.env.EVALUATOR_PRIVATE_KEY || '';
 
 const ESCROW_ABI = [
   'function createJob(address provider, address evaluator, uint256 expiry, address hook) returns (uint256)',
@@ -24,6 +28,12 @@ const ERC20_ABI = [
 ];
 
 async function main() {
+  if (!ESCROW_ADDRESS || !DEPLOYER_KEY || !AGENT_KEY || !EVALUATOR_KEY) {
+    throw new Error(
+      'Missing required env values. Expected ESCROW_RAIL_ERC20_BASE_SEPOLIA, DEPLOYER_PRIVATE_KEY, AGENT_PRIVATE_KEY, EVALUATOR_PRIVATE_KEY.'
+    );
+  }
+
   console.log('🚀 DealRail Full Lifecycle Test\n');
 
   const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC);

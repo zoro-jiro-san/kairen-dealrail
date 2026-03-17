@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "../interfaces/IIdentityVerifier.sol";
+import "../interfaces/IERC8004Registries.sol";
 
 /**
  * @title ERC8004Verifier
@@ -57,72 +58,22 @@ contract ERC8004Verifier is IIdentityVerifier {
             });
         }
 
-        // TODO: Call ERC-8004 registries once we have the interface
-        // For now, return a placeholder result
-
-        // Placeholder implementation:
-        // - Assume agent is verified if they have non-zero code (i.e., they're a contract)
-        // - Assign default reputation score of 500
-        // - No one is suspended
-
-        uint256 agentCodeSize;
-        assembly {
-            agentCodeSize := extcodesize(agent)
-        }
-
-        bool isVerified = agentCodeSize > 0 || agent != address(0);
-        uint256 reputationScore = isVerified ? 500 : 0;
-        string memory tier = isVerified ? "verified" : "unverified";
-
-        return VerificationResult({
-            isVerified: isVerified,
-            reputationScore: reputationScore,
-            tier: tier,
-            isSuspended: false
-        });
-
-        // Production implementation (uncomment when ERC-8004 interface is available):
-        /*
-        // Get agent ID from Identity Registry
-        uint256 agentId = IERC8004IdentityRegistry(ERC8004_IDENTITY_REGISTRY).agentIdOf(agent);
-
+        uint256 agentId = _resolveAgentId(agent);
         if (agentId == 0) {
-            // Agent not registered
-            return VerificationResult({
-                isVerified: false,
-                reputationScore: 0,
-                tier: "unverified",
-                isSuspended: false
-            });
+            return VerificationResult({isVerified: false, reputationScore: 0, tier: "unverified", isSuspended: false});
         }
 
-        // Get reputation from Reputation Registry
-        uint256 reputation = IERC8004ReputationRegistry(ERC8004_REPUTATION_REGISTRY).getReputation(agentId);
-
-        // Determine tier based on reputation score
-        string memory tier;
-        if (reputation >= 800) {
-            tier = "platinum";
-        } else if (reputation >= 600) {
-            tier = "gold";
-        } else if (reputation >= 400) {
-            tier = "silver";
-        } else if (reputation >= 200) {
-            tier = "bronze";
-        } else {
-            tier = "verified";
+        (bool ok, uint256 reputation) = _resolveReputation(agentId);
+        if (!ok) {
+            reputation = 0;
         }
-
-        // Check if suspended (would require additional registry call)
-        bool isSuspended = false; // TODO: implement suspension check
 
         return VerificationResult({
             isVerified: true,
             reputationScore: reputation,
-            tier: tier,
-            isSuspended: isSuspended
+            tier: _tierFor(reputation),
+            isSuspended: false
         });
-        */
     }
 
     /**
@@ -130,5 +81,40 @@ contract ERC8004Verifier is IIdentityVerifier {
      */
     function verifierName() external pure override returns (string memory) {
         return "ERC-8004";
+    }
+
+    function _resolveAgentId(address agent) internal view returns (uint256) {
+        try IERC8004IdentityRegistry(ERC8004_IDENTITY_REGISTRY).agentIdOf(agent) returns (uint256 id) {
+            if (id > 0) return id;
+        } catch {}
+
+        try IERC8004IdentityRegistryLegacy(ERC8004_IDENTITY_REGISTRY).getTokenId(agent) returns (uint256 tokenId) {
+            return tokenId;
+        } catch {}
+
+        return 0;
+    }
+
+    function _resolveReputation(uint256 agentId) internal view returns (bool ok, uint256 reputation) {
+        try IERC8004ReputationRegistry(ERC8004_REPUTATION_REGISTRY).getReputation(agentId) returns (uint256 rep) {
+            return (true, rep);
+        } catch {}
+
+        try IERC8004ReputationRegistryLegacy(ERC8004_REPUTATION_REGISTRY).getAggregateScore(agentId) returns (
+            int128 score
+        ) {
+            if (score < 0) return (true, 0);
+            return (true, uint256(uint128(score)));
+        } catch {}
+
+        return (false, 0);
+    }
+
+    function _tierFor(uint256 reputation) internal pure returns (string memory) {
+        if (reputation >= 800) return "platinum";
+        if (reputation >= 600) return "gold";
+        if (reputation >= 400) return "silver";
+        if (reputation >= 200) return "bronze";
+        return "verified";
     }
 }

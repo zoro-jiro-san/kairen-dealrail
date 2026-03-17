@@ -7,7 +7,31 @@ Purpose: canonical reference for all live demo onchain transactions used in subm
 - Base Sepolia (`84532`): `https://sepolia.basescan.org`
 - Celo Sepolia (`11142220`): `https://celo-sepolia.blockscout.com`
 
-## Celo Sepolia Deployment (March 17, 2026)
+## Active Deployment (March 17, 2026, upgraded ERC-8004 trust loop)
+These addresses are the current canonical deployment for both Base Sepolia and Celo Sepolia.
+
+Contracts:
+- NullVerifier: `0x79d0d1a9292421E940ABab2eFf250eB103834D1A`
+- ERC8004Verifier: `0xA3F079E0230Cf8FB0F40C8942841564A39d8cC1b`
+- EscrowRail (native): `0x08A88af8F4d0fcbF64FFBcd493520411c96c0B28`
+- EscrowRailERC20 (USDC): `0x0F8247f68521ad7EeaD623A9ca5a28787F27376B`
+- DealRailHook: `0x06bF44b8eb768e2738933222273e61C6442A0c94`
+
+### Celo Sepolia deployment txs (upgraded)
+- NullVerifier deploy: `0xd64ce76d1683039c7f8ed1169fb29ec3d7a865dae06b5af1864e05db39714c15`
+- ERC8004Verifier deploy: `0x98af4da66137563d2402ad7d65854bd5d6195c3651809456079b6082d9ca36bd`
+- EscrowRail deploy: `0x57b1e9958d3ca4040bcde84ea1e5e7e94c1375c1fa682a8c2b1b6f8a179c45c2`
+- EscrowRailERC20 deploy: `0x10adbc9c23989deb76d0408eb06e429fb29888ead1dbf5428c339373dfa32843`
+- DealRailHook deploy: `0xd43b1dadedbc8e2bba28eaf1f4f9ae1a06952c4e637c4852b7aea48acd1da993`
+
+### Base Sepolia deployment txs (upgraded)
+- NullVerifier deploy: `0xc490e8b5c6d3b35bea234677942e673e71285f329bbc31eddf3e3c79a7a989a3`
+- ERC8004Verifier deploy: `0x72337b4145c31e75f7205797f1c143ba2d99dd3a88bcd3c4bc9366f05fb695eb`
+- EscrowRail deploy: `0xfdf0b07912fae7b7744003193eb404822cb8bb1f72e13396309332561944f4ef`
+- EscrowRailERC20 deploy: `0x94fbeb06d31e4400fbec0d6d66476f46de2ee36b84596290c82c25bc17588407`
+- DealRailHook deploy: `0xc9e758280848abba9c0083f7406feba726f98bb9a42a4f9d07f0652e58b065c1`
+
+## Celo Sepolia Deployment (March 17, 2026, initial)
 Contracts:
 - NullVerifier: `0xA6eb0b8B88fb7172D2e404A8523C8E62e3efa7Bf`
 - ERC8004Verifier: `0x668Dcc3a039CBef0054AAF244763db419BE6A521`
@@ -64,6 +88,35 @@ Command: `npm run smoke:celo-sepolia` (in `backend/`)
 - fund: `0x5580e4e6d1f3a0907ade15a166ae653035eef6c3ebb209d957bef44b56189f70`
 - submit: `0x221a518558857b5c826621f8ce27a67414969cdd308d4152e4336bf35d133f1f`
 - reject: `0x95adaeaa706e6e2f9817ecf9c06a7c9cdde9e49792326008dbe04f85d58a9189`
+
+## Celo Sepolia Smoke Demo (live, upgraded deployment)
+Run timestamp: `2026-03-17T11:09:24.459Z`
+Contract: `0x0F8247f68521ad7EeaD623A9ca5a28787F27376B`
+
+### Happy path (jobId: 1, final state: Completed=3)
+- createJob: `0x030d870c30c9a6d643eee83916ea421df9b29f4bf3961f8c9a186a3c7c58cced`
+- approve: `0xe01ac3b51cacb485da8d87cd8e52052973f359fe56e672d271e1179d0bfeb3ad`
+- fund: `0x055b79207cd4d620152aeaf4e5898a688609445766ab07f0db76802b96e824f5`
+- submit: `0xd2a7cba3634a1aac26b7342890b1775c86d6d4d0fae62b801876aeb8cfc73ec6`
+- complete: `0xc072c925bf539761b7e814551a9b607efd697d0c0900a882ab2522a8975dacef`
+
+### Reject path (jobId: 2, final state: Rejected=4)
+- createJob: `0x9e19fe616b3104ced31891772133df753190aa21c676ea0170b0df1204ec2d2a`
+- approve: `0xb2ef216cdc6f8eeed4cb15092ffa10e05c77372beb8a0dbb12028a84a930c7e0`
+- fund: `0x3de7aa44cfb7e4863aa6591e4c715c10ad71a4dcf86f498d67c7ae689bfaeab6`
+- submit: `0x24241b42ae146d5e0446fe742e7202bc184adab54fc4f2e3d4d45c36229feeee`
+- reject: `0x51a6b708933742ac864749cb231ffd263c13e42056597efaa38ad2893061ea96`
+
+## Base Sepolia Smoke Demo (live, upgraded deployment)
+Run timestamp: `2026-03-17T11:11Z`
+Contract: `0x0F8247f68521ad7EeaD623A9ca5a28787F27376B`
+JobId: `8` (completed)
+
+- createJob: `0x68113da1922720ea0692832b79e53aff7149c2daf7da08cdfe9c9dcf21834bb2`
+- approve: `0xe4be6e3826caa5f3073baa3a3d93e0cc98dbbfd75c3e78e394c3565bd1242ff9`
+- fund: `0x85f72b13445ce470aa87b2a97dd873bea97947f3ec981f710d97b11353fce573`
+- submit: `0x2119dfa210bbce59a4afc95328f4c750bfa5d76ef52b395285e15a6fc339347a`
+- complete: `0x8b12c807e008bdd161a64fd4e8c04b14b9dabf3890f837e1452451a8216a422b`
 
 ## Base Sepolia Existing Smoke References (historical)
 - Happy path create: `0xd891fcb2b468684d85f0ff4b4d52c2df822c1fdc1db3dc6e5f738f20498d2ede`

@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "./interfaces/IACPHook.sol";
 import "./interfaces/IEIP8183AgenticCommerce.sol";
+import "./interfaces/IERC8004Registries.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -51,6 +52,11 @@ contract DealRailHook is IACPHook, Ownable {
     event MinimumReputationUpdated(uint256 newMinimum);
     event ReputationCheckPassed(uint256 indexed jobId, address indexed provider, uint256 score);
     event ReputationFeedbackWritten(uint256 indexed jobId, address indexed provider, bool positive);
+    event ProviderUnregistered(uint256 indexed jobId, address indexed provider);
+    event ReputationLookupFailed(uint256 indexed jobId, address indexed provider, uint256 agentId);
+    event ReputationWriteResult(
+        uint256 indexed jobId, address indexed provider, uint256 agentId, bool positive, bool success
+    );
 
     // ============ Errors ============
 
@@ -84,6 +90,7 @@ contract DealRailHook is IACPHook, Ownable {
      * @dev Before fund(): verify provider reputation
      */
     function beforeAction(uint256 jobId, bytes4 action, bytes calldata data) external onlyEscrow {
+        data;
         if (action == FUND_SELECTOR) {
             _beforeFund(jobId);
         }
@@ -96,6 +103,7 @@ contract DealRailHook is IACPHook, Ownable {
      *      After reject(): write negative reputation
      */
     function afterAction(uint256 jobId, bytes4 action, bytes calldata data) external onlyEscrow {
+        data;
         if (action == COMPLETE_SELECTOR) {
             _afterComplete(jobId);
         } else if (action == REJECT_SELECTOR) {
@@ -116,18 +124,23 @@ contract DealRailHook is IACPHook, Ownable {
         // Skip if minimum reputation is 0 (disabled)
         if (minimumReputation == 0) return;
 
-        // TODO: Integrate with ERC-8004 Reputation Registry
-        // For now, we'll implement a stub that always passes
-        // In production, this would call:
-        // uint256 reputation = IERC8004ReputationRegistry(ERC8004_REPUTATION_REGISTRY).getReputation(agentId);
+        uint256 agentId = _resolveAgentId(job.provider);
+        if (agentId == 0) {
+            emit ProviderUnregistered(jobId, job.provider);
+            return;
+        }
 
-        // Placeholder: assume provider has sufficient reputation
-        emit ReputationCheckPassed(jobId, job.provider, 1000);
+        (bool ok, uint256 reputation) = _resolveReputation(agentId);
+        if (!ok) {
+            emit ReputationLookupFailed(jobId, job.provider, agentId);
+            return;
+        }
 
-        // Uncomment when ERC-8004 integration is live:
-        // if (reputation < minimumReputation) {
-        //     revert InsufficientReputation(job.provider, reputation, minimumReputation);
-        // }
+        if (reputation < minimumReputation) {
+            revert InsufficientReputation(job.provider, reputation, minimumReputation);
+        }
+
+        emit ReputationCheckPassed(jobId, job.provider, reputation);
     }
 
     /**
@@ -137,16 +150,8 @@ contract DealRailHook is IACPHook, Ownable {
     function _afterComplete(uint256 jobId) internal {
         // Get job details
         IEIP8183AgenticCommerce.Job memory job = IEIP8183AgenticCommerce(escrowContract).getJob(jobId);
-
-        // TODO: Write to ERC-8004 Reputation Registry
-        // For now, we'll emit an event
         emit ReputationFeedbackWritten(jobId, job.provider, true);
-
-        // Placeholder for actual ERC-8004 integration:
-        // IERC8004ReputationRegistry(ERC8004_REPUTATION_REGISTRY).addFeedback(
-        //     agentId,
-        //     positiveFeedbackData
-        // );
+        _writeFeedback(jobId, job.provider, true);
     }
 
     /**
@@ -156,15 +161,66 @@ contract DealRailHook is IACPHook, Ownable {
     function _afterReject(uint256 jobId) internal {
         // Get job details
         IEIP8183AgenticCommerce.Job memory job = IEIP8183AgenticCommerce(escrowContract).getJob(jobId);
-
-        // TODO: Write to ERC-8004 Reputation Registry
         emit ReputationFeedbackWritten(jobId, job.provider, false);
+        _writeFeedback(jobId, job.provider, false);
+    }
 
-        // Placeholder for actual ERC-8004 integration:
-        // IERC8004ReputationRegistry(ERC8004_REPUTATION_REGISTRY).addFeedback(
-        //     agentId,
-        //     negativeFeedbackData
-        // );
+    function _writeFeedback(uint256 jobId, address provider, bool positive) internal {
+        uint256 agentId = _resolveAgentId(provider);
+        if (agentId == 0) {
+            emit ProviderUnregistered(jobId, provider);
+            emit ReputationWriteResult(jobId, provider, 0, positive, false);
+            return;
+        }
+
+        int128 score = positive ? int128(10) : int128(-10);
+        string memory signalName = positive ? "dealrail_complete" : "dealrail_reject";
+
+        bool success = _submitFeedback(agentId, score, signalName, "");
+        emit ReputationWriteResult(jobId, provider, agentId, positive, success);
+    }
+
+    function _resolveAgentId(address provider) internal view returns (uint256 agentId) {
+        // Preferred interface
+        try IERC8004IdentityRegistry(ERC8004_IDENTITY_REGISTRY).agentIdOf(provider) returns (uint256 id) {
+            if (id > 0) return id;
+        } catch {}
+
+        // Legacy compatibility
+        try IERC8004IdentityRegistryLegacy(ERC8004_IDENTITY_REGISTRY).getTokenId(provider) returns (uint256 tokenId) {
+            return tokenId;
+        } catch {}
+
+        return 0;
+    }
+
+    function _resolveReputation(uint256 agentId) internal view returns (bool ok, uint256 reputation) {
+        try IERC8004ReputationRegistry(ERC8004_REPUTATION_REGISTRY).getReputation(agentId) returns (uint256 rep) {
+            return (true, rep);
+        } catch {}
+
+        // Legacy compatibility: signed aggregate score
+        try IERC8004ReputationRegistryLegacy(ERC8004_REPUTATION_REGISTRY).getAggregateScore(agentId) returns (
+            int128 score
+        ) {
+            if (score < 0) return (true, 0);
+            return (true, uint256(uint128(score)));
+        } catch {}
+
+        return (false, 0);
+    }
+
+    function _submitFeedback(uint256 agentId, int128 score, string memory signalName, string memory evidenceUri)
+        internal
+        returns (bool)
+    {
+        try IERC8004ReputationRegistry(ERC8004_REPUTATION_REGISTRY).submitFeedback(
+            agentId, score, signalName, evidenceUri
+        ) {
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     // ============ Admin Functions ============
