@@ -2,7 +2,7 @@
 
 **Agentic Commerce Escrow Protocol** implementing EIP-8183 for machine-native deal execution on Base Sepolia and Celo Sepolia.
 
-**Status:** 🚧 P0 Pipeline In Progress (updated March 17, 2026)
+**Status:** ✅ Security-hardening pass complete (updated March 17, 2026)
 **Hackathon:** The Synthesis (March 13-22, 2026)
 **Networks:** Base Sepolia (deployed), Celo Sepolia (deployed)
 
@@ -56,6 +56,7 @@ npm run dev
 - **[AGENT.md](AGENT.md)** - AI agent collaboration guide
 - **[skills/README.md](skills/README.md)** - Agent role skills and execution checkpoints
 - **[backend/TRANSACTION_LEDGER.md](backend/TRANSACTION_LEDGER.md)** - Testnet ledger book (deployments + smoke txs)
+- **[docs/AUDIT_SUMMARY_2026-03-17.md](docs/AUDIT_SUMMARY_2026-03-17.md)** - Contract audit findings + fixes
 - **[docs/](docs/)** - Comprehensive documentation
 
 ## ✅ Hackathon P0 Scope (Must Ship)
@@ -115,9 +116,10 @@ DealRail supports multi-source integration:
 
 ### Frontend (Next.js 14 + React 18)
 - App Router with TypeScript
+- Task-based IA (`/`, `/flow`, `/ops`, `/integrations`)
 - RainbowKit + wagmi v2 wallet integration
 - Direct contract calls via user wallet
-- Responsive UI with dark theme
+- Responsive terminal-style UI shell
 
 ---
 

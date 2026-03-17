@@ -31,7 +31,8 @@ interface IACPHook {
 
     /**
      * @notice Called after a state-changing action succeeds
-     * @dev Cannot revert (would roll back the action)
+     * @dev Implementations MAY revert to enforce strict post-action invariants.
+     *      If it reverts, the parent action is rolled back atomically.
      * @param jobId The job identifier
      * @param action The function selector that was called
      * @param data ABI-encoded additional data (varies by action)

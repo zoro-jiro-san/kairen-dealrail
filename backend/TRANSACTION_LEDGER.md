@@ -31,6 +31,31 @@ Contracts:
 - EscrowRailERC20 deploy: `0x541075d8bbb701cd35a8955c70cd45bcaeb65e9aaf7ab360cfef6b38a82f0c3a`
 - DealRailHook deploy: `0x47f17a897be483ef872ac1f4588f80bbbd73bd824d5a13c3dc927ff464a703cf`
 
+## Final Smoke Verification (strict-mode deployment)
+
+### Celo Sepolia (run: `2026-03-17T12:02:57.501Z`)
+Contract: `0xB9dfa53326016415ca6fb9eb16A0f050c8d15C74`
+
+- happy/createJob: `0x5424798f49767904187831f74c1aff76ca173f05cf24522e49e10f206a1813e5`
+- happy/approve: `0xcf465c9617badda28db452e0ca18201429c908231855d03035acf98200cae8ee`
+- happy/fund: `0x16603b8ae114379ccb440b931c1e59e5f06037fe66b461b2cd588bb133627a1d`
+- happy/submit: `0x0512fc165fce20db039dc202f551d894ba51c260a9ff71cb0829ac1a9fda0f19`
+- happy/complete: `0x33a7fbf3c45f9c12a43c59c344d7ae1aaaf3e0928cd157c3dd63feb0d737ce24`
+- reject/createJob: `0x772b595b728a565098a0d68567792dbff2bb71c3a524427c896ab440c7a9f3f1`
+- reject/approve: `0xf93ad09eb4168d47010ba881fca673cfa7965ec65d3c8f4273b07fd1b86a1453`
+- reject/fund: `0xe04dfcbb499a3b3f2252e5b840adbc034071e11fe3bb62cc0103653f3944c017`
+- reject/submit: `0xdb6dc84e97d4f2f39e3f5008786dff0fb3908a753d95b7c6017fc3890238235a`
+- reject/reject: `0xb94efcdcfc41f7e3da223b9068e649797a575039d4e2e15b71b9beb19e31efb3`
+
+### Base Sepolia (run: `2026-03-17T12:03Z`)
+Contract: `0xE25B10057556e9714d2ac60992b68f4E61481cF9`
+
+- createJob: `0xc88a6bcef436cad6fefb0e012bf7ccf57ea991905f6b22615287701692952430`
+- approve: `0xae617b8867bb6739bf13e9aedde6045ebd8d8e49690f02175ffedb4b8abfb02d`
+- fund: `0xb0de61acee165e1e86a587edec2f8ab4c89a3ceae9e101d23a012b31ef9f66e5`
+- submit: `0x7ceaed4c8f145be9978289f0eea39cab4f92aa8417a33d1a06a98e8243de7f88`
+- complete: `0xfe06fa5f1c85d2c33f2c78c5d38fc03a2ab72628c292d3378830cd591f4cc519`
+
 ## Celo Sepolia Deployment (March 17, 2026, initial)
 Contracts:
 - NullVerifier: `0xA6eb0b8B88fb7172D2e404A8523C8E62e3efa7Bf`

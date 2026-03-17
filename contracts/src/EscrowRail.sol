@@ -44,7 +44,6 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
 
     event IdentityVerifierUpdated(address indexed newVerifier);
     event MinimumReputationUpdated(uint256 newMinimum);
-    event HookAfterActionFailed(uint256 indexed jobId, address indexed hook, bytes4 indexed action);
 
     // ============ Constructor ============
 
@@ -112,6 +111,7 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
     function fund(uint256 jobId, uint256 expectedBudget) external payable nonReentrant {
         Job storage job = _jobs[jobId];
 
+        require(job.client != address(0), "EscrowRail: job not found");
         require(job.state == State.Open, "EscrowRail: job not open");
         require(msg.sender == job.client, "EscrowRail: only client can fund");
         require(msg.value > 0, "EscrowRail: budget must be > 0");
@@ -132,6 +132,7 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
     function submit(uint256 jobId, bytes32 deliverable) external {
         Job storage job = _jobs[jobId];
 
+        require(job.client != address(0), "EscrowRail: job not found");
         require(job.state == State.Funded, "EscrowRail: job not funded");
         require(msg.sender == job.provider, "EscrowRail: only provider can submit");
         require(deliverable != bytes32(0), "EscrowRail: empty deliverable");
@@ -151,6 +152,7 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
     function complete(uint256 jobId, bytes32 reason) external nonReentrant {
         Job storage job = _jobs[jobId];
 
+        require(job.client != address(0), "EscrowRail: job not found");
         require(job.state == State.Submitted, "EscrowRail: job not submitted");
         require(msg.sender == job.evaluator, "EscrowRail: only evaluator can complete");
 
@@ -171,6 +173,7 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
      */
     function reject(uint256 jobId, bytes32 reason) external nonReentrant {
         Job storage job = _jobs[jobId];
+        require(job.client != address(0), "EscrowRail: job not found");
 
         // Determine who can reject based on state
         if (job.state == State.Open) {
@@ -201,6 +204,7 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
     function claimRefund(uint256 jobId) external nonReentrant {
         Job storage job = _jobs[jobId];
 
+        require(job.client != address(0), "EscrowRail: job not found");
         require(block.timestamp > job.expiry, "EscrowRail: not expired yet");
         require(
             job.state == State.Open || job.state == State.Funded || job.state == State.Submitted,
