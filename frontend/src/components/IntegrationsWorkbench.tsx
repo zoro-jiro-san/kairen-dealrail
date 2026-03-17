@@ -26,36 +26,36 @@ const railCopy: Record<
 > = {
   x402n: {
     title: 'x402n Negotiation',
-    when: 'Use when the buyer wants multi-round negotiation and offer ranking before settlement.',
-    avoid: 'Avoid when the price is fixed and no bidding or evaluator path is needed.',
-    input: 'Service requirement, budget, delivery target, provider market.',
-    output: 'Negotiation session, confirmed batch, savings receipt.',
+    when: 'Use when the buyer does not know the winning provider yet and wants ranked offers before settlement.',
+    avoid: 'Avoid when the endpoint and fixed price are already known.',
+    input: 'Buyer requirement, budget, delivery target, provider supply.',
+    output: 'Shortlist, negotiation session, confirmed deal posture.',
   },
   x402: {
     title: 'x402 Simple Payment',
-    when: 'Use when the agent already knows the endpoint and just wants to pay for access or execution.',
-    avoid: 'Avoid when the counterparty still needs to negotiate price or quality terms.',
+    when: 'Use when the agent already knows the endpoint and wants a simple payment handshake.',
+    avoid: 'Avoid when provider discovery or multi-round negotiation still needs to happen.',
     input: 'Endpoint URL and optional payment header.',
     output: 'Gateway response from the x402-compatible server.',
   },
   locus: {
     title: 'Locus Payout Rail',
-    when: 'Use when the deal is decided and you want a cleaner payout or routing path for USDC.',
-    avoid: 'Avoid before the deal is confirmed. Locus is for execution, not price discovery.',
+    when: 'Use once the deal is decided and only payout routing remains.',
+    avoid: 'Avoid before a provider or offer has been selected.',
     input: 'Agent ID, recipient address, amount.',
     output: 'Transfer response payload.',
   },
   delegation: {
     title: 'ERC-7710 Delegation',
-    when: 'Use when a human wallet wants to authorize bounded escrow actions to an agent or operator.',
-    avoid: 'Avoid if the human can act directly and does not need an agent to execute.',
+    when: 'Use when a human wallet wants to delegate bounded escrow actions to an agent.',
+    avoid: 'Avoid if the user can sign and execute directly.',
     input: 'Delegate, target escrow, max amount, expiry.',
-    output: 'Delegation payload and signature.',
+    output: 'Delegation payload and optional signature.',
   },
   uniswap: {
     title: 'Uniswap Treasury Routing',
-    when: 'Use after settlement if the desk needs to rebalance or route proceeds to another asset.',
-    avoid: 'Avoid as the primary settlement path. It is post-deal treasury tooling.',
+    when: 'Use after settlement if treasury rebalancing is needed.',
+    avoid: 'Avoid as the first step of a deal.',
     input: 'Amount in, minimum out, recipient.',
     output: 'Approve and swap transactions.',
   },
@@ -67,13 +67,20 @@ export function IntegrationsWorkbench() {
   const { isLoading: txConfirming, isSuccess: txConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
   const { signTypedDataAsync } = useSignTypedData();
 
-  const [uniswapOut, setUniswapOut] = useState<string>('');
-  const [locusOut, setLocusOut] = useState<string>('');
-  const [delegationOut, setDelegationOut] = useState<string>('');
-  const [x402Out, setX402Out] = useState<string>('');
-  const [delegationSignature, setDelegationSignature] = useState<string>('');
+  const [activeRail, setActiveRail] = useState<Rail>('x402n');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [x402Status, setX402Status] = useState<{ endpoints?: string[] } | null>(null);
+  const [locusTools, setLocusTools] = useState<Array<{ name?: string; id?: string; description?: string }>>([]);
+  const [executionProviders, setExecutionProviders] = useState<Array<{ id: string; mode: string; useCase: string }>>([]);
+  const [providersPreview, setProvidersPreview] = useState<Array<{ serviceName: string; source: string; basePriceUsdc: string | null }>>([]);
+
+  const [uniswapOut, setUniswapOut] = useState('');
+  const [locusOut, setLocusOut] = useState('');
+  const [delegationOut, setDelegationOut] = useState('');
+  const [x402Out, setX402Out] = useState('');
+  const [delegationSignature, setDelegationSignature] = useState('');
   const [approveTx, setApproveTx] = useState<BuiltTx | null>(null);
   const [swapTx, setSwapTx] = useState<BuiltTx | null>(null);
 
@@ -86,27 +93,46 @@ export function IntegrationsWorkbench() {
   const [maxUsdc, setMaxUsdc] = useState('25');
   const [x402Url, setX402Url] = useState('https://www.x402.org');
   const [x402PaymentHeader, setX402PaymentHeader] = useState('');
-  const [activeRail, setActiveRail] = useState<Rail>('x402n');
-  const [locusTools, setLocusTools] = useState<Array<{ name?: string; id?: string; description?: string }>>([]);
-  const [executionProviders, setExecutionProviders] = useState<Array<{ id: string; mode: string; useCase: string }>>([]);
-  const [x402Endpoints, setX402Endpoints] = useState<string[]>([]);
 
   useEffect(() => {
     void (async () => {
       try {
-        const [locus, execution, x402] = await Promise.all([
+        const [x402, locus, execution, providers] = await Promise.all([
+          integrationsApi.getX402Status().catch(() => ({ endpoints: [] })),
           integrationsApi.listLocusTools().catch(() => ({ tools: [] })),
           integrationsApi.listExecutionProviders().catch(() => ({ providers: [] })),
-          integrationsApi.getX402Status().catch(() => ({ endpoints: [] })),
+          integrationsApi.listProviders().catch(() => ({ providers: [] })),
         ]);
+
+        setX402Status(x402);
         setLocusTools(Array.isArray(locus.tools) ? locus.tools : locus.tools?.tools || []);
         setExecutionProviders(execution.providers || []);
-        setX402Endpoints(x402.endpoints || []);
+        setProvidersPreview(
+          (providers.providers || []).slice(0, 3).map((provider) => ({
+            serviceName: provider.serviceName,
+            source: provider.source,
+            basePriceUsdc: provider.basePriceUsdc,
+          }))
+        );
       } catch {
         // non-blocking
       }
     })();
   }, []);
+
+  async function executeBuiltTx(tx: BuiltTx | null) {
+    if (!tx) return;
+    setError(null);
+    try {
+      await sendTransactionAsync({
+        to: tx.to as `0x${string}`,
+        data: tx.data as `0x${string}`,
+        value: BigInt(tx.value || '0'),
+      });
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }
 
   async function buildUniswapTxs() {
     setLoading(true);
@@ -131,20 +157,6 @@ export function IntegrationsWorkbench() {
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function executeBuiltTx(tx: BuiltTx | null) {
-    if (!tx) return;
-    setError(null);
-    try {
-      await sendTransactionAsync({
-        to: tx.to as `0x${string}`,
-        data: tx.data as `0x${string}`,
-        value: BigInt(tx.value || '0'),
-      });
-    } catch (err) {
-      setError(getErrorMessage(err));
     }
   }
 
@@ -180,23 +192,6 @@ export function IntegrationsWorkbench() {
         allowedMethods: ['fund(uint256,uint256)', 'createJob(address,address,uint256,address)'],
       });
       setDelegationOut(JSON.stringify(result, null, 2));
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function probeX402() {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await integrationsApi.proxyX402({
-        url: x402Url,
-        method: 'GET',
-        paymentHeader: x402PaymentHeader || undefined,
-      });
-      setX402Out(JSON.stringify(result, null, 2));
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -242,14 +237,134 @@ export function IntegrationsWorkbench() {
     }
   }
 
+  async function probeX402() {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await integrationsApi.proxyX402({
+        url: x402Url,
+        method: 'GET',
+        paymentHeader: x402PaymentHeader || undefined,
+      });
+      setX402Out(JSON.stringify(result, null, 2));
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function renderWorkspace() {
+    if (activeRail === 'x402n') {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5">
+            <div className="font-semibold">How x402n fits into DealRail</div>
+            <div className="mt-3 space-y-3 text-sm leading-6 text-[var(--terminal-muted)]">
+              <div>1. `scan` or `buy` discovers supply from provider feeds.</div>
+              <div>2. x402n handles negotiation and offer ranking when the winner is not known yet.</div>
+              <div>3. Once an offer is accepted, DealRail routes the outcome into escrow, delegation, or payout rails.</div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5">
+            <div className="terminal-label">Visible Supply</div>
+            <div className="mt-3 space-y-2">
+              {providersPreview.length > 0 ? providersPreview.map((provider) => (
+                <div key={`${provider.source}-${provider.serviceName}`} className="rounded-xl border border-[var(--terminal-border)] bg-black/10 p-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="font-medium">{provider.serviceName}</div>
+                    <div className="terminal-chip">{provider.source}</div>
+                  </div>
+                  <div className="mt-1 text-xs text-[var(--terminal-muted)]">Base {provider.basePriceUsdc ?? 'n/a'} USDC</div>
+                </div>
+              )) : (
+                <div className="text-sm text-[var(--terminal-muted)]">No provider preview returned yet.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeRail === 'x402') {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5 space-y-3">
+            <div className="font-semibold">x402 Payment Probe</div>
+            <p className="text-sm leading-6 text-[var(--terminal-muted)]">Use only when the endpoint is already known and negotiation is over.</p>
+            <input value={x402Url} onChange={(e) => setX402Url(e.target.value)} className="terminal-input" placeholder="x402 endpoint URL" />
+            <input value={x402PaymentHeader} onChange={(e) => setX402PaymentHeader(e.target.value)} className="terminal-input" placeholder="Optional X-PAYMENT header" />
+            <button onClick={probeX402} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Call x402 Endpoint</button>
+          </div>
+          <pre className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 overflow-auto text-xs text-[var(--terminal-muted)]">{x402Out || 'x402 response will appear here.'}</pre>
+        </div>
+      );
+    }
+
+    if (activeRail === 'locus') {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5 space-y-3">
+            <div className="font-semibold">Locus USDC Payout</div>
+            <p className="text-sm leading-6 text-[var(--terminal-muted)]">Use after the desk already knows who gets paid.</p>
+            <input value={locusAgentId} onChange={(e) => setLocusAgentId(e.target.value)} className="terminal-input" placeholder="From agent ID" />
+            <input value={locusTo} onChange={(e) => setLocusTo(e.target.value)} className="terminal-input" placeholder="Recipient address 0x..." />
+            <input value={locusAmount} onChange={(e) => setLocusAmount(e.target.value)} className="terminal-input" placeholder="USDC amount" />
+            <button onClick={sendLocus} disabled={loading} className="terminal-btn terminal-btn-good w-full">Send via Locus</button>
+          </div>
+          <pre className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 overflow-auto text-xs text-[var(--terminal-muted)]">{locusOut || 'Locus response will appear here.'}</pre>
+        </div>
+      );
+    }
+
+    if (activeRail === 'delegation') {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5 space-y-3">
+            <div className="font-semibold">ERC-7710 Delegation</div>
+            <p className="text-sm leading-6 text-[var(--terminal-muted)]">Use when a human wallet needs an agent to execute bounded escrow actions.</p>
+            <input value={delegate} onChange={(e) => setDelegate(e.target.value)} className="terminal-input" placeholder="Delegate address 0x..." />
+            <input value={maxUsdc} onChange={(e) => setMaxUsdc(e.target.value)} className="terminal-input" placeholder="Max delegated USDC" />
+            <button onClick={buildDelegation} disabled={loading} className="terminal-btn w-full">Build Delegation</button>
+            <button onClick={signDelegationIntent} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Sign Delegation Intent</button>
+          </div>
+          <pre className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 overflow-auto text-xs text-[var(--terminal-muted)]">{delegationOut || 'Delegation payload will appear here.'}</pre>
+          {delegationSignature && (
+            <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 break-all text-xs text-[var(--terminal-muted)]">
+              Signature: {delegationSignature}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5 space-y-3">
+          <div className="font-semibold">Uniswap Treasury Routing</div>
+          <p className="text-sm leading-6 text-[var(--terminal-muted)]">Use only after settlement when proceeds need treasury routing.</p>
+          <input value={swapAmountIn} onChange={(e) => setSwapAmountIn(e.target.value)} className="terminal-input" placeholder="Amount in USDC" />
+          <input value={swapMinOut} onChange={(e) => setSwapMinOut(e.target.value)} className="terminal-input" placeholder="Minimum out" />
+          <button onClick={buildUniswapTxs} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Build Approve + Swap</button>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <button onClick={() => executeBuiltTx(approveTx)} disabled={loading || !approveTx} className="terminal-btn w-full">Execute Approve</button>
+            <button onClick={() => executeBuiltTx(swapTx)} disabled={loading || !swapTx} className="terminal-btn w-full">Execute Swap</button>
+          </div>
+        </div>
+        <pre className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 overflow-auto text-xs text-[var(--terminal-muted)]">{uniswapOut || 'Uniswap payloads will appear here.'}</pre>
+      </div>
+    );
+  }
+
   return (
     <section className="space-y-6">
-      <div className="terminal-panel rounded-[1.25rem] p-6">
-        <div className="terminal-kicker">Integration Strategies</div>
-        <h2 className="mt-2 text-2xl font-semibold">Choose the rail that matches the stage of the deal</h2>
-        <p className="mt-2 max-w-3xl text-sm text-[var(--terminal-muted)]">
-          The integrations page is for execution choices after you understand what stage you are in. Discovery and
-          negotiation are not the same thing as payout or treasury routing.
+      <div className="terminal-panel rounded-[1.5rem] p-6">
+        <div className="terminal-kicker">Rail Selector</div>
+        <h2 className="mt-2 text-2xl font-semibold">Pick the rail for the current stage of the deal</h2>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--terminal-muted)]">
+          This page should answer one question: what rail do you use now that you know the state of the deal? It should
+          not force you to decode a wall of unlabeled boxes.
         </p>
       </div>
 
@@ -267,16 +382,16 @@ export function IntegrationsWorkbench() {
           >
             <div className="terminal-kicker">{rail}</div>
             <div className="mt-2 font-semibold">{railCopy[rail].title}</div>
-            <div className="mt-2 text-xs text-[var(--terminal-muted)]">{railCopy[rail].when}</div>
+            <div className="mt-2 text-xs leading-5 text-[var(--terminal-muted)]">{railCopy[rail].when}</div>
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <div className="terminal-panel rounded-[1.25rem] p-5 xl:col-span-4">
-          <div className="terminal-kicker">Selected Strategy</div>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-4">
+          <div className="terminal-kicker">Selected Rail</div>
           <h3 className="mt-2 text-xl font-semibold">{railCopy[activeRail].title}</h3>
-          <div className="mt-4 space-y-4 text-sm text-[var(--terminal-muted)]">
+          <div className="mt-5 space-y-5 text-sm leading-6 text-[var(--terminal-muted)]">
             <div>
               <div className="terminal-label">When to use</div>
               <div className="mt-1">{railCopy[activeRail].when}</div>
@@ -295,102 +410,39 @@ export function IntegrationsWorkbench() {
             </div>
           </div>
 
-          <div className="mt-5 rounded-2xl border border-[var(--terminal-border)] bg-black/15 p-4">
-            <div className="terminal-label">Available Metadata</div>
+          <div className="mt-6 rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4">
+            <div className="terminal-label">Live metadata</div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {x402Endpoints.map((endpoint) => (
+              {(x402Status?.endpoints || []).map((endpoint) => (
                 <span key={endpoint} className="terminal-chip">{endpoint}</span>
               ))}
               {executionProviders.map((provider) => (
-                <span key={provider.id} className="terminal-chip">{provider.id}</span>
+                <span key={provider.id} className="terminal-chip">{provider.id}:{provider.mode}</span>
               ))}
-              {locusTools.slice(0, 4).map((tool, idx) => (
+              {locusTools.slice(0, 3).map((tool, idx) => (
                 <span key={`${tool.id || tool.name || idx}`} className="terminal-chip">{tool.name || tool.id || 'tool'}</span>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="terminal-panel rounded-[1.25rem] p-5 xl:col-span-8">
-          <div className="terminal-kicker">Execution Workspace</div>
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            {(activeRail === 'uniswap' || activeRail === 'x402n') && (
-              <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/15 p-4 space-y-3">
-                <div className="font-semibold">Uniswap Tx Builder</div>
-                <p className="text-xs text-[var(--terminal-muted)]">Use after settlement when you want to rebalance the proceeds.</p>
-                <input value={swapAmountIn} onChange={(e) => setSwapAmountIn(e.target.value)} className="terminal-input" placeholder="Amount in USDC (e.g. 10)" />
-                <input value={swapMinOut} onChange={(e) => setSwapMinOut(e.target.value)} className="terminal-input" placeholder="Min out WETH (e.g. 0.001)" />
-                <button onClick={buildUniswapTxs} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Build Approve + Swap</button>
-                <button onClick={() => executeBuiltTx(approveTx)} disabled={loading || !approveTx} className="terminal-btn w-full">Execute Approve Tx</button>
-                <button onClick={() => executeBuiltTx(swapTx)} disabled={loading || !swapTx} className="terminal-btn w-full">Execute Swap Tx</button>
-              </div>
-            )}
-
-            {(activeRail === 'locus' || activeRail === 'x402n') && (
-              <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/15 p-4 space-y-3">
-                <div className="font-semibold">Locus USDC Payout</div>
-                <p className="text-xs text-[var(--terminal-muted)]">Use once the desk has decided who gets paid and how much.</p>
-                <input value={locusAgentId} onChange={(e) => setLocusAgentId(e.target.value)} className="terminal-input" placeholder="From agent ID (buyer-agent)" />
-                <input value={locusTo} onChange={(e) => setLocusTo(e.target.value)} className="terminal-input" placeholder="Recipient address 0x..." />
-                <input value={locusAmount} onChange={(e) => setLocusAmount(e.target.value)} className="terminal-input" placeholder="USDC amount (e.g. 1)" />
-                <button onClick={sendLocus} disabled={loading} className="terminal-btn terminal-btn-good w-full">Send via Locus</button>
-              </div>
-            )}
-
-            {(activeRail === 'delegation' || activeRail === 'x402n') && (
-              <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/15 p-4 space-y-3">
-                <div className="font-semibold">ERC-7710 Delegation</div>
-                <p className="text-xs text-[var(--terminal-muted)]">Use when a user wants an agent to execute bounded escrow actions.</p>
-                <input value={delegate} onChange={(e) => setDelegate(e.target.value)} className="terminal-input" placeholder="Delegate address 0x..." />
-                <input value={maxUsdc} onChange={(e) => setMaxUsdc(e.target.value)} className="terminal-input" placeholder="Max delegated USDC (e.g. 25)" />
-                <button onClick={buildDelegation} disabled={loading} className="terminal-btn w-full">Build Delegation</button>
-                <button onClick={signDelegationIntent} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Sign Delegation Intent</button>
-              </div>
-            )}
-
-            {(activeRail === 'x402' || activeRail === 'x402n') && (
-              <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/15 p-4 space-y-3">
-                <div className="font-semibold">x402 Payment Probe</div>
-                <p className="text-xs text-[var(--terminal-muted)]">Use when the endpoint is already known and you want a simple payment handshake.</p>
-                <input value={x402Url} onChange={(e) => setX402Url(e.target.value)} className="terminal-input" placeholder="x402 endpoint URL" />
-                <input value={x402PaymentHeader} onChange={(e) => setX402PaymentHeader(e.target.value)} className="terminal-input" placeholder="Optional X-PAYMENT header" />
-                <button onClick={probeX402} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Call x402 Endpoint</button>
-              </div>
-            )}
-          </div>
+        <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-8">
+          <div className="terminal-kicker">Workspace</div>
+          <div className="mt-4">{renderWorkspace()}</div>
         </div>
       </div>
 
-      {error && <div className="rounded border p-3 text-sm text-[var(--terminal-danger)]" style={{ borderColor: 'color-mix(in srgb, var(--terminal-danger) 50%, transparent)', background: 'color-mix(in srgb, var(--terminal-danger) 10%, transparent)' }}>{error}</div>}
+      {error && (
+        <div className="rounded-2xl border p-4 text-sm text-[var(--terminal-danger)]" style={{ borderColor: 'color-mix(in srgb, var(--terminal-danger) 40%, transparent)', background: 'color-mix(in srgb, var(--terminal-danger) 8%, transparent)' }}>
+          {error}
+        </div>
+      )}
+
       {txHash && (
-        <div className="rounded border border-[var(--terminal-border)] bg-black/15 p-3 text-sm text-[var(--terminal-muted)]">
+        <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 text-sm text-[var(--terminal-muted)]">
           Tx submitted: {txHash} {txConfirming ? '(confirming...)' : txConfirmed ? '(confirmed)' : ''}
         </div>
       )}
-      {delegationSignature && (
-        <div className="rounded border border-[var(--terminal-border)] bg-black/15 p-3 text-sm break-all text-[var(--terminal-muted)]">
-          Delegation signature: {delegationSignature}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-        <div className="space-y-1">
-          <div className="terminal-label">UNISWAP JSON OUTPUT</div>
-          <pre className="rounded border border-[var(--terminal-border)] bg-black/25 p-3 overflow-auto max-h-64 text-[var(--terminal-muted)]">{uniswapOut || 'Approve and swap transaction payload appears here.'}</pre>
-        </div>
-        <div className="space-y-1">
-          <div className="terminal-label">LOCUS JSON OUTPUT</div>
-          <pre className="rounded border border-[var(--terminal-border)] bg-black/25 p-3 overflow-auto max-h-64 text-[var(--terminal-muted)]">{locusOut || 'Locus transfer response appears here.'}</pre>
-        </div>
-        <div className="space-y-1">
-          <div className="terminal-label">DELEGATION JSON OUTPUT</div>
-          <pre className="rounded border border-[var(--terminal-border)] bg-black/25 p-3 overflow-auto max-h-64 text-[var(--terminal-muted)]">{delegationOut || 'Delegation payload appears here.'}</pre>
-        </div>
-        <div className="space-y-1">
-          <div className="terminal-label">X402 JSON OUTPUT</div>
-          <pre className="rounded border border-[var(--terminal-border)] bg-black/25 p-3 overflow-auto max-h-64 text-[var(--terminal-muted)]">{x402Out || 'x402 endpoint response appears here.'}</pre>
-        </div>
-      </div>
     </section>
   );
 }

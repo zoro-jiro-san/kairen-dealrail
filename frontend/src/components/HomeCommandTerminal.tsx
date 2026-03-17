@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, KeyboardEvent, useState } from 'react';
+import { FormEvent, KeyboardEvent, useMemo, useState } from 'react';
 import { healthCheck, integrationsApi } from '@/lib/api';
 import { pushTerminalRun, TerminalActionKind } from '@/lib/terminalLedger';
 
@@ -23,10 +23,11 @@ type Props = {
 };
 
 const EXAMPLES = [
-  'buyer: need api integration sprint under 0.10 usdc in 24h',
-  'market: show provider supply for automation',
-  'integrations: show live rails',
-  'provider: offer workflow automation with 24h delivery',
+  'scan automation',
+  'buy benchmark report under 0.12 usdc in 24h',
+  'buy api integration sprint under 0.10 usdc in 24h',
+  'sell workflow automation from 0.12 usdc',
+  'rails',
   'status',
 ];
 
@@ -36,10 +37,12 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [lines, setLines] = useState<TerminalLine[]>([
-    { tone: 'system', text: 'DealRail Terminal OS / command surface online' },
-    { tone: 'system', text: 'Type a request in plain language. The terminal will classify the role and guide the next steps.' },
-    { tone: 'system', text: `Examples: ${EXAMPLES.join(' | ')}` },
+    { tone: 'system', text: 'DEALRAIL DESK READY' },
+    { tone: 'system', text: 'verbs: scan <need> | buy <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
+    { tone: 'system', text: 'goal: read real supply first, then choose whether to negotiate, settle, or import provider inventory' },
   ]);
+
+  const statusLabel = useMemo(() => (running ? 'RUNNING' : 'IDLE'), [running]);
 
   function append(tone: LineTone, text: string) {
     setLines((prev) => [...prev, { tone, text }]);
@@ -47,6 +50,12 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
 
   function appendMany(entries: TerminalLine[]) {
     setLines((prev) => [...prev, ...entries]);
+  }
+
+  function emit(kind: TerminalActionKind, command: string, note: string) {
+    const action: TerminalAction = { kind, command, note };
+    pushTerminalRun({ action: kind, command, note });
+    onAction?.(action);
   }
 
   function prefillFlow(text: string) {
@@ -58,10 +67,164 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
     if (hoursMatch?.[1]) window.localStorage.setItem('dealrail.prefill.maxDeliveryHours', hoursMatch[1]);
   }
 
-  function emit(kind: TerminalActionKind, command: string, note: string) {
-    const action: TerminalAction = { kind, command, note };
-    pushTerminalRun({ action: kind, command, note });
-    onAction?.(action);
+  function parseBudget(command: string) {
+    const match = command.toLowerCase().match(/(\d+(?:\.\d+)?)\s*usdc/);
+    return match ? Number(match[1]) : undefined;
+  }
+
+  function stripVerb(command: string, verbs: string[]) {
+    let next = command.trim();
+    for (const verb of verbs) {
+      const regex = new RegExp(`^${verb}\\s*:?\s*`, 'i');
+      next = next.replace(regex, '');
+    }
+    return next.trim();
+  }
+
+  async function showHelp(command: string) {
+    const note = 'Command map loaded';
+    appendMany([
+      { tone: 'system', text: 'GRAMMAR' },
+      { tone: 'system', text: 'scan automation' },
+      { tone: 'system', text: 'buy benchmark report under 0.12 usdc in 24h' },
+      { tone: 'system', text: 'sell workflow automation from 0.12 usdc' },
+      { tone: 'system', text: 'rails' },
+      { tone: 'system', text: 'status' },
+    ]);
+    emit('help', command, note);
+  }
+
+  async function runStatus(command: string) {
+    try {
+      const health = await healthCheck();
+      const note = `Backend online on chain ${health.blockchain.chainId}`;
+      appendMany([
+        { tone: 'ok', text: note },
+        { tone: 'ok', text: `escrow=${health.blockchain.escrowAddress}` },
+        { tone: health.integrations?.x402nMockMode ? 'warn' : 'ok', text: `x402n discovery=${health.integrations?.x402nMockMode ? 'demo/mock' : 'live'}` },
+      ]);
+      emit('status', command, note);
+    } catch {
+      const note = 'Backend offline or miswired';
+      append('warn', `${note}. Check NEXT_PUBLIC_API_URL and restart the frontend after env changes.`);
+      emit('status', command, note);
+    }
+  }
+
+  async function runScan(command: string) {
+    const query = stripVerb(command, ['scan', 'market', 'find providers']);
+    try {
+      const result = await integrationsApi.listProviders({ query: query || undefined });
+      const top = result.providers.slice(0, 4);
+      const allMock = result.providers.length > 0 && result.providers.every((provider) => provider.source === 'mock');
+      const note = `Supply scan returned ${result.providers.length} providers`;
+
+      appendMany([
+        { tone: 'ok', text: `scan query=${query || 'all supply'}` },
+        { tone: allMock ? 'warn' : 'ok', text: `source posture=${allMock ? 'demo/mock only' : 'mixed/live'}` },
+        ...top.map((provider) => ({
+          tone: (provider.source === 'mock' ? 'warn' : 'ok') as LineTone,
+          text: `${provider.serviceName} | ${provider.basePriceUsdc ?? 'n/a'} USDC | rep ${provider.reputationScore ?? 'n/a'} | ${provider.source}`,
+        })),
+      ]);
+
+      if (top.length === 0) {
+        append('warn', 'No provider supply matched. Add imported providers or point discovery to a live marketplace feed.');
+      }
+
+      emit('market_scan', command, note);
+    } catch {
+      const note = 'Supply scan failed';
+      append('warn', `${note}. Discovery endpoint did not respond.`);
+      emit('market_scan', command, note);
+    }
+  }
+
+  async function runBuy(command: string) {
+    const query = stripVerb(command, ['buy', 'buyer']);
+    const maxBasePriceUsdc = parseBudget(command);
+
+    prefillFlow(query || command);
+
+    try {
+      const result = await integrationsApi.listProviders({
+        query: query || undefined,
+        maxBasePriceUsdc,
+      });
+      const shortlist = result.providers.slice(0, 3);
+      const allMock = result.providers.length > 0 && result.providers.every((provider) => provider.source === 'mock');
+      const note = `Buyer flow staged with ${result.providers.length} candidate providers`;
+
+      appendMany([
+        { tone: 'ok', text: 'role=buyer' },
+        { tone: 'ok', text: `objective=${query || 'service request'}` },
+        ...(typeof maxBasePriceUsdc === 'number' ? [{ tone: 'ok' as LineTone, text: `budget ceiling=${maxBasePriceUsdc} USDC` }] : []),
+        { tone: allMock ? 'warn' : 'ok', text: `supply posture=${allMock ? 'demo/mock' : 'mixed/live'}` },
+        ...shortlist.map((provider) => ({
+          tone: (provider.source === 'mock' ? 'warn' : 'ok') as LineTone,
+          text: `candidate=${provider.serviceName} | price=${provider.basePriceUsdc ?? 'n/a'} | rep=${provider.reputationScore ?? 'n/a'} | ${provider.source}`,
+        })),
+      ]);
+
+      if (shortlist.length === 0) {
+        append('warn', 'No matching supply yet. Import provider feeds or connect a live marketplace before running the auction.');
+      } else {
+        append('ok', 'next: compare the shortlist, start reverse auction if enough competition exists, then confirm the escrow path');
+      }
+
+      emit('role_buyer', command, note);
+    } catch {
+      const note = 'Buyer flow staged but supply lookup failed';
+      appendMany([
+        { tone: 'ok', text: 'role=buyer' },
+        { tone: 'warn', text: note },
+      ]);
+      emit('role_buyer', command, note);
+    }
+  }
+
+  async function runSell(command: string) {
+    const query = stripVerb(command, ['sell', 'provider', 'offer']);
+    const note = 'Provider onboarding guidance loaded';
+
+    appendMany([
+      { tone: 'ok', text: 'role=provider' },
+      { tone: 'ok', text: `service=${query || 'unspecified service'}` },
+      { tone: 'ok', text: 'to appear in scans: publish to x402n or import your provider feed into DealRail discovery' },
+      { tone: 'ok', text: 'next: expose endpoint + base price + evaluator path, then respond to active demand' },
+    ]);
+
+    emit('role_provider', command, note);
+  }
+
+  async function runRails(command: string) {
+    try {
+      const [health, execution, locus, discovery] = await Promise.all([
+        healthCheck().catch(() => null),
+        integrationsApi.listExecutionProviders().catch(() => ({ providers: [] })),
+        integrationsApi.listLocusTools().catch(() => ({ tools: { mode: 'fallback' as const } })),
+        integrationsApi.listProviders().catch(() => ({ providers: [] })),
+      ]);
+
+      const locusMode = Array.isArray(locus.tools) ? 'live' : locus.tools?.mode || 'fallback';
+      const discoveryMode = discovery.providers.every((provider) => provider.source === 'mock') ? 'demo/mock' : 'mixed/live';
+      const note = 'Rail status loaded';
+
+      appendMany([
+        { tone: 'ok', text: note },
+        { tone: health?.integrations?.x402nMockMode ? 'warn' : 'ok', text: `x402n negotiation=${health?.integrations?.x402nMockMode ? 'demo/mock' : 'live'}` },
+        { tone: discoveryMode === 'demo/mock' ? 'warn' : 'ok', text: `provider market=${discoveryMode}` },
+        { tone: locusMode === 'live' ? 'ok' : 'warn', text: `locus payout=${locusMode}` },
+        { tone: execution.providers.some((provider) => provider.id === 'wallet') ? 'ok' : 'warn', text: 'delegation builder=ready' },
+        { tone: 'ok', text: 'uniswap tx builder=ready' },
+      ]);
+
+      emit('open_integrations', command, note);
+    } catch {
+      const note = 'Rail status failed to load';
+      append('warn', note);
+      emit('open_integrations', command, note);
+    }
   }
 
   async function runCommand(raw: string) {
@@ -70,194 +233,61 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
 
     setRunning(true);
     append('user', `dealrail$ ${command}`);
+
     const normalized = command.toLowerCase();
 
-    if (normalized === 'help') {
-      const note = 'Commands: help | status | clear | market | buyer | provider | evaluator | integrations';
-      appendMany([
-        { tone: 'system', text: note },
-        { tone: 'system', text: 'Examples:' },
-        { tone: 'system', text: 'buyer: need API integration sprint under 0.10 usdc in 24h' },
-        { tone: 'system', text: 'market: show provider supply for automation' },
-        { tone: 'system', text: 'integrations: show live rails' },
-      ]);
-      emit('help', command, note);
-      setRunning(false);
-      return;
-    }
-
-    if (normalized === 'clear') {
-      setLines([
-        { tone: 'system', text: 'DealRail Command Terminal v2' },
-        { tone: 'system', text: 'Terminal cleared. Type "help" for command list.' },
-      ]);
-      emit('clear', command, 'Terminal output cleared');
-      setRunning(false);
-      return;
-    }
-
-    if (normalized === 'status') {
-      try {
-        const health = await healthCheck();
-        const note = `Backend ONLINE | chainId=${health.blockchain.chainId}`;
-        appendMany([
-          { tone: 'ok', text: note },
-          {
-            tone: 'ok',
-            text: `escrow=${health.blockchain.escrowAddress.slice(0, 8)}...${health.blockchain.escrowAddress.slice(-6)}`,
-          },
-          {
-            tone: health.integrations?.x402nMockMode ? 'warn' : 'ok',
-            text: `x402n mode=${health.integrations?.x402nMockMode ? 'mock' : 'live'}`,
-          },
-        ]);
-        emit('status', command, note);
-      } catch {
-        const note = 'Backend OFFLINE or unreachable';
-        append('warn', `${note}. Check NEXT_PUBLIC_API_URL and backend process.`);
-        emit('status', command, note);
+    try {
+      if (normalized === 'help' || normalized === '?') {
+        await showHelp(command);
+        return;
       }
-      setRunning(false);
-      return;
-    }
 
-    if (normalized === 'market' || normalized.includes('find providers') || normalized.includes('scan market')) {
-      try {
-        const query = command.includes(':') ? command.split(':').slice(1).join(':').trim() : command.replace(/market/i, '').trim();
-        const result = await integrationsApi.listProviders({ query: query || undefined });
-        const top = result.providers.slice(0, 3);
-        const note = `Market scan complete: ${result.providers.length} providers returned`;
-        appendMany([
-          { tone: 'ok', text: 'scanning discovery rails...' },
-          { tone: 'ok', text: `query=${query || 'all providers'}` },
-          { tone: 'ok', text: note },
-          ...top.map((provider) => ({
-            tone: (provider.source === 'mock' ? 'warn' : 'ok') as LineTone,
-            text: `${provider.serviceName} | ${provider.basePriceUsdc ?? 'n/a'} USDC | rep ${provider.reputationScore ?? 'n/a'} | source=${provider.source}`,
-          })),
+      if (normalized === 'clear') {
+        setLines([
+          { tone: 'system', text: 'DEALRAIL DESK READY' },
+          { tone: 'system', text: 'verbs: scan <need> | buy <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
         ]);
-        if (top.length === 0) {
-          append('warn', 'No providers matched that request.');
-        }
-        emit('market_scan', command, note);
-      } catch {
-        const note = 'Market scan failed';
-        append('warn', `${note}. Discovery endpoint did not respond.`);
-        emit('market_scan', command, note);
+        emit('clear', command, 'Terminal output cleared');
+        return;
       }
-      setRunning(false);
-      return;
-    }
 
-    if (normalized === 'buyer' || normalized.includes('need') || normalized.includes('want') || normalized.includes('service')) {
-      prefillFlow(command);
-      try {
-        const query = command.replace(/^buyer:/i, '').trim();
-        const result = await integrationsApi.listProviders({ query: query || undefined });
-        const top = result.providers.slice(0, 2);
-        const note = `Buyer flow staged: ${result.providers.length} matching providers available for ranking`;
-        appendMany([
-          { tone: 'ok', text: 'classifying role: buyer / operator' },
-          { tone: 'ok', text: 'saving service policy...' },
-          { tone: 'ok', text: note },
-          ...top.map((provider) => ({
-            tone: (provider.source === 'mock' ? 'warn' : 'ok') as LineTone,
-            text: `candidate=${provider.serviceName} | price=${provider.basePriceUsdc ?? 'n/a'} | source=${provider.source}`,
-          })),
-          { tone: 'ok', text: 'next: scan market -> start reverse auction -> confirm settlement path' },
-        ]);
-        emit('role_buyer', command, note);
-      } catch {
-        const note = 'Buyer flow staged, but provider lookup failed';
-        appendMany([
-          { tone: 'ok', text: 'classifying role: buyer / operator' },
-          { tone: 'warn', text: note },
-        ]);
-        emit('role_buyer', command, note);
+      if (normalized === 'status') {
+        await runStatus(command);
+        return;
       }
-      setRunning(false);
-      return;
-    }
 
-    if (normalized === 'flow' || normalized.includes('auction')) {
-      prefillFlow(command);
-      const note = 'Auction flow staged: discovery + reverse auction queue updated.';
-      appendMany([
-        { tone: 'ok', text: 'loading auction path...' },
-        { tone: 'ok', text: 'next: compare offers, batch top quotes, confirm a deal' },
-      ]);
-      emit('start_flow', command, note);
-      setRunning(false);
-      return;
-    }
-
-    if (normalized === 'provider' || normalized.includes('list my service') || normalized.includes('offer service')) {
-      const note = 'Provider flow staged: service listing / quote path ready.';
-      appendMany([
-        { tone: 'ok', text: 'classifying role: provider' },
-        { tone: 'ok', text: 'next: publish capability -> respond to auction -> submit deliverable' },
-      ]);
-      emit('role_provider', command, note);
-      setRunning(false);
-      return;
-    }
-
-    if (normalized === 'evaluator' || normalized.includes('verify delivery') || normalized.includes('review output')) {
-      const note = 'Evaluator flow staged: verification and settlement decision path ready.';
-      appendMany([
-        { tone: 'ok', text: 'classifying role: evaluator' },
-        { tone: 'ok', text: 'next: inspect submission -> complete or reject -> write reputation' },
-      ]);
-      emit('role_evaluator', command, note);
-      setRunning(false);
-      return;
-    }
-
-    if (normalized === 'ops' || normalized.includes('create job') || normalized.includes('fund')) {
-      const note = 'Ops path staged: onchain lifecycle queue updated.';
-      appendMany([
-        { tone: 'ok', text: 'preparing escrow lifecycle...' },
-        { tone: 'ok', text: 'next: create job -> fund -> submit -> settle' },
-      ]);
-      emit('start_ops', command, note);
-      setRunning(false);
-      return;
-    }
-
-    if (normalized === 'integrations' || normalized.includes('delegation') || normalized.includes('x402') || normalized.includes('locus') || normalized.includes('uniswap')) {
-      try {
-        const [health, execution, locus, discovery] = await Promise.all([
-          healthCheck().catch(() => null),
-          integrationsApi.listExecutionProviders().catch(() => ({ providers: [] })),
-          integrationsApi.listLocusTools().catch(() => ({ tools: { mode: 'fallback' as const, error: 'unavailable' } })),
-          integrationsApi.listProviders().catch(() => ({ providers: [] })),
-        ]);
-        const locusMode = Array.isArray(locus.tools) ? 'live' : locus.tools?.mode || 'fallback';
-        const discoveryMode = discovery.providers.every((provider) => provider.source === 'mock') ? 'mock' : 'live';
-        const note = 'Integration status loaded';
-        appendMany([
-          { tone: 'ok', text: note },
-          { tone: health?.integrations?.x402nMockMode ? 'warn' : 'ok', text: `x402n negotiation=${health?.integrations?.x402nMockMode ? 'mock' : 'live'}` },
-          { tone: discoveryMode === 'mock' ? 'warn' : 'ok', text: `provider market=${discoveryMode} (${discovery.providers.length} providers)` },
-          { tone: locusMode === 'live' ? 'ok' : 'warn', text: `locus payout=${locusMode}` },
-          { tone: 'ok', text: `delegation builder=live (${execution.providers.some((provider) => provider.id === 'wallet') ? 'wallet path ready' : 'check config'})` },
-          { tone: 'ok', text: 'uniswap tx builder=live on Base Mainnet' },
-          { tone: 'ok', text: 'next: open Integrations page to use a specific rail with guided inputs' },
-        ]);
-        emit('open_integrations', command, note);
-      } catch {
-        const note = 'Integration status failed to load';
-        append('warn', note);
-        emit('open_integrations', command, note);
+      if (/^(scan|market)\b/i.test(command) || normalized.includes('find providers')) {
+        await runScan(command);
+        return;
       }
-      setRunning(false);
-      return;
-    }
 
-    const note = 'Command not mapped. Use help/examples.';
-    append('warn', note);
-    emit('unknown', command, note);
-    setRunning(false);
+      if (/^(buy|buyer)\b/i.test(command) || /^need\b/i.test(command)) {
+        await runBuy(command);
+        return;
+      }
+
+      if (/^(sell|provider|offer)\b/i.test(command)) {
+        await runSell(command);
+        return;
+      }
+
+      if (/^(rails|integrations)\b/i.test(command) || normalized.includes('x402') || normalized.includes('locus')) {
+        await runRails(command);
+        return;
+      }
+
+      if (/^(auction|flow)\b/i.test(command)) {
+        prefillFlow(command);
+        append('ok', 'Auction path staged. Use `buy ...` first so the desk knows what supply it is comparing.');
+        emit('start_flow', command, 'Auction path staged');
+        return;
+      }
+
+      append('warn', 'Unknown command. Use `help`, `scan`, `buy`, `sell`, `rails`, or `status`.');
+      emit('unknown', command, 'Command not mapped');
+    } finally {
+      setRunning(false);
+    }
   }
 
   async function onSubmit(e: FormEvent) {
@@ -287,63 +317,100 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
   }
 
   return (
-    <section className="terminal-panel rounded-xl p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <div className="terminal-kicker">Command Entry</div>
-          <p className="mt-1 text-sm text-[var(--terminal-muted)]">
-            {compact ? 'Widget mode for quick intent capture.' : 'Full mode. Trade through discovery, negotiation, and settlement guidance from one surface.'}
-          </p>
+    <section className="terminal-frame overflow-hidden rounded-[1.6rem]">
+      <div className="flex items-center justify-between border-b border-[var(--terminal-border)] px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--terminal-danger)]/85" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--terminal-warn)]/85" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--terminal-good)]/85" />
+          </div>
+          <div>
+            <div className="terminal-kicker">Terminal Desk</div>
+            <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">buy / sell / scan / rails / status</div>
+          </div>
         </div>
-        <div className="terminal-mono text-xs text-[var(--terminal-muted)]">{running ? 'RUNNING' : 'IDLE'}</div>
+        <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">{statusLabel}</div>
       </div>
 
-      <div className="terminal-screen overflow-hidden rounded-[1.25rem] border border-[var(--terminal-border)] bg-black/35">
-        <div className="flex items-center justify-between border-b border-[var(--terminal-border)] bg-[var(--terminal-accent)]/10 px-3 py-2">
-          <div className="terminal-mono text-[11px] uppercase tracking-widest text-[var(--terminal-accent)]">
-            DealRail / Cypherpunk Desk
-          </div>
-          <div className="terminal-mono text-[10px] text-[var(--terminal-muted)]">F1 HELP | F2 STATUS | F3 MARKET | F4 BUYER</div>
-        </div>
-        <div className="border-b border-[var(--terminal-border)] bg-black/15 px-3 py-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="terminal-chip">Buyer: need benchmark report under 0.12 usdc</span>
-            <span className="terminal-chip">Provider: offer service</span>
-            <span className="terminal-chip">Evaluator: verify delivery</span>
-          </div>
-        </div>
-        <div className="p-3">
-          <div className={`terminal-mono overflow-auto space-y-1.5 text-xs ${compact ? 'h-44' : 'h-72'}`}>
-            {lines.map((line, idx) => (
-              <div
-                key={`${line.text}-${idx}`}
-                className={
-                  line.tone === 'system'
-                    ? 'text-[var(--terminal-muted)]'
-                    : line.tone === 'ok'
-                      ? 'text-[var(--terminal-good)]'
-                      : line.tone === 'warn'
-                        ? 'text-[var(--terminal-warn)]'
-                        : 'text-[var(--terminal-fg)]'
-                }
-              >
-                {line.text}
+      <div className={`grid ${compact ? 'grid-cols-1' : 'grid-cols-1 xl:grid-cols-[148px,1fr]'}`}>
+        {!compact && (
+          <aside className="hidden border-r border-[var(--terminal-border)] px-4 py-5 xl:block">
+            <div className="terminal-label">Desk Modes</div>
+            <div className="mt-4 space-y-3 text-xs text-[var(--terminal-muted)]">
+              <div>01 Scan supply</div>
+              <div>02 Compare quotes</div>
+              <div>03 Lock escrow</div>
+              <div>04 Emit receipt</div>
+            </div>
+            <div className="mt-6 terminal-label">Examples</div>
+            <div className="mt-3 space-y-2">
+              {EXAMPLES.slice(0, 4).map((example) => (
+                <button
+                  key={example}
+                  type="button"
+                  onClick={() => setInput(example)}
+                  className="block w-full text-left text-[11px] text-[var(--terminal-muted)] transition hover:text-[var(--terminal-fg)]"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
+          </aside>
+        )}
+
+        <div className="p-4">
+          <div className="terminal-console terminal-screen overflow-hidden rounded-[1.2rem]">
+            <div className="flex items-center justify-between border-b border-[var(--terminal-border)] px-4 py-3">
+              <div className="terminal-mono text-[11px] uppercase tracking-[0.24em] text-[var(--terminal-accent)]">
+                DealRail / Market Console
               </div>
-            ))}
+              <div className="terminal-mono text-[10px] text-[var(--terminal-muted)]">ESC to clear mentally, `clear` to clear literally</div>
+            </div>
+
+            <div className="p-4">
+              <div className={`terminal-mono overflow-auto space-y-2 text-xs leading-6 ${compact ? 'h-56' : 'h-[26rem]'}`}>
+                {lines.map((line, idx) => (
+                  <div
+                    key={`${line.text}-${idx}`}
+                    className={
+                      line.tone === 'system'
+                        ? 'text-[var(--terminal-muted)]'
+                        : line.tone === 'ok'
+                          ? 'text-[var(--terminal-good)]'
+                          : line.tone === 'warn'
+                            ? 'text-[var(--terminal-warn)]'
+                            : 'text-[var(--terminal-fg)]'
+                    }
+                  >
+                    {line.text}
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={onSubmit} className="mt-4 flex items-center gap-2">
+                <span className="terminal-mono text-xs text-[var(--terminal-accent)]">dealrail$</span>
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={onKeyDown}
+                  className="terminal-input terminal-mono"
+                  placeholder='Try: buy benchmark report under 0.12 usdc in 24h'
+                />
+                <button type="submit" className="terminal-btn terminal-btn-accent" disabled={running}>
+                  Run
+                </button>
+              </form>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {EXAMPLES.map((example) => (
+                  <button key={example} type="button" onClick={() => setInput(example)} className="terminal-command">
+                    {example}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <form onSubmit={onSubmit} className="mt-3 flex items-center gap-2">
-            <span className="terminal-mono text-xs text-[var(--terminal-accent)]">dealrail$</span>
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={onKeyDown}
-              className="terminal-input terminal-mono"
-              placeholder='Try: "need benchmark report under 0.12 usdc in 24h"'
-            />
-            <button type="submit" className="terminal-btn terminal-btn-accent" disabled={running}>
-              Run
-            </button>
-          </form>
         </div>
       </div>
     </section>

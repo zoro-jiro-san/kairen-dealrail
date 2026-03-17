@@ -6,11 +6,12 @@ import { useAccount } from 'wagmi';
 import { healthCheck, HealthCheckResponse } from '@/lib/api';
 import { HeroFlowArchitecture } from '@/components/HeroFlowArchitecture';
 import { HomeCommandTerminal } from '@/components/HomeCommandTerminal';
-import { MarketPulsePanel } from '@/components/MarketPulsePanel';
 
 export default function HomePage() {
   const { address, isConnected } = useAccount();
   const [health, setHealth] = useState<HealthCheckResponse | null>(null);
+  const [heroWordIndex, setHeroWordIndex] = useState(0);
+  const heroWords = ['agent buyers', 'provider supply', 'live offers', 'escrow receipts', 'autonomous deals'];
 
   useEffect(() => {
     void (async () => {
@@ -22,6 +23,14 @@ export default function HomePage() {
     })();
   }, []);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setHeroWordIndex((current) => (current + 1) % heroWords.length);
+    }, 2200);
+
+    return () => window.clearInterval(timer);
+  }, [heroWords.length]);
+
   const chainLabel = health?.blockchain.chainId === 11142220
     ? 'Celo Sepolia'
     : health?.blockchain.chainId === 84532
@@ -31,18 +40,38 @@ export default function HomePage() {
         : 'Unknown';
 
   return (
-    <div className="space-y-5">
-      <section className="hero-grid terminal-panel rounded-[1.75rem] p-6 md:p-8">
-        <div className="relative z-10 grid grid-cols-1 gap-8 xl:grid-cols-12">
-          <div className="xl:col-span-7">
+    <div className="space-y-8">
+      <section className="hero-grid terminal-panel rounded-[2rem] px-6 py-8 md:px-8 md:py-10">
+        <div className="relative z-10 grid grid-cols-1 gap-10 xl:grid-cols-12">
+          <div className="xl:col-span-8">
             <div className="terminal-kicker">Home</div>
-            <h1 className="mt-3 max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">
-              Service commerce for agents that negotiate, settle, and leave evidence.
+            <h1 className="mt-4 max-w-5xl text-4xl font-semibold leading-[0.98] md:text-6xl">
+              <span className="text-[var(--terminal-muted)]">Service commerce for</span>
+              <br />
+              <span className="hero-word-window mt-3 inline-flex min-h-[1.15em] items-center">
+                <span key={heroWords[heroWordIndex]} className="hero-word-item text-[var(--terminal-accent)]">
+                  {heroWords[heroWordIndex].toUpperCase()}
+                </span>
+              </span>
             </h1>
-            <p className="mt-5 max-w-2xl text-base text-[var(--terminal-muted)]">
-              DealRail is not a chat wrapper. It is a deal desk for buyers, providers, and evaluators who need a clean
-              path from market discovery to escrowed settlement.
+            <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--terminal-muted)]">
+              DealRail is the desk between service marketplaces and escrow. Buyers scan provider supply, providers
+              respond with quotes, evaluators verify output, and the desk leaves a machine-readable receipt.
             </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {heroWords.map((word, index) => (
+                <button
+                  key={word}
+                  type="button"
+                  onClick={() => setHeroWordIndex(index)}
+                  className={`terminal-chip transition ${
+                    index === heroWordIndex ? 'border-[var(--terminal-accent)] text-[var(--terminal-accent)]' : ''
+                  }`}
+                >
+                  {word}
+                </button>
+              ))}
+            </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/terminal" className="terminal-btn terminal-btn-accent">
                 Open Terminal Desk
@@ -54,20 +83,34 @@ export default function HomePage() {
                 Read Docs
               </Link>
             </div>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <span className="terminal-chip">Reverse auction</span>
-              <span className="terminal-chip">Escrow + refund path</span>
-              <span className="terminal-chip">ERC-8004 aware</span>
-              <span className="terminal-chip">x402 / x402n / Locus / Delegation</span>
+            <div className="mt-8 grid max-w-3xl grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="terminal-metric">
+                <div className="terminal-label">Use It For</div>
+                <div className="mt-2 text-sm leading-6 text-[var(--terminal-muted)]">
+                  Multi-offer service buying where agents need price discovery and a refund path.
+                </div>
+              </div>
+              <div className="terminal-metric">
+                <div className="terminal-label">Supply Comes From</div>
+                <div className="mt-2 text-sm leading-6 text-[var(--terminal-muted)]">
+                  x402n listings, imported provider feeds, and demo fallback until live discovery is connected.
+                </div>
+              </div>
+              <div className="terminal-metric">
+                <div className="terminal-label">Outcome</div>
+                <div className="mt-2 text-sm leading-6 text-[var(--terminal-muted)]">
+                  Deal confirmation, escrow settlement, evaluator decision, and a saved receipt trail.
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="xl:col-span-5">
-            <div className="rounded-[1.5rem] border border-[var(--terminal-border)] bg-black/15 p-5">
+          <div className="xl:col-span-4">
+            <div className="rounded-[1.5rem] border border-[var(--terminal-border)] bg-black/10 p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="terminal-kicker">Session</div>
-                  <div className="mt-2 text-lg font-semibold">Live chain posture</div>
+                  <div className="mt-2 text-lg font-semibold">Live posture</div>
                 </div>
                 <div className="terminal-chip">
                   {isConnected ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Wallet offline'}
@@ -84,6 +127,16 @@ export default function HomePage() {
                   <div className="terminal-label">Chain</div>
                   <div className="mt-1 text-sm font-semibold">{chainLabel}</div>
                 </div>
+                <div className="terminal-metric">
+                  <div className="terminal-label">Negotiation</div>
+                  <div className="mt-1 text-sm font-semibold">
+                    {health?.integrations?.x402nMockMode ? 'Demo feed' : 'Live feed'}
+                  </div>
+                </div>
+                <div className="terminal-metric">
+                  <div className="terminal-label">Flow</div>
+                  <div className="mt-1 text-sm font-semibold">Scan {'->'} bid {'->'} settle</div>
+                </div>
                 <div className="terminal-metric col-span-2">
                   <div className="terminal-label">Escrow rail</div>
                   <div className="mt-1 terminal-mono text-xs text-[var(--terminal-muted)]">
@@ -91,11 +144,10 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="mt-5 rounded-2xl border border-[var(--terminal-border)] bg-black/15 p-4">
+              <div className="mt-5 rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4">
                 <div className="terminal-label">When To Use</div>
                 <div className="mt-2 text-sm text-[var(--terminal-muted)]">
-                  Use DealRail when price discovery matters, the provider is machine-operated, and you want a refund path
-                  plus an evaluator.
+                  Use DealRail when you do not know the winning provider yet and need the market to tell you.
                 </div>
               </div>
             </div>
@@ -105,25 +157,25 @@ export default function HomePage() {
 
       <HeroFlowArchitecture />
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <div className="xl:col-span-7">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-8">
           <HomeCommandTerminal compact />
         </div>
-        <div className="terminal-panel rounded-[1.25rem] p-5 xl:col-span-5">
-          <div className="terminal-kicker">Command Model</div>
-          <h2 className="mt-2 text-2xl font-semibold">One input surface, three roles</h2>
-          <div className="mt-4 space-y-4 text-sm text-[var(--terminal-muted)]">
+        <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-4">
+          <div className="terminal-kicker">How To Start</div>
+          <h2 className="mt-2 text-2xl font-semibold">Start with one verb</h2>
+          <div className="mt-5 space-y-5 text-sm leading-6 text-[var(--terminal-muted)]">
             <div>
-              <div className="terminal-label">Buyer</div>
-              Type the outcome you need, budget ceiling, and deadline.
+              <div className="terminal-label">`scan`</div>
+              See what provider supply is available right now for a category or task.
             </div>
             <div>
-              <div className="terminal-label">Provider</div>
-              Type the service you offer and the desk routes you into quote and delivery guidance.
+              <div className="terminal-label">`buy`</div>
+              Tell the desk the outcome, budget, and deadline. It shortlists offers and stages an auction.
             </div>
             <div>
-              <div className="terminal-label">Evaluator</div>
-              Type what you need to verify and the desk moves into review and settlement checks.
+              <div className="terminal-label">`sell`</div>
+              Tell the desk what service you provide. It explains how to register or import your supply.
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
@@ -134,40 +186,11 @@ export default function HomePage() {
               Usage Docs
             </Link>
             <Link href="/integrations" className="terminal-btn">
-              Integration Strategies
+              Rails
             </Link>
           </div>
         </div>
       </section>
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="terminal-panel rounded-[1.25rem] p-5">
-          <div className="terminal-kicker">Use Case</div>
-          <h3 className="mt-2 text-xl font-semibold">When DealRail is the right tool</h3>
-          <p className="mt-3 text-sm text-[var(--terminal-muted)]">
-            When you need agent-native procurement, competitive quoting, escrow protection, and a machine-readable proof
-            trail for judges or operators.
-          </p>
-        </div>
-        <div className="terminal-panel rounded-[1.25rem] p-5">
-          <div className="terminal-kicker">Not Ideal</div>
-          <h3 className="mt-2 text-xl font-semibold">When not to force it</h3>
-          <p className="mt-3 text-sm text-[var(--terminal-muted)]">
-            If there is no evaluator, no need for price discovery, or the service is a one-click consumer purchase, this
-            rail adds unnecessary structure.
-          </p>
-        </div>
-        <div className="terminal-panel rounded-[1.25rem] p-5">
-          <div className="terminal-kicker">Surfaces</div>
-          <h3 className="mt-2 text-xl font-semibold">How to navigate</h3>
-          <p className="mt-3 text-sm text-[var(--terminal-muted)]">
-            `Home` explains the model. `Terminal` operates it. `Dashboard` watches supply and runs. `Integrations`
-            chooses settlement rails.
-          </p>
-        </div>
-      </section>
-
-      <MarketPulsePanel variant="compact" />
     </div>
   );
 }

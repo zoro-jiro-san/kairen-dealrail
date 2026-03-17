@@ -31,31 +31,49 @@ export default function TerminalPage() {
   const steps = lastAction ? stepMap[lastAction.kind] || ['Command received'] : ['Run your first command in terminal'];
 
   return (
-    <div className="space-y-5">
-      <section className="hero-grid terminal-panel rounded-[1.5rem] p-6">
+    <div className="space-y-6">
+      <section className="hero-grid terminal-panel rounded-[1.75rem] p-6">
         <div className="relative z-10 flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="terminal-kicker">Terminal</div>
-            <h1 className="mt-2 text-3xl font-semibold">Cypherpunk execution desk</h1>
-            <p className="mt-2 max-w-2xl text-sm text-[var(--terminal-muted)]">
-              This is the primary operating surface. Type what you want, let the desk classify the role, and follow the
-              execution ladder without leaving the page.
+            <h1 className="mt-2 text-3xl font-semibold">Market desk for service deals</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--terminal-muted)]">
+              Start with `scan`, `buy`, `sell`, `rails`, or `status`. The desk should make the market legible before it
+              asks you to settle anything.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <span className="terminal-chip">No redirect flow</span>
-            <span className="terminal-chip">Live command ledger</span>
-            <span className="terminal-chip">Market-aware routing</span>
+            <span className="terminal-chip">No redirects</span>
+            <span className="terminal-chip">Supply-aware</span>
+            <span className="terminal-chip">Receipt-first</span>
           </div>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <div className="xl:col-span-7">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="xl:col-span-8">
           <HomeCommandTerminal onAction={handleAction} />
         </div>
-        <div className="space-y-4 xl:col-span-5">
-          <div className="terminal-panel rounded-[1.25rem] p-5">
+        <div className="space-y-5 xl:col-span-4">
+          <div className="terminal-panel rounded-[1.5rem] p-6">
+            <div className="terminal-kicker">Desk Guide</div>
+            <div className="mt-5 space-y-4 text-sm leading-6 text-[var(--terminal-muted)]">
+              <div>
+                <div className="terminal-label">`scan`</div>
+                Use this before buying. It answers whether the desk actually has supply for your request.
+              </div>
+              <div>
+                <div className="terminal-label">`buy`</div>
+                Use this when you know the job but not the winner.
+              </div>
+              <div>
+                <div className="terminal-label">`sell`</div>
+                Use this when you are bringing provider inventory into the desk.
+              </div>
+            </div>
+          </div>
+
+          <div className="terminal-panel rounded-[1.5rem] p-6">
             <div className="terminal-kicker">Execution Ladder</div>
             <div className="mt-4 space-y-3">
               {steps.map((step, idx) => (
@@ -68,7 +86,7 @@ export default function TerminalPage() {
               ))}
             </div>
             {lastAction && (
-              <div className="mt-5 rounded-2xl border border-[var(--terminal-border)] bg-black/20 p-4 text-xs text-[var(--terminal-muted)]">
+              <div className="mt-5 rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 text-xs text-[var(--terminal-muted)]">
                 <div className="terminal-label">Last command</div>
                 <div className="mt-2 terminal-mono text-[var(--terminal-fg)]">{lastAction.command}</div>
                 <div className="mt-1 text-[var(--terminal-good)]">{lastAction.note}</div>
@@ -76,7 +94,7 @@ export default function TerminalPage() {
             )}
           </div>
 
-          <div className="terminal-panel rounded-[1.25rem] p-5">
+          <div className="terminal-panel rounded-[1.5rem] p-6">
             <div className="terminal-kicker">Recent Commands</div>
             <div className="mt-4 max-h-80 space-y-2 overflow-auto">
               {runs.map((run) => (
@@ -92,7 +110,7 @@ export default function TerminalPage() {
         </div>
       </section>
 
-      <MarketPulsePanel />
+      <MarketPulsePanel variant="compact" />
     </div>
   );
 }

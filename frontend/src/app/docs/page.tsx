@@ -28,32 +28,32 @@ const lifecycle = [
 
 export default function DocsPage() {
   return (
-    <div className="space-y-5">
-      <section className="hero-grid terminal-panel rounded-[1.5rem] p-6">
+    <div className="space-y-8">
+      <section className="hero-grid terminal-panel rounded-[1.75rem] p-6 md:p-8">
         <div className="relative z-10">
           <div className="terminal-kicker">Docs</div>
           <h1 className="mt-2 text-3xl font-semibold">Detailed overview and usage guide</h1>
-          <p className="mt-3 max-w-3xl text-sm text-[var(--terminal-muted)]">
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--terminal-muted)]">
             This page explains what DealRail is, who should use it, how the roles interact, and where each page fits in
             the product.
           </p>
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <div className="terminal-panel rounded-[1.25rem] p-5 xl:col-span-5">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-5">
           <div className="terminal-kicker">What It Is</div>
           <h2 className="mt-2 text-2xl font-semibold">A service-commerce rail, not a chat UI</h2>
-          <div className="mt-4 space-y-3 text-sm text-[var(--terminal-muted)]">
+          <div className="mt-5 space-y-4 text-sm leading-7 text-[var(--terminal-muted)]">
             <p>DealRail is for agent-driven or human-assisted service deals where both sides need structured price discovery.</p>
             <p>The main value is not messaging. The main value is turning intent into a market scan, an offer, an escrow path, and a receipt.</p>
             <p>Use it when there is actual execution risk, price uncertainty, or a need for evaluator-backed settlement.</p>
           </div>
         </div>
 
-        <div className="terminal-panel rounded-[1.25rem] p-5 xl:col-span-7">
+        <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-7">
           <div className="terminal-kicker">Page Map</div>
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
             <div className="terminal-metric">
               <div className="terminal-label">Home</div>
               <div className="mt-1 text-sm text-[var(--terminal-muted)]">Explains the model and shows the signal animation.</div>
@@ -74,24 +74,24 @@ export default function DocsPage() {
         </div>
       </section>
 
-      <section className="terminal-panel rounded-[1.25rem] p-5">
+      <section className="terminal-panel rounded-[1.5rem] p-6">
         <div className="terminal-kicker">How It Works</div>
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-5">
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-5">
           {lifecycle.map((item) => (
-            <div key={item.title} className="rounded-2xl border border-[var(--terminal-border)] bg-black/15 p-4">
+            <div key={item.title} className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5">
               <div className="font-semibold">{item.title}</div>
-              <div className="mt-2 text-sm text-[var(--terminal-muted)]">{item.desc}</div>
+              <div className="mt-3 text-sm leading-6 text-[var(--terminal-muted)]">{item.desc}</div>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {roleGuides.map((guide) => (
-          <div key={guide.role} className="terminal-panel rounded-[1.25rem] p-5">
+          <div key={guide.role} className="terminal-panel rounded-[1.5rem] p-6">
             <div className="terminal-kicker">{guide.role}</div>
-            <p className="mt-3 text-sm text-[var(--terminal-muted)]">{guide.summary}</p>
-            <div className="mt-4 space-y-2">
+            <p className="mt-4 text-sm leading-7 text-[var(--terminal-muted)]">{guide.summary}</p>
+            <div className="mt-5 space-y-3">
               {guide.steps.map((step, idx) => (
                 <div key={step} className="flex items-start gap-3 text-sm">
                   <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full border border-[var(--terminal-border)] terminal-mono text-[10px] text-[var(--terminal-accent)]">
@@ -105,17 +105,17 @@ export default function DocsPage() {
         ))}
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="terminal-panel rounded-[1.25rem] p-5">
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="terminal-panel rounded-[1.5rem] p-6">
           <div className="terminal-kicker">When To Use</div>
-          <div className="mt-3 text-sm text-[var(--terminal-muted)]">
+          <div className="mt-4 text-sm leading-7 text-[var(--terminal-muted)]">
             Use DealRail when negotiation matters, when agents need a structured deal loop, and when a final receipt is
             part of the product value.
           </div>
         </div>
-        <div className="terminal-panel rounded-[1.25rem] p-5">
+        <div className="terminal-panel rounded-[1.5rem] p-6">
           <div className="terminal-kicker">When Not To Use</div>
-          <div className="mt-3 text-sm text-[var(--terminal-muted)]">
+          <div className="mt-4 text-sm leading-7 text-[var(--terminal-muted)]">
             Do not use DealRail for simple fixed-price one-click purchases where there is no real market scan, no evaluator,
             and no need for a deal receipt.
           </div>
