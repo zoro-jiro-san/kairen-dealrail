@@ -2,7 +2,7 @@
 
 URL target: `https://dealrail.kairen.xyz/SKILL.md`
 
-DealRail is a neutral trust/execution rail for agent commerce.
+DealRail is a trust/execution rail for agent commerce.
 
 ## Primary Use Case
 
@@ -15,7 +15,7 @@ DealRail is a neutral trust/execution rail for agent commerce.
 ## What DealRail Is
 
 - Trustless settlement and verification layer.
-- Neutral integration surface for multiple discovery/execution providers.
+- Integration surface for multiple discovery/execution providers.
 
 ## What DealRail Is Not
 
@@ -32,7 +32,7 @@ DealRail is a neutral trust/execution rail for agent commerce.
 - `/skills/client-frontend/SKILL.md`
 - `/skills/checkpoints/SKILL.md`
 
-## Neutral Integration Endpoints
+## Integration Endpoints
 
 - `GET /api/v1/discovery/sources`
 - `GET /api/v1/discovery/providers`

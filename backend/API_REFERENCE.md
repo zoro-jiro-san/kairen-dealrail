@@ -264,7 +264,7 @@ curl -X POST http://localhost:3001/api/v1/jobs/6/complete \
 
 ---
 
-## Neutral Discovery
+## Discovery
 
 ### List Discovery Sources
 **Endpoint:** `GET /api/v1/discovery/sources`
@@ -383,7 +383,7 @@ Requires job state = `Completed`.
 
 ---
 
-## Neutral Execution Adapters
+## Execution Adapters
 
 ### List Execution Providers
 **Endpoint:** `GET /api/v1/execution/providers`

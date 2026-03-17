@@ -75,9 +75,9 @@ DealRail is the trust/execution layer, not the full marketplace:
 4. Verification: evaluator decides complete/reject.
 5. Settlement ops: optional post-settlement routing (Uniswap/Locus).
 
-## 🌐 Neutrality
+## 🌐 Integration
 
-DealRail is integration-neutral:
+DealRail supports multi-source integration:
 - Discovery can aggregate multiple sources (x402n, external marketplaces, imported catalogs).
 - Identity trust source uses ERC-8004 registries.
 - Execution adapters support wallet-native flow plus bridge providers.
