@@ -55,6 +55,7 @@ npm run dev
 - **[PRD_KAIREN_DEALRAIL.md](PRD_KAIREN_DEALRAIL.md)** - Product requirements
 - **[AGENT.md](AGENT.md)** - AI agent collaboration guide
 - **[skills/README.md](skills/README.md)** - Agent role skills and execution checkpoints
+- **[backend/TRANSACTION_LEDGER.md](backend/TRANSACTION_LEDGER.md)** - Testnet ledger book (deployments + smoke txs)
 - **[docs/](docs/)** - Comprehensive documentation
 
 ## ✅ Hackathon P0 Scope (Must Ship)
@@ -177,6 +178,9 @@ npx tsx tests/recycle-usdc.ts
 
 # Check all wallet balances
 npx tsx tests/check-all-balances.ts
+
+# Celo Sepolia smoke flow (happy + reject)
+npx tsx tests/test-lifecycle-celo-sepolia.ts
 ```
 
 ### Frontend Testing

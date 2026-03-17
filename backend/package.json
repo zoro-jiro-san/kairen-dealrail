@@ -14,7 +14,8 @@
     "db:studio": "prisma studio",
     "test": "jest",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "smoke:celo-sepolia": "tsx tests/test-lifecycle-celo-sepolia.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
