@@ -1,4 +1,4 @@
-# DealRail Scales
+# DealRail Skills
 
 Purpose: agent-friendly operations directory that centralizes how DealRail should be run by role.
 

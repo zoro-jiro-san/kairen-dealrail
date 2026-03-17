@@ -316,6 +316,11 @@ const createNegotiationSchema = z.object({
   maxBudgetUsdc: z.number().positive(),
   maxDeliveryHours: z.number().int().positive(),
   minReputationScore: z.number().int().min(0).max(1000),
+  auctionMode: z.enum(['ranked', 'reverse_auction']).optional(),
+  maxRounds: z.number().int().min(1).max(10).optional(),
+  batchSize: z.number().int().min(1).max(8).optional(),
+  autoCounterStepBps: z.number().int().min(50).max(2000).optional(),
+  networkMode: z.enum(['demo', 'testnet', 'mainnet']).optional(),
 });
 
 // POST /api/v1/x402n/rfos - Create negotiation from policy
@@ -382,6 +387,142 @@ app.post('/api/v1/x402n/offers/:offerId/accept', async (req: Request, res: Respo
     }
     console.error('Error accepting x402n offer:', error);
     res.status(500).json({ error: 'Failed to accept offer' });
+    return;
+  }
+});
+
+// POST /api/v1/x402n/rfos/:negotiationId/counter - Execute one reverse-auction round
+app.post('/api/v1/x402n/rfos/:negotiationId/counter', (req: Request, res: Response) => {
+  const updated = x402nService.runCounterRound(req.params.negotiationId);
+  if (!updated) {
+    res.status(404).json({ error: 'Negotiation not found' });
+    return;
+  }
+  res.json({
+    success: true,
+    negotiation: updated,
+    roundsCompleted: updated.roundsCompleted,
+    maxRounds: updated.maxRounds,
+    bestOffer: updated.offers[0] ?? null,
+  });
+  return;
+});
+
+// POST /api/v1/x402n/rfos/:negotiationId/batch - Create offer batch for confirmation
+app.post('/api/v1/x402n/rfos/:negotiationId/batch', (req: Request, res: Response) => {
+  const schema = z.object({
+    offerIds: z.array(z.string().min(1)).optional(),
+  });
+
+  try {
+    const payload = schema.parse(req.body ?? {});
+    const result = x402nService.createBatch(req.params.negotiationId, payload.offerIds);
+    if (!result) {
+      res.status(404).json({ error: 'Negotiation not found or no eligible offers for batch' });
+      return;
+    }
+    res.status(201).json({
+      success: true,
+      batch: result.batch,
+      negotiation: result.session,
+    });
+    return;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid batch payload', details: error.issues });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to create batch', details: (error as Error).message });
+    return;
+  }
+});
+
+// POST /api/v1/x402n/rfos/:negotiationId/confirm - Confirm deal from a batch
+app.post('/api/v1/x402n/rfos/:negotiationId/confirm', (req: Request, res: Response) => {
+  const schema = z.object({
+    batchId: z.string().min(1),
+    selectedOfferId: z.string().min(1).optional(),
+  });
+
+  try {
+    const payload = schema.parse(req.body);
+    const result = x402nService.confirmBatch(
+      req.params.negotiationId,
+      payload.batchId,
+      payload.selectedOfferId
+    );
+
+    if (!result) {
+      res.status(404).json({ error: 'Negotiation, batch, or offer not found' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      confirmation: result.confirmation,
+      selectedOffer: result.selectedOffer,
+      receipt: result.receipt,
+      negotiation: result.session,
+    });
+    return;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid confirmation payload', details: error.issues });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to confirm batch', details: (error as Error).message });
+    return;
+  }
+});
+
+// GET /api/v1/x402n/rfos/:negotiationId/receipt - Savings receipt
+app.get('/api/v1/x402n/rfos/:negotiationId/receipt', (req: Request, res: Response) => {
+  const receipt = x402nService.getReceipt(req.params.negotiationId);
+  if (!receipt) {
+    res.status(404).json({ error: 'Receipt not found for negotiation' });
+    return;
+  }
+  res.json({
+    success: true,
+    receipt,
+  });
+  return;
+});
+
+// GET /api/v1/x402n/rfos/:negotiationId/activities - Live negotiation feed
+app.get('/api/v1/x402n/rfos/:negotiationId/activities', (req: Request, res: Response) => {
+  const schema = z.object({
+    limit: z
+      .string()
+      .transform((value) => Number(value))
+      .pipe(z.number().int().min(1).max(200))
+      .optional(),
+  });
+
+  try {
+    const parsed = schema.parse({
+      limit: req.query.limit,
+    });
+
+    const negotiation = x402nService.getNegotiation(req.params.negotiationId);
+    if (!negotiation) {
+      res.status(404).json({ error: 'Negotiation not found' });
+      return;
+    }
+
+    const activities = x402nService.getActivities(req.params.negotiationId, parsed.limit ?? 50);
+    res.json({
+      success: true,
+      negotiationId: req.params.negotiationId,
+      activities,
+    });
+    return;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid activity query params', details: error.issues });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to load activities', details: (error as Error).message });
     return;
   }
 });

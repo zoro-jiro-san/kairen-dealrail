@@ -27,6 +27,24 @@ export default function Home() {
     }
   }
 
+  function networkLabel(): string {
+    const chainId = health?.blockchain.chainId;
+    if (chainId === 84532) return 'Base Sepolia';
+    if (chainId === 8453) return 'Base Mainnet';
+    if (chainId === 44787) return 'Celo Alfajores';
+    if (chainId === 42220) return 'Celo Mainnet';
+    return chainId ? `Chain ${chainId}` : 'Unknown';
+  }
+
+  function explorerAddressUrl(address: string): string {
+    const chainId = health?.blockchain.chainId;
+    if (chainId === 84532) return `https://sepolia.basescan.org/address/${address}`;
+    if (chainId === 8453) return `https://basescan.org/address/${address}`;
+    if (chainId === 44787) return `https://alfajores.celoscan.io/address/${address}`;
+    if (chainId === 42220) return `https://celoscan.io/address/${address}`;
+    return `https://sepolia.basescan.org/address/${address}`;
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       {/* Header */}
@@ -169,7 +187,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="text-lg font-semibold text-purple-400">
-                  Base Sepolia
+                  {networkLabel()}
                 </div>
               </div>
 
@@ -227,7 +245,9 @@ export default function Home() {
             <div className="flex gap-4">
               <CreateJobButton />
               <a
-                href={`https://sepolia.basescan.org/address/${health?.blockchain.escrowAddress || '0x53d368b5467524F7d674B70F00138a283e1533ce'}`}
+                href={explorerAddressUrl(
+                  health?.blockchain.escrowAddress || '0x53d368b5467524F7d674B70F00138a283e1533ce'
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors inline-flex items-center gap-2"

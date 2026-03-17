@@ -45,6 +45,11 @@ export interface NegotiationPolicy {
   maxBudgetUsdc: number;
   maxDeliveryHours: number;
   minReputationScore: number;
+  auctionMode?: 'ranked' | 'reverse_auction';
+  maxRounds?: number;
+  batchSize?: number;
+  autoCounterStepBps?: number;
+  networkMode?: 'demo' | 'testnet' | 'mainnet';
 }
 
 export interface NegotiationOffer {
@@ -57,6 +62,52 @@ export interface NegotiationOffer {
   confidence: number;
   score: number;
   terms: string;
+  round: number;
+  initialPriceUsdc: number;
+}
+
+export interface NegotiationBatch {
+  batchId: string;
+  offerIds: string[];
+  createdAt: string;
+  status: 'open' | 'confirmed';
+}
+
+export interface DealConfirmation {
+  confirmationId: string;
+  negotiationId: string;
+  batchId: string;
+  selectedOfferId: string;
+  provider: string;
+  evaluator: string;
+  confirmedAt: string;
+  expectedDeliveryHours: number;
+}
+
+export interface SavingsReceipt {
+  receiptId: string;
+  negotiationId: string;
+  generatedAt: string;
+  baselinePriceUsdc: number;
+  settledPriceUsdc: number;
+  savedUsdc: number;
+  savedPct: number;
+  networkMode: 'demo' | 'testnet' | 'mainnet';
+}
+
+export interface NegotiationActivity {
+  id: string;
+  timestamp: string;
+  type:
+    | 'session_created'
+    | 'offers_ranked'
+    | 'counter_round'
+    | 'offer_accepted'
+    | 'batch_created'
+    | 'deal_confirmed'
+    | 'receipt_generated';
+  message: string;
+  data?: Record<string, unknown>;
 }
 
 export interface NegotiationSession {
@@ -66,6 +117,15 @@ export interface NegotiationSession {
   policy: NegotiationPolicy;
   offers: NegotiationOffer[];
   acceptedOfferId: string | null;
+  auctionMode: 'ranked' | 'reverse_auction';
+  roundsCompleted: number;
+  maxRounds: number;
+  batchSize: number;
+  activities: NegotiationActivity[];
+  batches: NegotiationBatch[];
+  confirmation: DealConfirmation | null;
+  receipt: SavingsReceipt | null;
+  baselineBestPriceUsdc: number | null;
 }
 
 export interface ProviderCandidate {
@@ -207,6 +267,48 @@ export const x402nApi = {
     } | null;
   }> => {
     const response = await api.post(`/x402n/offers/${offerId}/accept`, { negotiationId });
+    return response.data;
+  },
+  runCounterRound: async (negotiationId: string): Promise<{
+    success: boolean;
+    roundsCompleted: number;
+    maxRounds: number;
+    bestOffer: NegotiationOffer | null;
+    negotiation: NegotiationSession;
+  }> => {
+    const response = await api.post(`/x402n/rfos/${negotiationId}/counter`);
+    return response.data;
+  },
+  createBatch: async (
+    negotiationId: string,
+    offerIds?: string[]
+  ): Promise<{ success: boolean; batch: NegotiationBatch; negotiation: NegotiationSession }> => {
+    const response = await api.post(`/x402n/rfos/${negotiationId}/batch`, { offerIds });
+    return response.data;
+  },
+  confirmBatch: async (
+    negotiationId: string,
+    batchId: string,
+    selectedOfferId?: string
+  ): Promise<{
+    success: boolean;
+    confirmation: DealConfirmation;
+    selectedOffer: NegotiationOffer;
+    receipt: SavingsReceipt;
+    negotiation: NegotiationSession;
+  }> => {
+    const response = await api.post(`/x402n/rfos/${negotiationId}/confirm`, { batchId, selectedOfferId });
+    return response.data;
+  },
+  getReceipt: async (negotiationId: string): Promise<{ success: boolean; receipt: SavingsReceipt }> => {
+    const response = await api.get(`/x402n/rfos/${negotiationId}/receipt`);
+    return response.data;
+  },
+  getActivities: async (
+    negotiationId: string,
+    limit = 50
+  ): Promise<{ success: boolean; negotiationId: string; activities: NegotiationActivity[] }> => {
+    const response = await api.get(`/x402n/rfos/${negotiationId}/activities`, { params: { limit } });
     return response.data;
   },
 };
