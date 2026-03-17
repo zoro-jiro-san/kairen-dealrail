@@ -5,6 +5,8 @@ import { injected, walletConnect } from 'wagmi/connectors';
 
 // WalletConnect Project ID (get from https://cloud.walletconnect.com)
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '';
+const hasWalletConnectProjectId =
+  !!projectId && projectId !== 'your_project_id_here' && !projectId.toLowerCase().includes('placeholder');
 
 // Configure chains
 export const chains = [baseSepolia, base] as const;
@@ -12,18 +14,20 @@ export const chains = [baseSepolia, base] as const;
 // Create Wagmi config
 export const config = createConfig({
   chains,
-  connectors: [
-    injected(),
-    walletConnect({
-      projectId,
-      metadata: {
-        name: 'DealRail',
-        description: 'EIP-8183 Agentic Commerce Platform',
-        url: 'https://dealrail.xyz',
-        icons: ['https://dealrail.xyz/logo.png'],
-      },
-    }),
-  ],
+  connectors: hasWalletConnectProjectId
+    ? [
+        injected(),
+        walletConnect({
+          projectId,
+          metadata: {
+            name: 'DealRail',
+            description: 'EIP-8183 Agentic Commerce Platform',
+            url: 'https://dealrail.xyz',
+            icons: ['https://dealrail.xyz/logo.png'],
+          },
+        }),
+      ]
+    : [injected()],
   transports: {
     [baseSepolia.id]: http(),
     [base.id]: http(),

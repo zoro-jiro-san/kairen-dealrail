@@ -6,12 +6,12 @@ const nextConfig = {
   },
   webpack: (config) => {
     config.resolve.fallback = { fs: false, net: false, tls: false };
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@react-native-async-storage/async-storage': false,
+    };
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
     return config;
-  },
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
-    NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID || '84532',
   },
 };
 

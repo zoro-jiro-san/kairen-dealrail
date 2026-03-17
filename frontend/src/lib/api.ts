@@ -6,13 +6,47 @@
  */
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const COMPILED_API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
+
+function isLocalHostname(hostname: string) {
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+function getApiOrigin() {
+  if (typeof window !== 'undefined') {
+    const browserDefault = `${window.location.protocol}//${window.location.hostname}:3001`;
+
+    if (!COMPILED_API_URL) {
+      return isLocalHostname(window.location.hostname) ? browserDefault : window.location.origin;
+    }
+
+    try {
+      const parsed = new URL(COMPILED_API_URL, window.location.origin);
+      if (
+        isLocalHostname(window.location.hostname) &&
+        parsed.hostname === window.location.hostname &&
+        parsed.port === window.location.port
+      ) {
+        return browserDefault;
+      }
+      return parsed.toString().replace(/\/$/, '');
+    } catch {
+      return isLocalHostname(window.location.hostname) ? browserDefault : window.location.origin;
+    }
+  }
+
+  return COMPILED_API_URL || 'http://localhost:3001';
+}
 
 export const api = axios.create({
-  baseURL: `${API_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+api.interceptors.request.use((config) => {
+  config.baseURL = `${getApiOrigin()}/api/v1`;
+  return config;
 });
 
 // ============ Types (matching simplified API response) ============
@@ -412,7 +446,7 @@ export const integrationsApi = {
  * Verifies backend connectivity and blockchain status
  */
 export const healthCheck = async (): Promise<HealthCheckResponse> => {
-  const response = await axios.get(`${API_URL}/health`);
+  const response = await axios.get(`${getApiOrigin()}/health`);
   return response.data;
 };
 
