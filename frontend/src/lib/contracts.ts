@@ -1,16 +1,23 @@
 // Contract addresses and ABIs
 import { Address } from 'viem';
 
-// Contract addresses - DealRail deployment on Base Sepolia
+// Contract addresses - latest deployment (Base Sepolia + Celo Sepolia)
 export const ESCROW_ADDRESSES: Record<number, Address> = {
-  84532: '0x53d368b5467524F7d674B70F00138a283e1533ce', // Base Sepolia - EscrowRail
+  84532: '0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835', // Base Sepolia - EscrowRailERC20
+  11142220: '0x03e36985D6497BEf550aFAF8b7105301Ea19C890', // Celo Sepolia - EscrowRailERC20
   8453: '0x0000000000000000000000000000000000000000', // Base Mainnet (not deployed)
 };
 
 // USDC addresses
 export const USDC_ADDRESSES: Record<number, Address> = {
   84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia - Mock USDC
+  11142220: '0x01C5C0122039549AD1493B8220cABEdD739BC44E', // Celo Sepolia - Stable token
   8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base Mainnet - Native USDC
+};
+
+export const HOOK_ADDRESSES: Record<number, Address> = {
+  84532: '0x0CF133C9cE602854269CA6e49A4E8697Ef392c76',
+  11142220: '0x4F7Ed262F1675cdffB5D63eE5E2B0FCb95C0015f',
 };
 
 // EscrowRail ABI (minimal for frontend)
@@ -66,7 +73,7 @@ export const ESCROW_ABI = [
     ],
     name: 'fund',
     outputs: [],
-    stateMutability: 'payable',
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -187,6 +194,10 @@ export const JobStateNames: Record<number, string> = {
 // Helper to get contract address for current chain
 export function getEscrowAddress(chainId: number): Address {
   return ESCROW_ADDRESSES[chainId] || ESCROW_ADDRESSES[84532];
+}
+
+export function getHookAddress(chainId: number): Address {
+  return HOOK_ADDRESSES[chainId] || '0x0000000000000000000000000000000000000000';
 }
 
 // Helper to get USDC address for current chain

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "./interfaces/IEIP8183AgenticCommerce.sol";
+import "./interfaces/IACPHook.sol";
 import "./interfaces/IIdentityVerifier.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -43,6 +44,7 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
 
     event IdentityVerifierUpdated(address indexed newVerifier);
     event MinimumReputationUpdated(uint256 newMinimum);
+    event HookAfterActionFailed(uint256 indexed jobId, address indexed hook, bytes4 indexed action);
 
     // ============ Constructor ============
 
@@ -69,6 +71,9 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         require(provider != address(0), "EscrowRail: zero provider");
         require(evaluator != address(0), "EscrowRail: zero evaluator");
         require(expiry > block.timestamp, "EscrowRail: expiry must be in future");
+        if (hook != address(0)) {
+            require(hook.code.length > 0, "EscrowRail: hook must be contract");
+        }
 
         // Optional: Verify provider identity
         if (address(identityVerifier) != address(0)) {
@@ -112,9 +117,12 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         require(msg.value > 0, "EscrowRail: budget must be > 0");
         require(msg.value == expectedBudget, "EscrowRail: budget mismatch");
 
+        _callBeforeAction(jobId, bytes4(keccak256("fund(uint256,uint256)")), abi.encode(expectedBudget), job.hook);
+
         job.budget = msg.value;
         job.state = State.Funded;
 
+        _callAfterAction(jobId, bytes4(keccak256("fund(uint256,uint256)")), abi.encode(expectedBudget), job.hook);
         emit JobFunded(jobId, msg.value);
     }
 
@@ -128,9 +136,12 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         require(msg.sender == job.provider, "EscrowRail: only provider can submit");
         require(deliverable != bytes32(0), "EscrowRail: empty deliverable");
 
+        _callBeforeAction(jobId, bytes4(keccak256("submit(uint256,bytes32)")), abi.encode(deliverable), job.hook);
+
         job.deliverable = deliverable;
         job.state = State.Submitted;
 
+        _callAfterAction(jobId, bytes4(keccak256("submit(uint256,bytes32)")), abi.encode(deliverable), job.hook);
         emit JobSubmitted(jobId, deliverable);
     }
 
@@ -143,12 +154,15 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         require(job.state == State.Submitted, "EscrowRail: job not submitted");
         require(msg.sender == job.evaluator, "EscrowRail: only evaluator can complete");
 
+        _callBeforeAction(jobId, bytes4(keccak256("complete(uint256,bytes32)")), abi.encode(reason), job.hook);
+
         job.state = State.Completed;
 
         // Release payment to provider
         (bool success,) = job.provider.call{value: job.budget}("");
         require(success, "EscrowRail: payment failed");
 
+        _callAfterAction(jobId, bytes4(keccak256("complete(uint256,bytes32)")), abi.encode(reason), job.hook);
         emit JobCompleted(jobId, reason);
     }
 
@@ -167,6 +181,8 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
             revert("EscrowRail: cannot reject in this state");
         }
 
+        _callBeforeAction(jobId, bytes4(keccak256("reject(uint256,bytes32)")), abi.encode(reason), job.hook);
+
         job.state = State.Rejected;
 
         // Refund to client if funded
@@ -175,6 +191,7 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
             require(success, "EscrowRail: refund failed");
         }
 
+        _callAfterAction(jobId, bytes4(keccak256("reject(uint256,bytes32)")), abi.encode(reason), job.hook);
         emit JobRejected(jobId, reason);
     }
 
@@ -190,6 +207,8 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
             "EscrowRail: invalid state for refund"
         );
 
+        _callBeforeAction(jobId, bytes4(keccak256("claimRefund(uint256)")), bytes(""), job.hook);
+
         job.state = State.Expired;
 
         // Refund to client if funded
@@ -198,7 +217,20 @@ contract EscrowRail is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
             require(success, "EscrowRail: refund failed");
         }
 
+        _callAfterAction(jobId, bytes4(keccak256("claimRefund(uint256)")), bytes(""), job.hook);
         emit JobExpired(jobId);
+    }
+
+    function _callBeforeAction(uint256 jobId, bytes4 action, bytes memory data, address hook) internal {
+        if (hook == address(0)) return;
+        IACPHook(hook).beforeAction(jobId, action, data);
+    }
+
+    function _callAfterAction(uint256 jobId, bytes4 action, bytes memory data, address hook) internal {
+        if (hook == address(0)) return;
+        try IACPHook(hook).afterAction(jobId, action, data) {} catch {
+            emit HookAfterActionFailed(jobId, hook, action);
+        }
     }
 
     // ============ View Functions ============

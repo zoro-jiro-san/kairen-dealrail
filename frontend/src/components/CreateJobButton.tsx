@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi';
-import { ESCROW_ABI, getEscrowAddress } from '@/lib/contracts';
+import { ESCROW_ABI, getEscrowAddress, getHookAddress } from '@/lib/contracts';
 import { Address } from 'viem';
 
 export function CreateJobButton() {
@@ -10,6 +10,7 @@ export function CreateJobButton() {
   const [provider, setProvider] = useState('');
   const [evaluator, setEvaluator] = useState('');
   const [expiry, setExpiry] = useState('');
+  const [useTrustHook, setUseTrustHook] = useState(true);
   const chainId = useChainId();
 
   const { data: hash, writeContract, isPending, error } = useWriteContract();
@@ -37,7 +38,7 @@ export function CreateJobButton() {
           provider as Address,
           evaluator as Address,
           BigInt(expiryTimestamp),
-          '0x0000000000000000000000000000000000000000' as Address, // No hook
+          (useTrustHook ? getHookAddress(chainId) : '0x0000000000000000000000000000000000000000') as Address,
         ],
       });
     } catch (error) {
@@ -147,6 +148,16 @@ export function CreateJobButton() {
                       disabled={isPending || isConfirming}
                     />
                   </div>
+
+                  <label className="flex items-center gap-2 rounded border border-gray-600 bg-gray-900/40 px-3 py-2 text-sm text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={useTrustHook}
+                      onChange={(e) => setUseTrustHook(e.target.checked)}
+                      disabled={isPending || isConfirming}
+                    />
+                    Use trust hook (ERC-8004 reputation checks and feedback writes)
+                  </label>
 
                   <div className="flex gap-3 mt-6">
                     <button

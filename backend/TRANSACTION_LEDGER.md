@@ -7,29 +7,29 @@ Purpose: canonical reference for all live demo onchain transactions used in subm
 - Base Sepolia (`84532`): `https://sepolia.basescan.org`
 - Celo Sepolia (`11142220`): `https://celo-sepolia.blockscout.com`
 
-## Active Deployment (March 17, 2026, upgraded ERC-8004 trust loop)
+## Active Deployment (March 17, 2026, upgraded ERC-8004 trust loop + hook execution)
 These addresses are the current canonical deployment for both Base Sepolia and Celo Sepolia.
 
 Contracts:
-- NullVerifier: `0x79d0d1a9292421E940ABab2eFf250eB103834D1A`
-- ERC8004Verifier: `0xA3F079E0230Cf8FB0F40C8942841564A39d8cC1b`
-- EscrowRail (native): `0x08A88af8F4d0fcbF64FFBcd493520411c96c0B28`
-- EscrowRailERC20 (USDC): `0x0F8247f68521ad7EeaD623A9ca5a28787F27376B`
-- DealRailHook: `0x06bF44b8eb768e2738933222273e61C6442A0c94`
+- NullVerifier: `0x9cF6eE9c8606988525ACa24023E3293130A25f1B` (Base), `0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835` (Celo)
+- ERC8004Verifier: `0xEd943E74001e1129546FEde0484Ec1C0F1419815` (Base), `0x0CF133C9cE602854269CA6e49A4E8697Ef392c76` (Celo)
+- EscrowRail (native): `0x7F992E25A7de4269bf6acB187C140920593C2b98` (Base), `0x3FC242a428e612c54Dd7F81181bdDcC295BecEe6` (Celo)
+- EscrowRailERC20 (USDC): `0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835` (Base), `0x03e36985D6497BEf550aFAF8b7105301Ea19C890` (Celo)
+- DealRailHook: `0x0CF133C9cE602854269CA6e49A4E8697Ef392c76` (Base), `0x4F7Ed262F1675cdffB5D63eE5E2B0FCb95C0015f` (Celo)
 
 ### Celo Sepolia deployment txs (upgraded)
-- NullVerifier deploy: `0xd64ce76d1683039c7f8ed1169fb29ec3d7a865dae06b5af1864e05db39714c15`
-- ERC8004Verifier deploy: `0x98af4da66137563d2402ad7d65854bd5d6195c3651809456079b6082d9ca36bd`
-- EscrowRail deploy: `0x57b1e9958d3ca4040bcde84ea1e5e7e94c1375c1fa682a8c2b1b6f8a179c45c2`
-- EscrowRailERC20 deploy: `0x10adbc9c23989deb76d0408eb06e429fb29888ead1dbf5428c339373dfa32843`
-- DealRailHook deploy: `0xd43b1dadedbc8e2bba28eaf1f4f9ae1a06952c4e637c4852b7aea48acd1da993`
+- NullVerifier deploy: `0x239105b357e4be409cfe54e9dc5405327c6a7498f9fa9e84bbc3ea87b98421c5`
+- ERC8004Verifier deploy: `0x4bda1f86e3d42c7eb419209ed0ad2b928a9fedfc383a8a32ad72a89aa1d8cbe3`
+- EscrowRail deploy: `0x61d57236eac7b4a42448e9f2c6839d09f3bded4cbaca0d64705efa851b8fe8db`
+- EscrowRailERC20 deploy: `0x81fb34c8d13f7e477e4292398702ededadeda41278cd46b4a682e22489776512`
+- DealRailHook deploy: `0x9989150ca05a7e613c128c0515e5270468a11520c91b245929d90be55b6a9e68`
 
 ### Base Sepolia deployment txs (upgraded)
-- NullVerifier deploy: `0xc490e8b5c6d3b35bea234677942e673e71285f329bbc31eddf3e3c79a7a989a3`
-- ERC8004Verifier deploy: `0x72337b4145c31e75f7205797f1c143ba2d99dd3a88bcd3c4bc9366f05fb695eb`
-- EscrowRail deploy: `0xfdf0b07912fae7b7744003193eb404822cb8bb1f72e13396309332561944f4ef`
-- EscrowRailERC20 deploy: `0x94fbeb06d31e4400fbec0d6d66476f46de2ee36b84596290c82c25bc17588407`
-- DealRailHook deploy: `0xc9e758280848abba9c0083f7406feba726f98bb9a42a4f9d07f0652e58b065c1`
+- NullVerifier deploy: `0x15f2a9c54c675cf518b73bd00222f8d49f0a7c39b54acbbe0daf1a35e6c9f4f1`
+- ERC8004Verifier deploy: `0x518ff6ca2ddb8913f662155d3c956b1f4c66d0177c7b6ac6d3557a891616308d`
+- EscrowRail deploy: `0xd665b65207bdb5c50164e78181d0dd6f963d48e2a12822ff8abcde63a1748d89`
+- EscrowRailERC20 deploy: `0x6389dbf42591837019fd5671469cf2d983a70ac35be2f7f0186e6e2ce1ba0c5c`
+- DealRailHook deploy: `0xa71ffbb0104ba89319c26f69ddba1a32934b2adc836c3d6c7459f5220f4e70a0`
 
 ## Celo Sepolia Deployment (March 17, 2026, initial)
 Contracts:
@@ -117,6 +117,64 @@ JobId: `8` (completed)
 - fund: `0x85f72b13445ce470aa87b2a97dd873bea97947f3ec981f710d97b11353fce573`
 - submit: `0x2119dfa210bbce59a4afc95328f4c750bfa5d76ef52b395285e15a6fc339347a`
 - complete: `0x8b12c807e008bdd161a64fd4e8c04b14b9dabf3890f837e1452451a8216a422b`
+
+## Celo Sepolia Smoke Demo (live, hook-execution patch deployment)
+Run timestamp: `2026-03-17T11:19:11.097Z`
+Contract: `0x068358C84a5B5d5b1DD0Bd037E62e81816B61eF7`
+
+### Happy path (jobId: 1, final state: Completed=3)
+- createJob: `0xf9b405799494b900c00fa0007ddfe0894b1b111d6da0297be4516fd352dd71fe`
+- approve: `0x129f33bcb4f9cd9311dd036e8f4ea20258d49ff310f930c9b50a3336c9a10afd`
+- fund: `0x86c35b4e65558ddfdfd9b11cfc30888edf435cc33c81dd0ae1cf033e8f17984b`
+- submit: `0xc46be99393dc61c0eee4e0ff09f06e099f894ddd73519841ad326103eb7805c3`
+- complete: `0x84ec3908117d7be46752a21d5c9489f8f10ea3a82613dedbbda8f966c60b937a`
+
+### Reject path (jobId: 2, final state: Rejected=4)
+- createJob: `0xa4a88f221eb4c1858d7e1812f61c216b63a2f1cc5869b0d09ae8af4dbcd613b5`
+- approve: `0xc2df1d27033c23fc581a7456e912e1671ca780c21b7f3f2403ec4f5930671d8f`
+- fund: `0x7aff01d638ce38f330d8f7dc01d54c83df071d60c611c2ad0d115a6140bb1b8d`
+- submit: `0x2440fe75cd2f4cb6dd7cd408dac3e3eaaa54df7caa7348041bc152ba3ffd21d3`
+- reject: `0x20079f7fb8e1de0ff52f291da52989e550e83d61905e356c235d191ca4f6e69f`
+
+## Base Sepolia Smoke Demo (live, hook-execution patch deployment)
+Run timestamp: `2026-03-17T11:20Z`
+Contract: `0x068358C84a5B5d5b1DD0Bd037E62e81816B61eF7`
+JobId: `1` (completed)
+
+- createJob: `0x3ac22d01fdd13889b15b8b0ea471bdeedbbd8f942544d2609911f8371acaeb88`
+- approve: `0x9dd68406ce6d445eb8cb1b132253a6474999164195cf7617abc28a808a47d969`
+- fund: `0x9da238db3169e35f3aef90595922db6fcc8e91da051d2ef91f9ecf1ab09d3212`
+- submit: `0x780fe4a642eaa4baf7c54535f4e116e4a97e649ecbd63e898744fed35e5ddef7`
+- complete: `0x0f5906409c53c20bf22038d8273ba7926a85e1259a4cba48ef5beb4426be3694`
+
+## Celo Sepolia Smoke Demo (live, final deployment)
+Run timestamp: `2026-03-17T11:24:24.645Z`
+Contract: `0x03e36985D6497BEf550aFAF8b7105301Ea19C890`
+
+### Happy path (jobId: 1, final state: Completed=3)
+- createJob: `0xd37d2927b5d87c4f7b485385f82f4ab6baa73eb776a5ebd114d1b38e47433a93`
+- approve: `0x000f98d27398954c75d025b0c131bde950405d5732f6deddf395edcbfff978e3`
+- fund: `0x4f685c120a3f961b892fb7e69e2c2b97642389e562ba081c46b200ce590f874a`
+- submit: `0x3f8dafa310a440f8dbde2ba0ec56fd560599392d8e8820e9be3a6f20e51ecbe7`
+- complete: `0x1c7aa72ec08b86a72a65b5a9a182d14c07c6e106b288191366fa450236e16502`
+
+### Reject path (jobId: 2, final state: Rejected=4)
+- createJob: `0xb22dee065bfaf5797a7849faac6846fd890b51bc1895243fb541ef521da2779e`
+- approve: `0x9d10898546996f4600ddd457f7aec98c544ab31e5d83284e93ce4e58b096b0ad`
+- fund: `0x1378587f21b591d80483c11ee7055f50b1fc81a5ae106389d4afca51486d9de1`
+- submit: `0x8c77df6eaa97a5a998c456aeec92b3f11c79d02d47a4a2abe454f029ec114a01`
+- reject: `0xb400ab111085c1ca5dbe3d12f87dcd0612409d48f7ff956d8922780ea35e04da`
+
+## Base Sepolia Smoke Demo (live, final deployment)
+Run timestamp: `2026-03-17T11:25Z`
+Contract: `0x3Bf4a9DD8200F43eF93bF4DAF1E0148102383835`
+JobId: `1` (completed)
+
+- createJob: `0xe55276ccb8c6c93c7d9fda8e036cc498d0dadad9b709fe80036fc124bf06d76f`
+- approve: `0x3ff366a3dc4d4ca0fdb4331a0f7dc10c5aed68fa99160f2b9a9919b01dbf750c`
+- fund: `0x8a7d52d20b4ef322916bb5be832e46ab143b5a1b3d94be155bd1fa05a91df1a1`
+- submit: `0x7ca85de284424afb8be6dff54ef5d11e92f5fdde9cb510242e30804d74d7f927`
+- complete: `0xef6d30ee706cbfa880244c9883c8f0d68179041363a0fd4ea182d030283f6f65`
 
 ## Base Sepolia Existing Smoke References (historical)
 - Happy path create: `0xd891fcb2b468684d85f0ff4b4d52c2df822c1fdc1db3dc6e5f738f20498d2ede`

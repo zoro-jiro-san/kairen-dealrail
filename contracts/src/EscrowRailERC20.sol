@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "./interfaces/IEIP8183AgenticCommerce.sol";
+import "./interfaces/IACPHook.sol";
 import "./interfaces/IIdentityVerifier.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -57,6 +58,7 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
     event IdentityVerifierUpdated(address indexed newVerifier);
     event MinimumReputationUpdated(uint256 newMinimum);
     event SettlementTokenSet(address indexed token);
+    event HookAfterActionFailed(uint256 indexed jobId, address indexed hook, bytes4 indexed action);
 
     // ============ Constructor ============
 
@@ -88,6 +90,9 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         require(provider != address(0), "EscrowRailERC20: zero provider");
         require(evaluator != address(0), "EscrowRailERC20: zero evaluator");
         require(expiry > block.timestamp, "EscrowRailERC20: expiry must be in future");
+        if (hook != address(0)) {
+            require(hook.code.length > 0, "EscrowRailERC20: hook must be contract");
+        }
 
         // Optional: Verify provider identity
         if (address(identityVerifier) != address(0)) {
@@ -132,6 +137,9 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         require(job.state == State.Open, "EscrowRailERC20: job not open");
         require(msg.sender == job.client, "EscrowRailERC20: only client can fund");
         require(expectedBudget > 0, "EscrowRailERC20: budget must be > 0");
+        require(msg.value == 0, "EscrowRailERC20: ETH not accepted");
+
+        _callBeforeAction(jobId, bytes4(keccak256("fund(uint256,uint256)")), abi.encode(expectedBudget), job.hook);
 
         // Transfer tokens from client to this contract
         settlementToken.safeTransferFrom(msg.sender, address(this), expectedBudget);
@@ -139,6 +147,7 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         job.budget = expectedBudget;
         job.state = State.Funded;
 
+        _callAfterAction(jobId, bytes4(keccak256("fund(uint256,uint256)")), abi.encode(expectedBudget), job.hook);
         emit JobFunded(jobId, expectedBudget);
     }
 
@@ -152,9 +161,12 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         require(msg.sender == job.provider, "EscrowRailERC20: only provider can submit");
         require(deliverable != bytes32(0), "EscrowRailERC20: empty deliverable");
 
+        _callBeforeAction(jobId, bytes4(keccak256("submit(uint256,bytes32)")), abi.encode(deliverable), job.hook);
+
         job.deliverable = deliverable;
         job.state = State.Submitted;
 
+        _callAfterAction(jobId, bytes4(keccak256("submit(uint256,bytes32)")), abi.encode(deliverable), job.hook);
         emit JobSubmitted(jobId, deliverable);
     }
 
@@ -167,11 +179,14 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
         require(job.state == State.Submitted, "EscrowRailERC20: job not submitted");
         require(msg.sender == job.evaluator, "EscrowRailERC20: only evaluator can complete");
 
+        _callBeforeAction(jobId, bytes4(keccak256("complete(uint256,bytes32)")), abi.encode(reason), job.hook);
+
         job.state = State.Completed;
 
         // Release payment to provider
         settlementToken.safeTransfer(job.provider, job.budget);
 
+        _callAfterAction(jobId, bytes4(keccak256("complete(uint256,bytes32)")), abi.encode(reason), job.hook);
         emit JobCompleted(jobId, reason);
     }
 
@@ -190,6 +205,8 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
             revert("EscrowRailERC20: cannot reject in this state");
         }
 
+        _callBeforeAction(jobId, bytes4(keccak256("reject(uint256,bytes32)")), abi.encode(reason), job.hook);
+
         job.state = State.Rejected;
 
         // Refund to client if funded
@@ -197,6 +214,7 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
             settlementToken.safeTransfer(job.client, job.budget);
         }
 
+        _callAfterAction(jobId, bytes4(keccak256("reject(uint256,bytes32)")), abi.encode(reason), job.hook);
         emit JobRejected(jobId, reason);
     }
 
@@ -212,6 +230,8 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
             "EscrowRailERC20: invalid state for refund"
         );
 
+        _callBeforeAction(jobId, bytes4(keccak256("claimRefund(uint256)")), bytes(""), job.hook);
+
         job.state = State.Expired;
 
         // Refund to client if funded
@@ -219,7 +239,20 @@ contract EscrowRailERC20 is IEIP8183AgenticCommerce, ReentrancyGuard, Ownable {
             settlementToken.safeTransfer(job.client, job.budget);
         }
 
+        _callAfterAction(jobId, bytes4(keccak256("claimRefund(uint256)")), bytes(""), job.hook);
         emit JobExpired(jobId);
+    }
+
+    function _callBeforeAction(uint256 jobId, bytes4 action, bytes memory data, address hook) internal {
+        if (hook == address(0)) return;
+        IACPHook(hook).beforeAction(jobId, action, data);
+    }
+
+    function _callAfterAction(uint256 jobId, bytes4 action, bytes memory data, address hook) internal {
+        if (hook == address(0)) return;
+        try IACPHook(hook).afterAction(jobId, action, data) {} catch {
+            emit HookAfterActionFailed(jobId, hook, action);
+        }
     }
 
     // ============ View Functions ============
