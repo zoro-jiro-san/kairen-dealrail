@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { IBM_Plex_Mono, IBM_Plex_Sans, Oxanium } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { AppShell } from '@/components/AppShell';
@@ -14,6 +14,11 @@ const plexMono = IBM_Plex_Mono({
   weight: ['400', '500', '600'],
   variable: '--font-plex-mono',
 });
+const oxanium = Oxanium({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-display',
+});
 
 export const metadata: Metadata = {
   title: 'DealRail - Agentic Commerce Platform',
@@ -27,7 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${plexSans.variable} ${plexMono.variable}`}>
+      <body className={`${plexSans.variable} ${plexMono.variable} ${oxanium.variable}`}>
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>

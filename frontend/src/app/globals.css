@@ -178,6 +178,17 @@ textarea {
     color: var(--terminal-muted);
   }
 
+  .hero-display {
+    font-family: var(--font-display), var(--font-plex-sans), sans-serif;
+    letter-spacing: -0.04em;
+    font-variation-settings: 'wght' 650;
+  }
+
+  .hero-subtle {
+    color: color-mix(in srgb, var(--terminal-fg) 72%, var(--terminal-muted) 28%);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
   .terminal-chip {
     display: inline-flex;
     align-items: center;
@@ -326,13 +337,22 @@ textarea {
 .hero-word-window {
   position: relative;
   overflow: hidden;
+  max-width: 100%;
   border-bottom: 1px solid color-mix(in srgb, var(--terminal-accent) 38%, transparent);
-  padding-bottom: 0.08em;
+  padding: 0 0.08em 0.12em 0;
+  filter: drop-shadow(0 10px 24px color-mix(in srgb, var(--terminal-accent) 14%, transparent));
 }
 
 .hero-word-item {
   display: inline-block;
-  font-family: var(--font-plex-mono), monospace;
-  letter-spacing: 0.12em;
+  max-width: 100%;
+  font-family: var(--font-display), var(--font-plex-mono), monospace;
+  font-variation-settings: 'wght' 700;
+  letter-spacing: 0.03em;
+  line-height: 0.95;
+  overflow-wrap: anywhere;
+  text-shadow:
+    0 0 24px color-mix(in srgb, var(--terminal-accent) 24%, transparent),
+    0 0 1px rgba(255, 255, 255, 0.18);
   animation: heroWordRise 2.2s ease both;
 }

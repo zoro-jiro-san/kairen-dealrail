@@ -45,8 +45,8 @@ export default function HomePage() {
         <div className="relative z-10 grid grid-cols-1 gap-10 xl:grid-cols-12">
           <div className="xl:col-span-8">
             <div className="terminal-kicker">Home</div>
-            <h1 className="mt-4 max-w-5xl text-4xl font-semibold leading-[0.98] md:text-6xl">
-              <span className="text-[var(--terminal-muted)]">Service commerce for</span>
+            <h1 className="hero-display mt-4 max-w-5xl text-4xl leading-[0.94] md:text-6xl">
+              <span className="hero-subtle">Service commerce for</span>
               <br />
               <span className="hero-word-window mt-3 inline-flex min-h-[1.15em] items-center">
                 <span key={heroWords[heroWordIndex]} className="hero-word-item text-[var(--terminal-accent)]">
@@ -139,7 +139,10 @@ export default function HomePage() {
                 </div>
                 <div className="terminal-metric col-span-2">
                   <div className="terminal-label">Escrow rail</div>
-                  <div className="mt-1 terminal-mono text-xs text-[var(--terminal-muted)]">
+                  <div
+                    className="mt-1 break-all terminal-mono text-xs leading-5 text-[var(--terminal-muted)]"
+                    title={health?.blockchain.escrowAddress || 'Unavailable'}
+                  >
                     {health?.blockchain.escrowAddress || 'Unavailable'}
                   </div>
                 </div>
