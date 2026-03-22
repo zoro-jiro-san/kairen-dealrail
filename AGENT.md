@@ -6,7 +6,7 @@ Live surfaces:
 - Browser desk: `https://dealrail.kairen.xyz/`
 - Backend API: `https://kairen-dealrail-production.up.railway.app/`
 - Agent package: `@kairenxyz/dealrail`
-- Public skill index: `https://dealrail.kairen.xyz/skill.md`
+- Public skill index: `https://dealrail.kairen.xyz/SKILL.md`
 
 ## Canonical Rule
 
@@ -67,8 +67,9 @@ Current track posture:
 - Live URL + tx proof beats future intent.
 - Curated demo supply must be described as curated demo supply.
 - Uniswap is currently a Base-only routing preview, not a recorded swap proof.
-- Public backend mutating routes do not accept raw private keys.
+- Public backend mutating routes reject raw private-key request fields. Signing stays client-side or on documented managed demo signers.
 - Roadmap items are not current claims.
+- Never put raw private keys, seed phrases, or mnemonics into prompts, docs, or helper scripts.
 
 ## Strongest Proofs
 
@@ -86,6 +87,6 @@ If you edit product behavior:
 - prefer scenario-first explanations over generic protocol slogans
 
 If you need operating guidance:
-- start with `frontend/public/skill.md`
+- start with `frontend/public/SKILL.md`
 - use `./skills.sh features` for the feature map
 - load the matching repo-local skill before acting on discovery, negotiation, escrow, Base, routing, or delegation
