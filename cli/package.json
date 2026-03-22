@@ -17,13 +17,15 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "demo"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc --noEmit -p tsconfig.json",
     "cli": "tsx src/cli.ts",
     "demo": "tsx src/cli.ts demo",
+    "demo:walkthrough": "bash demo/dealrail-demo.sh",
     "start": "node dist/cli.js"
   },
   "engines": {
