@@ -4,6 +4,7 @@ import { contractService } from './services/contract.service';
 import { buildRawPrivateKeyRejection } from './index-simple';
 import { discoveryService } from './services/discovery.service';
 import { x402nService } from './services/x402n.service';
+import { baseAgentServicesService } from './services/base-agent-services.service';
 
 test('public chain summaries omit rpc URLs', () => {
   const chains = contractService.listSupportedChains();
@@ -53,4 +54,17 @@ test('mock negotiations are ranked from the same discovery catalog', async () =>
   for (const offer of session.offers) {
     assert.ok(providerAddresses.has(offer.provider.toLowerCase()));
   }
+});
+
+test('base agent services directory exposes public Base-facing surfaces', async () => {
+  const directory = await baseAgentServicesService.getDirectory();
+
+  assert.equal(directory.track, 'base-agent-services');
+  assert.equal(directory.chain, 'baseSepolia');
+  assert.equal(directory.chainId, 84532);
+  assert.ok(directory.publicSurfaces.some((surface) => surface.id === 'x402_proxy'));
+  assert.ok(directory.publicSurfaces.some((surface) => surface.id === 'job_board'));
+  assert.ok(directory.publicSurfaces.some((surface) => surface.id === 'post_settlement_routing' && surface.access === 'preview'));
+  assert.ok(Array.isArray(directory.supplyPreview));
+  assert.ok(directory.paymentModels.includes('Base Sepolia USDC escrow'));
 });

@@ -13,6 +13,7 @@ import { discoveryService } from './services/discovery.service';
 import { executionService } from './services/execution.service';
 import { opportunityBookService } from './services/opportunity-book.service';
 import { machinePaymentsService } from './services/machine-payments.service';
+import { baseAgentServicesService } from './services/base-agent-services.service';
 
 const app: Express = express();
 
@@ -156,6 +157,20 @@ app.get('/api/v1/chains', (_req: Request, res: Response) => {
     defaultChain: config.blockchain.activeChain,
     supportedChains: contractService.listSupportedChains(),
   });
+});
+
+app.get('/api/v1/base/agent-services', async (_req: Request, res: Response) => {
+  try {
+    const directory = await baseAgentServicesService.getDirectory();
+    res.json(directory);
+    return;
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to build Base agent services directory',
+      details: (error as Error).message,
+    });
+    return;
+  }
 });
 
 // GET /api/v1/jobs - List recent jobs from chain
