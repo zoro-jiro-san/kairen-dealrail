@@ -11,8 +11,8 @@ import { locusService } from './services/locus.service';
 import { delegationService } from './services/delegation.service';
 import { discoveryService } from './services/discovery.service';
 import { executionService } from './services/execution.service';
-import { x402Service } from './services/x402.service';
 import { opportunityBookService } from './services/opportunity-book.service';
+import { machinePaymentsService } from './services/machine-payments.service';
 
 const app: Express = express();
 
@@ -65,6 +65,7 @@ app.get('/health', async (_req: Request, res: Response) => {
     integrations: {
       x402nMockMode: config.x402n.mockMode,
       x402nBaseUrl: config.x402n.baseUrl,
+      machinePaymentsPrimary: 'x402',
     },
   });
 });
@@ -779,15 +780,47 @@ app.get('/api/v1/integrations/locus/tools', async (_req: Request, res: Response)
   }
 });
 
+// GET /api/v1/payments/status
+app.get('/api/v1/payments/status', (_req: Request, res: Response) => {
+  res.json(machinePaymentsService.getStatus());
+  return;
+});
+
+// POST /api/v1/payments/proxy
+app.post('/api/v1/payments/proxy', async (req: Request, res: Response) => {
+  const schema = z.object({
+    provider: z.enum(['x402']).optional(),
+    url: z.string().url(),
+    method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']).optional(),
+    headers: z.record(z.string()).optional(),
+    body: z.unknown().optional(),
+    paymentHeader: z.string().optional(),
+  });
+
+  try {
+    const payload = schema.parse(req.body);
+    const result = await machinePaymentsService.proxyRequest(payload);
+    res.status(result.status === 402 ? 402 : 200).json(result);
+    return;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid machine payments payload', details: error.issues });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to call machine payment provider', details: (error as Error).message });
+    return;
+  }
+});
+
 // GET /api/v1/integrations/x402/status
 app.get('/api/v1/integrations/x402/status', (_req: Request, res: Response) => {
+  const status = machinePaymentsService.getStatus();
   res.json({
-    success: true,
-    useCase:
-      'Use x402 for pay-per-call API/data purchases; keep DealRail escrow for milestone settlement and dispute resolution.',
-    endpoints: [
-      'POST /api/v1/integrations/x402/proxy',
-    ],
+    success: status.success,
+    primaryProvider: status.primaryProvider,
+    providers: status.providers,
+    useCase: status.useCase,
+    endpoints: ['POST /api/v1/integrations/x402/proxy', ...status.endpoints],
   });
   return;
 });
@@ -804,7 +837,7 @@ app.post('/api/v1/integrations/x402/proxy', async (req: Request, res: Response) 
 
   try {
     const payload = schema.parse(req.body);
-    const result = await x402Service.proxyRequest(payload);
+    const result = await machinePaymentsService.proxyRequest({ ...payload, provider: 'x402' });
     res.status(result.status === 402 ? 402 : 200).json(result);
     return;
   } catch (error) {

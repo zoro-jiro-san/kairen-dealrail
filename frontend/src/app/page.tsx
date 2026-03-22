@@ -55,8 +55,9 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--terminal-muted)]">
-              DealRail is the desk between service discovery and settlement. A buyer or agent states one request, the
-              desk scans provider supply, negotiates a winner, locks escrow, and leaves a machine-readable receipt.
+              DealRail is the Ethereum desk between service discovery and settlement. A buyer or agent states one
+              request, the desk scans provider supply, runs offer competition, routes machine payment when needed,
+              locks escrow, and leaves a machine-readable receipt.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               {heroWords.map((word, index) => (
@@ -93,7 +94,7 @@ export default function HomePage() {
               <div className="terminal-metric">
                 <div className="terminal-label">Supply Comes From</div>
                 <div className="mt-2 text-sm leading-6 text-[var(--terminal-muted)]">
-                  x402n listings, imported provider feeds, and wallet-native execution rails, with demo fallback until live discovery is connected.
+                  provider feeds, imported catalogs, and competition-ready market adapters, with demo fallback until live discovery is connected.
                 </div>
               </div>
               <div className="terminal-metric">
@@ -128,11 +129,11 @@ export default function HomePage() {
                   <div className="mt-1 text-sm font-semibold">{chainLabel}</div>
                 </div>
                 <div className="terminal-metric">
-                  <div className="terminal-label">Negotiation</div>
-                  <div className="mt-1 text-sm font-semibold">
-                    {health?.integrations?.x402nMockMode ? 'Demo market' : 'Live market'}
-                  </div>
+                <div className="terminal-label">Negotiation</div>
+                <div className="mt-1 text-sm font-semibold">
+                    {health?.integrations?.x402nMockMode ? 'Demo competition' : 'Live competition'}
                 </div>
+              </div>
                 <div className="terminal-metric">
                   <div className="terminal-label">Flow</div>
                   <div className="mt-1 text-sm font-semibold">Request {'->'} shortlist {'->'} settle</div>
@@ -174,7 +175,7 @@ export default function HomePage() {
             </div>
             <div>
               <div className="terminal-label">`vend`</div>
-              Tell the desk the outcome, budget, and deadline. It shortlists offers and stages the procurement path.
+              Tell the desk the outcome, budget, and deadline. It shortlists offers, chooses the payment posture, and stages escrow.
             </div>
             <div>
               <div className="terminal-label">`sell`</div>

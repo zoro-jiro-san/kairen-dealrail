@@ -219,7 +219,21 @@ export interface HealthCheckResponse {
   integrations?: {
     x402nMockMode?: boolean;
     x402nBaseUrl?: string;
+    machinePaymentsPrimary?: string;
   };
+}
+
+export interface MachinePaymentsStatusResponse {
+  success: boolean;
+  primaryProvider: string;
+  providers: Array<{
+    id: string;
+    mode: string;
+    settlementModel: string;
+    useCase: string;
+  }>;
+  useCase: string;
+  endpoints: string[];
 }
 
 // ============ API Functions ============
@@ -455,20 +469,29 @@ export const integrationsApi = {
     const response = await api.get('/execution/providers');
     return response.data;
   },
-  getX402Status: async (): Promise<{ success: boolean; useCase: string; endpoints: string[] }> => {
-    const response = await api.get('/integrations/x402/status');
+  getMachinePaymentsStatus: async (): Promise<MachinePaymentsStatusResponse> => {
+    const response = await api.get('/payments/status');
     return response.data;
   },
-  proxyX402: async (payload: {
+  proxyMachinePayment: async (payload: {
+    provider?: 'x402';
     url: string;
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: Record<string, string>;
     body?: unknown;
     paymentHeader?: string;
   }) => {
-    const response = await api.post('/integrations/x402/proxy', payload);
+    const response = await api.post('/payments/proxy', payload);
     return response.data;
   },
+  getX402Status: async (): Promise<MachinePaymentsStatusResponse> => integrationsApi.getMachinePaymentsStatus(),
+  proxyX402: async (payload: {
+    url: string;
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    headers?: Record<string, string>;
+    body?: unknown;
+    paymentHeader?: string;
+  }) => integrationsApi.proxyMachinePayment({ ...payload, provider: 'x402' }),
 };
 
 /**

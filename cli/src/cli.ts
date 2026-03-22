@@ -146,12 +146,12 @@ async function run(): Promise<void> {
     }
 
     case 'rails': {
-      const [execution, locus, x402] = await Promise.all([
+      const [execution, locus, payments] = await Promise.all([
         client.listExecutionProviders(),
         client.listLocusTools(),
-        client.x402Status(),
+        client.machinePaymentsStatus(),
       ]);
-      process.stdout.write(json ? stringify({ execution, locus, x402 }) : `${renderRails(execution, locus, x402)}\n`);
+      process.stdout.write(json ? stringify({ execution, locus, payments }) : `${renderRails(execution, locus, payments)}\n`);
       return;
     }
 

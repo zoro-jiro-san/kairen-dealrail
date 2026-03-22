@@ -4,9 +4,10 @@ This is the canonical submission entry point for DealRail.
 
 ## What DealRail Is
 
-DealRail is an agentic commerce execution rail:
-- negotiate offchain
-- commit onchain
+DealRail is an Ethereum machine-commerce execution desk:
+- compete for offers offchain
+- route machine payments for immediate calls
+- commit negotiated jobs onchain
 - settle via ERC-8183-style escrow
 - enforce trust hooks with ERC-8004-aware verification and reputation writes
 

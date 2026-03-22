@@ -20,10 +20,10 @@ const phases: Array<{
     title: 'Negotiate',
     phase: 'Discovery',
     headline: 'The desk scans supply before it locks a counterparty.',
-    desc: 'A buyer states the job, discovery rails return provider supply, and the desk decides whether there is enough competition to run an auction.',
+    desc: 'A buyer states the job, market rails return provider supply, and the desk decides whether there is enough competition to run an auction.',
     rows: [
       { from: 'Buyer', to: 'Desk', label: 'Post outcome, budget, deadline', tag: 'INTENT' },
-      { from: 'Desk', to: 'Market', label: 'Scan x402n, imports, live feeds', tag: 'SCAN' },
+      { from: 'Desk', to: 'Market', label: 'Scan market adapters, imports, live feeds', tag: 'SCAN' },
       { from: 'Market', to: 'Desk', label: 'Return ranked provider supply', tag: 'SUPPLY' },
       { from: 'Desk', to: 'Buyer', label: 'Shortlist + auction posture', tag: 'QUOTE' },
     ],
@@ -32,9 +32,10 @@ const phases: Array<{
     title: 'Offer',
     phase: 'Execution',
     headline: 'The winning quote becomes an executable deal, not a chat log.',
-    desc: 'Selected terms move into escrow assumptions, evaluator policy, and an explicit settlement rail.',
+    desc: 'Selected terms move into a payment posture, escrow assumptions, evaluator policy, and an explicit settlement rail.',
     rows: [
       { from: 'Buyer', to: 'Desk', label: 'Accept ranked offer or batch', tag: 'SELECT' },
+      { from: 'Desk', to: 'Provider', label: 'Choose machine payment adapter if the call is immediate', tag: 'PAY' },
       { from: 'Desk', to: 'Provider', label: 'Lock price and delivery terms', tag: 'LOCK' },
       { from: 'Desk', to: 'Escrow', label: 'Create job + fund settlement path', tag: 'ESCROW' },
       { from: 'Provider', to: 'Desk', label: 'Submit deliverable and proof', tag: 'SUBMIT' },
@@ -81,8 +82,8 @@ export function HeroFlowArchitecture() {
           <div className="terminal-kicker">Protocol Flow</div>
           <h2 className="mt-2 text-2xl font-semibold">One desk from scan to receipt</h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--terminal-muted)]">
-            Structured as a procurement-style coordination loop for DealRail: discover supply, lock an offer, settle
-            with escrow, and emit a receipt.
+            Structured as an Ethereum machine-commerce loop for DealRail: discover supply, choose payment posture,
+            lock an offer, settle with escrow, and emit a receipt.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -40,7 +40,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
   const [lines, setLines] = useState<TerminalLine[]>([
     { tone: 'system', text: 'DEALRAIL DESK READY' },
     { tone: 'system', text: 'verbs: scan/providers <need> | buy/vend <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
-    { tone: 'system', text: 'goal: route one machine-payable request from supply discovery to escrow and receipt' },
+    { tone: 'system', text: 'goal: route one Ethereum machine-commerce request from supply discovery to payment, escrow, and receipt' },
   ]);
 
   const statusLabel = useMemo(() => (running ? 'RUNNING' : 'IDLE'), [running]);
@@ -116,7 +116,8 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
       appendMany([
         { tone: 'ok', text: note },
         { tone: 'ok', text: `escrow=${health.blockchain.escrowAddress}` },
-        { tone: health.integrations?.x402nMockMode ? 'warn' : 'ok', text: `x402n discovery=${health.integrations?.x402nMockMode ? 'demo/mock' : 'live'}` },
+        { tone: health.integrations?.x402nMockMode ? 'warn' : 'ok', text: `market competition=${health.integrations?.x402nMockMode ? 'demo/mock' : 'live'}` },
+        { tone: 'ok', text: `machine payments=${health.integrations?.machinePaymentsPrimary ?? 'x402'}` },
       ]);
       emit('status', command, note);
     } catch {
@@ -195,7 +196,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
         append('warn', 'No matching supply yet. Demand was stored in the opportunity book instead of being dropped.');
         append('ok', `opportunity=${queued.opportunity.id} | providers can pick this up later from the dashboard`);
       } else {
-        append('ok', 'next: compare the shortlist, run the negotiation pass if competition exists, then lock the escrow path');
+        append('ok', 'next: compare the shortlist, run competition if needed, then choose machine payment or escrow commit');
       }
 
       emit('role_buyer', command, note);
@@ -216,7 +217,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
     appendMany([
       { tone: 'ok', text: 'role=provider' },
       { tone: 'ok', text: `service=${query || 'unspecified service'}` },
-      { tone: 'ok', text: 'to appear in scans: publish to x402n or import your provider feed into DealRail discovery' },
+      { tone: 'ok', text: 'to appear in scans: publish to a market adapter or import your provider feed into DealRail discovery' },
       { tone: 'ok', text: 'next: expose endpoint + base price + evaluator path, then respond to active demand' },
     ]);
 
@@ -238,7 +239,8 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
 
       appendMany([
         { tone: 'ok', text: note },
-        { tone: health?.integrations?.x402nMockMode ? 'warn' : 'ok', text: `x402n negotiation=${health?.integrations?.x402nMockMode ? 'demo/mock' : 'live'}` },
+        { tone: health?.integrations?.x402nMockMode ? 'warn' : 'ok', text: `market competition=${health?.integrations?.x402nMockMode ? 'demo/mock' : 'live'}` },
+        { tone: 'ok', text: `machine payments=${health?.integrations?.machinePaymentsPrimary ?? 'x402'}` },
         { tone: discoveryMode === 'demo/mock' ? 'warn' : 'ok', text: `provider market=${discoveryMode}` },
         { tone: locusMode === 'live' ? 'ok' : 'warn', text: `locus payout=${locusMode}` },
         { tone: execution.providers.some((provider) => provider.id === 'wallet') ? 'ok' : 'warn', text: 'delegation builder=ready' },

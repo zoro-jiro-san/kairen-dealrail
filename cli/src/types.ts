@@ -10,6 +10,7 @@ export type HealthCheck = {
   integrations?: {
     x402nMockMode?: boolean;
     x402nBaseUrl?: string;
+    machinePaymentsPrimary?: string;
   };
 };
 
@@ -56,8 +57,15 @@ export type LocusToolsResponse = {
     | Array<{ name?: string; description?: string }>;
 };
 
-export type X402StatusResponse = {
+export type MachinePaymentsStatusResponse = {
   success: boolean;
+  primaryProvider: string;
+  providers: Array<{
+    id: string;
+    mode: string;
+    settlementModel: string;
+    useCase: string;
+  }>;
   useCase: string;
   endpoints: string[];
 };
