@@ -170,6 +170,10 @@ export default function HomePage() {
           <h2 className="mt-2 text-2xl font-semibold">Start with one request</h2>
           <div className="mt-5 space-y-5 text-sm leading-6 text-[var(--terminal-muted)]">
             <div>
+              <div className="terminal-label">`doctor`</div>
+              Run this first when you want to know whether the desk is reachable, what supply is live, and which rails are still in demo posture.
+            </div>
+            <div>
               <div className="terminal-label">`scan`</div>
               See what provider supply is available right now for a category or task.
             </div>

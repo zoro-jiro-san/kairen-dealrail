@@ -1,5 +1,6 @@
 export type TerminalActionKind =
   | 'help'
+  | 'doctor'
   | 'status'
   | 'start_flow'
   | 'start_ops'

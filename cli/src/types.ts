@@ -195,3 +195,38 @@ export type VendResult = {
   bestOffer: NegotiationOffer | null;
   queuedOpportunity?: Opportunity | null;
 };
+
+export type DoctorReport = {
+  apiBase: string;
+  backend: {
+    ok: boolean;
+    status?: string;
+    network?: string;
+    chainId?: number;
+    escrowAddress?: string;
+    marketMode?: string;
+    machinePaymentsPrimary?: string;
+    error?: string;
+  };
+  discovery: {
+    enabledSources: string[];
+    providerCount: number;
+    liveProviderCount: number;
+    mockProviderCount: number;
+  };
+  rails: {
+    executionProviders: number;
+    locusMode: string;
+    paymentProvider: string;
+  };
+  jobs: {
+    recentCount: number;
+    totalOnchain: number;
+    latestState: string | null;
+  };
+  warnings: string[];
+  nextSteps: {
+    human: string;
+    agent: string;
+  };
+};

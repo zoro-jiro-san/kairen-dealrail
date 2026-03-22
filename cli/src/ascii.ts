@@ -1,4 +1,5 @@
 import type {
+  DoctorReport,
   DiscoveryProvidersResponse,
   ExecutionProvidersResponse,
   HealthCheck,
@@ -67,6 +68,7 @@ export function renderHelp(): string {
     box('COMMAND DECK', [
       'dealrail help',
       'dealrail demo',
+      'dealrail doctor [--json]',
       'dealrail status [--json]',
       'dealrail scan <query> [--max-price 0.12] [--min-reputation 700]',
       'dealrail providers <query>',
@@ -74,6 +76,9 @@ export function renderHelp(): string {
       'dealrail rails',
       'dealrail jobs [--limit 8]',
       'dealrail job <id>',
+      '',
+      'human lane: dealrail doctor -> vend -> jobs',
+      'agent lane: dealrail doctor --json -> vend --json',
       '',
       'set DEALRAIL_API_URL or pass --api http://localhost:3001',
     ]),
@@ -145,6 +150,30 @@ export function renderStatus(status: HealthCheck): string {
       section('payments', status.integrations?.machinePaymentsPrimary ?? 'x402'),
       section('escrow', status.blockchain.escrowAddress),
       section('stablecoin', status.blockchain.usdcAddress),
+    ]),
+  ].join('\n');
+}
+
+export function renderDoctor(report: DoctorReport): string {
+  return [
+    renderBanner(),
+    '',
+    box('PRECHECK / DOCTOR', [
+      section('api', report.apiBase),
+      section('backend', report.backend.ok ? 'reachable' : 'offline'),
+      section('chain', report.backend.chainId ? `${report.backend.network ?? 'unknown'} (${report.backend.chainId})` : 'unknown'),
+      section('market', report.backend.marketMode ?? 'unknown'),
+      section('payments', report.rails.paymentProvider),
+      section('supply', `${report.discovery.providerCount} providers`),
+      section('jobs', `${report.jobs.totalOnchain} onchain`),
+      '',
+      `enabled sources :: ${report.discovery.enabledSources.join(', ') || 'none'}`,
+      `providers :: live ${report.discovery.liveProviderCount} / mock ${report.discovery.mockProviderCount}`,
+      `execution :: ${report.rails.executionProviders} providers / locus ${report.rails.locusMode}`,
+      ...(report.warnings.length > 0 ? ['', ...report.warnings.slice(0, 4).map((warning) => `warn :: ${warning}`)] : ['', 'warn :: none']),
+      '',
+      `next human :: ${shorten(report.nextSteps.human, WIDTH - 14)}`,
+      `next agent :: ${shorten(report.nextSteps.agent, WIDTH - 14)}`,
     ]),
   ].join('\n');
 }

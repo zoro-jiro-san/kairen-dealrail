@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, KeyboardEvent, useMemo, useState } from 'react';
-import { healthCheck, integrationsApi } from '@/lib/api';
+import { healthCheck, integrationsApi, jobsApi } from '@/lib/api';
 import { pushTerminalRun, TerminalActionKind } from '@/lib/terminalLedger';
 
 type LineTone = 'system' | 'user' | 'ok' | 'warn';
@@ -23,6 +23,7 @@ type Props = {
 };
 
 const EXAMPLES = [
+  'doctor',
   'scan automation',
   'vend benchmark report under 0.12 usdc in 24h',
   'buy api integration sprint under 0.10 usdc in 24h',
@@ -39,7 +40,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [lines, setLines] = useState<TerminalLine[]>([
     { tone: 'system', text: 'DEALRAIL DESK READY' },
-    { tone: 'system', text: 'verbs: scan/providers <need> | buy/vend <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
+    { tone: 'system', text: 'verbs: doctor | scan/providers <need> | buy/vend <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
     { tone: 'system', text: 'goal: route one Ethereum machine-commerce request from supply discovery to payment, escrow, and receipt' },
   ]);
 
@@ -99,14 +100,59 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
     const note = 'Command map loaded';
     appendMany([
       { tone: 'system', text: 'GRAMMAR' },
+      { tone: 'system', text: 'doctor' },
       { tone: 'system', text: 'scan automation' },
       { tone: 'system', text: 'providers benchmark report' },
       { tone: 'system', text: 'vend benchmark report under 0.12 usdc in 24h' },
       { tone: 'system', text: 'sell workflow automation from 0.12 usdc' },
       { tone: 'system', text: 'rails' },
       { tone: 'system', text: 'status' },
+      { tone: 'system', text: 'agent lane: use the CLI with --json after doctor confirms posture' },
+      { tone: 'system', text: 'human lane: use scan or vend here, then inspect the board and settlement rails' },
     ]);
     emit('help', command, note);
+  }
+
+  async function runDoctor(command: string) {
+    try {
+      const [health, sources, providers, execution, locus, jobs] = await Promise.all([
+        healthCheck(),
+        integrationsApi.listDiscoverySources().catch(() => ({ sources: [] })),
+        integrationsApi.listProviders().catch(() => ({ providers: [] })),
+        integrationsApi.listExecutionProviders().catch(() => ({ providers: [] })),
+        integrationsApi.listLocusTools().catch(() => ({ tools: { mode: 'fallback' as const } })),
+        jobsApi.list({ limit: 4 }).catch(() => ({ jobs: [], pagination: { limit: 4, totalOnchain: 0 } })),
+      ]);
+
+      const enabledSources = sources.sources.filter((source) => source.enabled).map((source) => source.id);
+      const providerCount = providers.providers.length;
+      const liveProviderCount = providers.providers.filter((provider) => provider.source !== 'mock').length;
+      const locusMode = Array.isArray(locus.tools) ? 'live' : locus.tools?.mode || 'fallback';
+      const note = health.integrations?.x402nMockMode
+        ? 'Doctor complete: desk is reachable but competition is still demo/mock'
+        : 'Doctor complete: desk is reachable and ready for live routing';
+
+      appendMany([
+        { tone: 'ok', text: `api=reachable | chain=${health.blockchain.chainId} | escrow=${health.blockchain.escrowAddress}` },
+        { tone: health.integrations?.x402nMockMode ? 'warn' : 'ok', text: `market competition=${health.integrations?.x402nMockMode ? 'demo/mock' : 'live'}` },
+        { tone: 'ok', text: `machine payments=${health.integrations?.machinePaymentsPrimary ?? 'x402'}` },
+        { tone: enabledSources.length > 0 ? 'ok' : 'warn', text: `enabled discovery=${enabledSources.join(', ') || 'none'}` },
+        { tone: liveProviderCount > 0 ? 'ok' : 'warn', text: `provider supply=${providerCount} total | ${liveProviderCount} live | ${providerCount - liveProviderCount} mock` },
+        { tone: locusMode === 'live' ? 'ok' : 'warn', text: `locus payout=${locusMode}` },
+        { tone: 'ok', text: `execution adapters=${execution.providers.length} | onchain jobs=${jobs.pagination?.totalOnchain ?? jobs.jobs.length}` },
+        { tone: 'system', text: 'next human: vend automation benchmark report under 0.12 usdc in 24h' },
+        { tone: 'system', text: 'next agent: dealrail doctor --json && dealrail vend "automation benchmark report" --budget 0.12 --hours 24 --json' },
+      ]);
+
+      emit('doctor', command, note);
+    } catch {
+      const note = 'Doctor failed: backend is unreachable';
+      appendMany([
+        { tone: 'warn', text: note },
+        { tone: 'warn', text: 'check NEXT_PUBLIC_API_URL, backend startup, and local port forwarding before testing flows' },
+      ]);
+      emit('doctor', command, note);
+    }
   }
 
   async function runStatus(command: string) {
@@ -273,10 +319,15 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
       if (normalized === 'clear') {
         setLines([
           { tone: 'system', text: 'DEALRAIL DESK READY' },
-          { tone: 'system', text: 'verbs: scan/providers <need> | buy/vend <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
+          { tone: 'system', text: 'verbs: doctor | scan/providers <need> | buy/vend <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
           { tone: 'system', text: 'goal: route one machine-payable request from supply discovery to escrow and receipt' },
         ]);
         emit('clear', command, 'Terminal output cleared');
+        return;
+      }
+
+      if (normalized === 'doctor' || normalized === 'preflight' || normalized === 'check') {
+        await runDoctor(command);
         return;
       }
 
@@ -356,7 +407,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
           </div>
           <div>
             <div className="terminal-kicker">Terminal Desk</div>
-            <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">scan / providers / buy / vend / rails / status</div>
+            <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">doctor / scan / providers / buy / vend / rails / status</div>
           </div>
         </div>
         <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">{statusLabel}</div>
@@ -367,10 +418,24 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
           <aside className="hidden border-r border-[var(--terminal-border)] px-4 py-5 xl:block">
             <div className="terminal-label">Desk Modes</div>
             <div className="mt-4 space-y-3 text-xs text-[var(--terminal-muted)]">
-              <div>01 Route request</div>
-              <div>02 Scan providers</div>
-              <div>03 Lock escrow</div>
-              <div>04 Emit receipt</div>
+              <div>01 Doctor the desk</div>
+              <div>02 Route request</div>
+              <div>03 Scan providers</div>
+              <div>04 Lock escrow</div>
+              <div>05 Emit receipt</div>
+            </div>
+            <div className="mt-6 terminal-label">Operator Lanes</div>
+            <div className="mt-3 space-y-3 text-[11px] leading-5 text-[var(--terminal-muted)]">
+              <button type="button" onClick={() => setInput('doctor')} className="block w-full rounded-2xl border border-[var(--terminal-border)] bg-black/10 px-3 py-3 text-left transition hover:border-[var(--terminal-accent)]/60 hover:text-[var(--terminal-fg)]">
+                <div className="terminal-label">Human lane</div>
+                <div className="mt-1 font-semibold text-[var(--terminal-fg)]">doctor -&gt; vend -&gt; jobs</div>
+                <div className="mt-1">Use the desk interactively, then inspect the board and settlement record.</div>
+              </button>
+              <button type="button" onClick={() => setInput('status')} className="block w-full rounded-2xl border border-[var(--terminal-border)] bg-black/10 px-3 py-3 text-left transition hover:border-[var(--terminal-accent)]/60 hover:text-[var(--terminal-fg)]">
+                <div className="terminal-label">Agent lane</div>
+                <div className="mt-1 font-semibold text-[var(--terminal-fg)]">CLI doctor --json -&gt; vend --json</div>
+                <div className="mt-1">Use machine-readable checks before dispatching autonomous requests.</div>
+              </button>
             </div>
             <div className="mt-6 terminal-label">Examples</div>
             <div className="mt-3 space-y-2">
@@ -394,7 +459,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
               <div className="terminal-mono text-[11px] uppercase tracking-[0.24em] text-[var(--terminal-accent)]">
                 DealRail / Procurement Console
               </div>
-              <div className="terminal-mono text-[10px] text-[var(--terminal-muted)]">ESC to clear mentally, `clear` to clear literally</div>
+              <div className="terminal-mono text-[10px] text-[var(--terminal-muted)]">Start with `doctor`, then move to `scan` or `vend`</div>
             </div>
 
             <div className="p-4">

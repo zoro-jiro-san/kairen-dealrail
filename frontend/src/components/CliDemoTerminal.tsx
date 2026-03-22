@@ -21,6 +21,21 @@ type DemoScene = {
 
 const SCENES: DemoScene[] = [
   {
+    id: 'doctor',
+    kicker: 'Preflight',
+    title: 'Doctor the desk before dispatch',
+    command: 'dealrail doctor --json',
+    note: 'Shows whether the desk is reachable, how much supply is live, and what is still demo-only.',
+    badge: 'doctor',
+    output: [
+      { tone: 'ok', text: '"backend": { "ok": true, "chainId": 84532 }' },
+      { tone: 'warn', text: '"marketMode": "demo/mock"' },
+      { tone: 'ok', text: '"paymentProvider": "x402"' },
+      { tone: 'warn', text: '"providerCount": 3, "liveProviderCount": 0, "mockProviderCount": 3' },
+      { tone: 'system', text: '"nextSteps": { "human": "dealrail vend ...", "agent": "dealrail vend ... --json" }' },
+    ],
+  },
+  {
     id: 'help',
     kicker: 'Command Deck',
     title: 'Start with the deck',
