@@ -7,6 +7,7 @@
 import axios from 'axios';
 
 const COMPILED_API_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
+const PRODUCTION_API_URL = 'https://kairen-dealrail-production.up.railway.app';
 
 function isLocalHostname(hostname: string) {
   return hostname === 'localhost' || hostname === '127.0.0.1';
@@ -15,9 +16,10 @@ function isLocalHostname(hostname: string) {
 function getApiOrigin() {
   if (typeof window !== 'undefined') {
     const browserDefault = `${window.location.protocol}//${window.location.hostname}:3001`;
+    const productionDefault = PRODUCTION_API_URL;
 
     if (!COMPILED_API_URL) {
-      return isLocalHostname(window.location.hostname) ? browserDefault : window.location.origin;
+      return isLocalHostname(window.location.hostname) ? browserDefault : productionDefault;
     }
 
     try {
@@ -31,11 +33,11 @@ function getApiOrigin() {
       }
       return parsed.toString().replace(/\/$/, '');
     } catch {
-      return isLocalHostname(window.location.hostname) ? browserDefault : window.location.origin;
+      return isLocalHostname(window.location.hostname) ? browserDefault : productionDefault;
     }
   }
 
-  return COMPILED_API_URL || 'http://localhost:3001';
+  return COMPILED_API_URL || PRODUCTION_API_URL;
 }
 
 export const api = axios.create({

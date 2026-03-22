@@ -100,7 +100,7 @@ npm run start
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API URL | `https://api.dealrail.kairen.xyz` |
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `https://kairen-dealrail-production.up.railway.app` |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect project ID | `abc123...` |
 
 ## Troubleshooting

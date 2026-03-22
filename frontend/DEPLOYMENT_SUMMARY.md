@@ -84,7 +84,7 @@ Core frontend env vars:
 
 | Variable | Purpose |
 |----------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL |
+| `NEXT_PUBLIC_API_URL` | Backend API base URL, currently `https://kairen-dealrail-production.up.railway.app` |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect integration |
 
 Wallet connection is optional for the demo path.
