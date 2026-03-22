@@ -53,6 +53,8 @@ api.interceptors.request.use((config) => {
 
 export interface Job {
   jobId: number;
+  chain: 'baseSepolia' | 'celoSepolia';
+  chainId: number;
   client: string;
   provider: string;
   evaluator: string;
@@ -63,6 +65,8 @@ export interface Job {
   stateCode: number; // 0-5
   deliverable: string; // Bytes32 hash
   hook: string; // Address
+  stablecoinAddress: string;
+  explorerBaseUrl: string;
   explorerUrl: string; // BaseScan URL
 }
 
@@ -212,14 +216,47 @@ export interface HealthCheckResponse {
   status: string;
   timestamp: string;
   blockchain: {
+    network: 'baseSepolia' | 'celoSepolia';
     chainId: number;
     escrowAddress: string;
     usdcAddress: string;
   };
+  supportedChains?: Array<{
+    chain: 'baseSepolia' | 'celoSepolia';
+    chainId: number;
+    escrowAddress: string;
+    stablecoinAddress: string;
+    stablecoinSymbol: string;
+    explorerBaseUrl: string;
+  }>;
   integrations?: {
     x402nMockMode?: boolean;
     x402nBaseUrl?: string;
     machinePaymentsPrimary?: string;
+  };
+}
+
+export interface JobSimulationResponse {
+  success: boolean;
+  action: 'createJob' | 'fundJob' | 'submitDeliverable' | 'completeJob' | 'rejectJob' | 'claimRefund';
+  simulation: {
+    chain: 'baseSepolia' | 'celoSepolia';
+    chainId: number;
+    escrowAddress: string;
+    stablecoinAddress: string;
+    stablecoinSymbol: string;
+    explorerBaseUrl: string;
+    ok: boolean;
+    warnings: string[];
+    transactions: Array<{
+      kind: string;
+      to: string;
+      data: string;
+      value: string;
+      from?: string;
+      gasEstimate: string | null;
+      explorerUrl: string;
+    }>;
   };
 }
 
@@ -242,7 +279,7 @@ export const jobsApi = {
   /**
    * List recent jobs from chain
    */
-  list: async (params?: { limit?: number }): Promise<JobsListResponse> => {
+  list: async (params?: { limit?: number; chain?: 'baseSepolia' | 'celoSepolia' }): Promise<JobsListResponse> => {
     const response = await api.get('/jobs', { params });
     return response.data;
   },
@@ -251,9 +288,9 @@ export const jobsApi = {
    * Get job details by on-chain job ID
    * Reads directly from blockchain via backend
    */
-  getByJobId: async (jobId: number): Promise<Job> => {
+  getByJobId: async (jobId: number, params?: { chain?: 'baseSepolia' | 'celoSepolia' }): Promise<Job> => {
     try {
-      const response = await api.get(`/jobs/${jobId}`);
+      const response = await api.get(`/jobs/${jobId}`, { params });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -267,8 +304,8 @@ export const jobsApi = {
    * Get multiple jobs by their IDs
    * Helper function to batch fetch jobs
    */
-  getMultipleJobs: async (jobIds: number[]): Promise<Job[]> => {
-    const promises = jobIds.map(id => jobsApi.getByJobId(id).catch(() => null));
+  getMultipleJobs: async (jobIds: number[], params?: { chain?: 'baseSepolia' | 'celoSepolia' }): Promise<Job[]> => {
+    const promises = jobIds.map((id) => jobsApi.getByJobId(id, params).catch(() => null));
     const results = await Promise.all(promises);
     return results.filter((job): job is Job => job !== null);
   },
@@ -304,6 +341,49 @@ export const jobsApi = {
    */
   completeJob: async (jobId: number, data: CompleteJobRequest): Promise<{ txHash: string }> => {
     const response = await api.post(`/jobs/${jobId}/complete`, data);
+    return response.data;
+  },
+
+  simulateAction: async (
+    payload:
+      | {
+          action: 'createJob';
+          chain?: 'baseSepolia' | 'celoSepolia';
+          from?: string;
+          provider: string;
+          evaluator: string;
+          expiryUnix: number;
+          hook?: string;
+        }
+      | {
+          action: 'fundJob';
+          chain?: 'baseSepolia' | 'celoSepolia';
+          from?: string;
+          jobId: number;
+          amountUsdc: string;
+        }
+      | {
+          action: 'submitDeliverable';
+          chain?: 'baseSepolia' | 'celoSepolia';
+          from?: string;
+          jobId: number;
+          deliverable: string;
+        }
+      | {
+          action: 'completeJob' | 'rejectJob';
+          chain?: 'baseSepolia' | 'celoSepolia';
+          from?: string;
+          jobId: number;
+          reason?: string;
+        }
+      | {
+          action: 'claimRefund';
+          chain?: 'baseSepolia' | 'celoSepolia';
+          from?: string;
+          jobId: number;
+        }
+  ): Promise<JobSimulationResponse> => {
+    const response = await api.post('/jobs/simulate', payload);
     return response.data;
   },
 };
@@ -498,8 +578,8 @@ export const integrationsApi = {
  * Health check endpoint
  * Verifies backend connectivity and blockchain status
  */
-export const healthCheck = async (): Promise<HealthCheckResponse> => {
-  const response = await axios.get(`${getApiOrigin()}/health`);
+export const healthCheck = async (params?: { chain?: 'baseSepolia' | 'celoSepolia' }): Promise<HealthCheckResponse> => {
+  const response = await axios.get(`${getApiOrigin()}/health`, { params });
   return response.data;
 };
 

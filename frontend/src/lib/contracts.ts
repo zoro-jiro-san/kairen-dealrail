@@ -1,11 +1,25 @@
 // Contract addresses and ABIs
 import { Address } from 'viem';
 
+export const SUPPORTED_SETTLEMENT_CHAIN_IDS = [84532, 11142220] as const;
+
+export const CHAIN_INFO: Record<number, { key: string; label: string; explorerBaseUrl: string }> = {
+  84532: {
+    key: 'baseSepolia',
+    label: 'Base Sepolia',
+    explorerBaseUrl: 'https://sepolia.basescan.org',
+  },
+  11142220: {
+    key: 'celoSepolia',
+    label: 'Celo Sepolia',
+    explorerBaseUrl: 'https://celo-sepolia.blockscout.com',
+  },
+};
+
 // Contract addresses - latest deployment (Base Sepolia + Celo Sepolia)
 export const ESCROW_ADDRESSES: Record<number, Address> = {
   84532: '0xE25B10057556e9714d2ac60992b68f4E61481cF9', // Base Sepolia - EscrowRailERC20
   11142220: '0xB9dfa53326016415ca6fb9eb16A0f050c8d15C74', // Celo Sepolia - EscrowRailERC20
-  8453: '0x0000000000000000000000000000000000000000', // Base Mainnet (not deployed)
 };
 
 // USDC addresses
@@ -203,6 +217,27 @@ export function getHookAddress(chainId: number): Address {
 // Helper to get USDC address for current chain
 export function getUSDCAddress(chainId: number): Address {
   return USDC_ADDRESSES[chainId] || USDC_ADDRESSES[84532];
+}
+
+export function isSupportedSettlementChain(chainId?: number | null): chainId is (typeof SUPPORTED_SETTLEMENT_CHAIN_IDS)[number] {
+  return typeof chainId === 'number' && SUPPORTED_SETTLEMENT_CHAIN_IDS.includes(chainId as (typeof SUPPORTED_SETTLEMENT_CHAIN_IDS)[number]);
+}
+
+export function getChainLabel(chainId?: number | null): string {
+  if (!chainId) return 'No chain';
+  return CHAIN_INFO[chainId]?.label || `Chain ${chainId}`;
+}
+
+export function getChainKey(chainId?: number | null): 'baseSepolia' | 'celoSepolia' {
+  return chainId === 11142220 ? 'celoSepolia' : 'baseSepolia';
+}
+
+export function getExplorerBaseUrl(chainId?: number | null): string {
+  return CHAIN_INFO[chainId || 84532]?.explorerBaseUrl || CHAIN_INFO[84532].explorerBaseUrl;
+}
+
+export function getExplorerTxUrl(chainId: number, txHash: string): string {
+  return `${getExplorerBaseUrl(chainId)}/tx/${txHash}`;
 }
 
 // USDC ABI (minimal for approval)

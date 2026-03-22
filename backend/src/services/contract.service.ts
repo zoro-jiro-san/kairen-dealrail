@@ -24,14 +24,51 @@ const ESCROW_RAIL_ABI = [
   'function complete(uint256 jobId, bytes32 reason)',
   'function reject(uint256 jobId, bytes32 reason)',
   'function claimRefund(uint256 jobId)',
-];
+] as const;
 
-// ERC20 ABI (for USDC approvals)
+// ERC20 ABI (for stablecoin approvals)
 const ERC20_ABI = [
   'function approve(address spender, uint256 amount) returns (bool)',
   'function allowance(address owner, address spender) view returns (uint256)',
   'function balanceOf(address account) view returns (uint256)',
-];
+] as const;
+
+export type SupportedChain = 'baseSepolia' | 'celoSepolia';
+
+type ChainConfig = typeof config.blockchain.baseSepolia | typeof config.blockchain.celoSepolia;
+
+type ChainContext = {
+  chain: SupportedChain;
+  chainConfig: ChainConfig;
+  provider: ethers.JsonRpcProvider;
+  escrowContract: ethers.Contract;
+  stablecoinContract: ethers.Contract;
+  stablecoinAddress: string;
+  stablecoinSymbol: string;
+  explorerBaseUrl: string;
+};
+
+export type SimulationTx = {
+  kind: string;
+  to: string;
+  data: string;
+  value: string;
+  from?: string;
+  gasEstimate: string | null;
+  explorerUrl: string;
+};
+
+export type TransactionSimulation = {
+  chain: SupportedChain;
+  chainId: number;
+  explorerBaseUrl: string;
+  stablecoinAddress: string;
+  stablecoinSymbol: string;
+  ok: boolean;
+  warnings: string[];
+  transactions: SimulationTx[];
+  error?: string;
+};
 
 // Job State enum (matches Solidity)
 export enum JobState {
@@ -56,45 +93,123 @@ export interface Job {
 }
 
 class ContractService {
-  private provider: ethers.JsonRpcProvider;
-  private escrowContract: any;
-  private usdcContract: any;
+  private contexts = new Map<SupportedChain, ChainContext>();
 
-  constructor() {
-    const chainConfig = config.activeChainConfig;
+  private resolveChain(chain?: SupportedChain): SupportedChain {
+    return chain || config.blockchain.activeChain;
+  }
 
-    // Initialize provider
-    this.provider = new ethers.JsonRpcProvider(chainConfig.rpcUrl);
+  private getStablecoinAddress(chainConfig: ChainConfig): string {
+    return 'usdcAddress' in chainConfig ? chainConfig.usdcAddress : chainConfig.cusdAddress;
+  }
 
-    // Initialize contracts (read-only initially)
-    this.escrowContract = new ethers.Contract(
-      chainConfig.contracts.escrowRailERC20,
-      ESCROW_RAIL_ABI,
-      this.provider
-    );
+  private getStablecoinSymbol(chain: SupportedChain): string {
+    return chain === 'baseSepolia' ? 'USDC' : 'USDC';
+  }
 
-    const stablecoinAddress =
-      'usdcAddress' in chainConfig ? chainConfig.usdcAddress : chainConfig.cusdAddress;
+  private getExplorerBaseUrl(chain: SupportedChain): string {
+    return chain === 'celoSepolia'
+      ? 'https://celo-sepolia.blockscout.com'
+      : 'https://sepolia.basescan.org';
+  }
 
-    this.usdcContract = new ethers.Contract(
+  private buildContext(chain: SupportedChain): ChainContext {
+    const chainConfig = config.blockchain[chain];
+    const provider = new ethers.JsonRpcProvider(chainConfig.rpcUrl);
+    const stablecoinAddress = this.getStablecoinAddress(chainConfig);
+
+    return {
+      chain,
+      chainConfig,
+      provider,
+      escrowContract: new ethers.Contract(chainConfig.contracts.escrowRailERC20, ESCROW_RAIL_ABI, provider),
+      stablecoinContract: new ethers.Contract(stablecoinAddress, ERC20_ABI, provider),
       stablecoinAddress,
-      ERC20_ABI,
-      this.provider
-    );
+      stablecoinSymbol: this.getStablecoinSymbol(chain),
+      explorerBaseUrl: this.getExplorerBaseUrl(chain),
+    };
   }
 
-  /**
-   * Get a signer for write operations
-   */
-  private getSigner(privateKey: string): ethers.Wallet {
-    return new ethers.Wallet(privateKey, this.provider);
+  private getContext(chain?: SupportedChain): ChainContext {
+    const resolvedChain = this.resolveChain(chain);
+    const existing = this.contexts.get(resolvedChain);
+    if (existing) return existing;
+
+    const next = this.buildContext(resolvedChain);
+    this.contexts.set(resolvedChain, next);
+    return next;
   }
 
-  /**
-   * Get job details from contract
-   */
-  async getJob(jobId: number): Promise<Job> {
-    const jobData = await this.escrowContract.getJob(jobId);
+  private getSigner(privateKey: string, chain?: SupportedChain): ethers.Wallet {
+    return new ethers.Wallet(privateKey, this.getContext(chain).provider);
+  }
+
+  private async estimateGasOrNull(
+    provider: ethers.JsonRpcProvider,
+    request: { from?: string; to: string; data: string; value?: string }
+  ): Promise<string | null> {
+    if (!request.from) return null;
+
+    try {
+      const gas = await provider.estimateGas({
+        from: request.from,
+        to: request.to,
+        data: request.data,
+        value: BigInt(request.value || '0'),
+      });
+      return gas.toString();
+    } catch {
+      return null;
+    }
+  }
+
+  private async buildSimulationTx(params: {
+    chain?: SupportedChain;
+    kind: string;
+    to: string;
+    data: string;
+    from?: string;
+    value?: string;
+  }): Promise<SimulationTx> {
+    const context = this.getContext(params.chain);
+    const value = params.value || '0';
+    const gasEstimate = await this.estimateGasOrNull(context.provider, {
+      from: params.from,
+      to: params.to,
+      data: params.data,
+      value,
+    });
+
+    return {
+      kind: params.kind,
+      to: params.to,
+      data: params.data,
+      value,
+      from: params.from,
+      gasEstimate,
+      explorerUrl: `${context.explorerBaseUrl}/address/${params.to}`,
+    };
+  }
+
+  getChainSummary(chain?: SupportedChain) {
+    const context = this.getContext(chain);
+    return {
+      chain: context.chain,
+      chainId: context.chainConfig.chainId,
+      rpcUrl: context.chainConfig.rpcUrl,
+      escrowAddress: context.chainConfig.contracts.escrowRailERC20,
+      stablecoinAddress: context.stablecoinAddress,
+      stablecoinSymbol: context.stablecoinSymbol,
+      explorerBaseUrl: context.explorerBaseUrl,
+    };
+  }
+
+  listSupportedChains() {
+    return (['baseSepolia', 'celoSepolia'] as SupportedChain[]).map((chain) => this.getChainSummary(chain));
+  }
+
+  async getJob(jobId: number, chain?: SupportedChain): Promise<Job> {
+    const jobData = await this.getContext(chain).escrowContract.getJob(jobId);
 
     return {
       jobId: jobId.toString(),
@@ -109,34 +224,27 @@ class ContractService {
     };
   }
 
-  /**
-   * Get job state
-   */
-  async getJobState(jobId: number): Promise<JobState> {
-    const state = await this.escrowContract.getState(jobId);
+  async getJobState(jobId: number, chain?: SupportedChain): Promise<JobState> {
+    const state = await this.getContext(chain).escrowContract.getState(jobId);
     return state as JobState;
   }
 
-  /**
-   * Get next job ID
-   */
-  async getNextJobId(): Promise<number> {
-    const nextId = await this.escrowContract.nextJobId();
+  async getNextJobId(chain?: SupportedChain): Promise<number> {
+    const nextId = await this.getContext(chain).escrowContract.nextJobId();
     return Number(nextId);
   }
 
-  /**
-   * Create a new job (client perspective)
-   */
   async createJob(params: {
     provider: string;
     evaluator: string;
     expiry: number;
     hook?: string;
     clientPrivateKey: string;
+    chain?: SupportedChain;
   }): Promise<{ jobId: number; txHash: string }> {
-    const signer = this.getSigner(params.clientPrivateKey);
-    const escrowWithSigner = this.escrowContract.connect(signer);
+    const context = this.getContext(params.chain);
+    const signer = this.getSigner(params.clientPrivateKey, params.chain);
+    const escrowWithSigner = context.escrowContract.connect(signer);
 
     const tx = await escrowWithSigner.createJob(
       params.provider,
@@ -146,19 +254,17 @@ class ContractService {
     );
 
     const receipt = await tx.wait();
-
-    // Parse JobCreated event to get jobId
     const event = receipt.logs
       .map((log: any) => {
         try {
-          return this.escrowContract.interface.parseLog(log);
+          return context.escrowContract.interface.parseLog(log);
         } catch {
           return null;
         }
       })
-      .find((e: any) => e?.name === 'JobCreated');
+      .find((entry: any) => entry?.name === 'JobCreated');
 
-    const jobId = event ? Number(event.args.jobId) : await this.getNextJobId() - 1;
+    const jobId = event ? Number(event.args.jobId) : (await this.getNextJobId(params.chain)) - 1;
 
     return {
       jobId,
@@ -166,42 +272,35 @@ class ContractService {
     };
   }
 
-  /**
-   * Fund a job (client perspective)
-   */
   async fundJob(params: {
     jobId: number;
-    amount: string; // in wei/smallest unit
+    amount: string;
     clientPrivateKey: string;
+    chain?: SupportedChain;
   }): Promise<{ txHash: string }> {
-    const signer = this.getSigner(params.clientPrivateKey);
+    const context = this.getContext(params.chain);
+    const signer = this.getSigner(params.clientPrivateKey, params.chain);
 
-    // 1. Approve USDC spending
-    const usdcWithSigner = this.usdcContract.connect(signer);
-    const approveTx = await usdcWithSigner.approve(
-      this.escrowContract.target,
-      params.amount
-    );
+    const stablecoinWithSigner = context.stablecoinContract.connect(signer);
+    const approveTx = await stablecoinWithSigner.approve(context.escrowContract.target, params.amount);
     await approveTx.wait();
 
-    // 2. Fund the job
-    const escrowWithSigner = this.escrowContract.connect(signer);
+    const escrowWithSigner = context.escrowContract.connect(signer);
     const tx = await escrowWithSigner.fund(params.jobId, params.amount);
     const receipt = await tx.wait();
 
     return { txHash: receipt.hash };
   }
 
-  /**
-   * Submit deliverable (provider perspective)
-   */
   async submitDeliverable(params: {
     jobId: number;
-    deliverableHash: string; // bytes32 hash
+    deliverableHash: string;
     providerPrivateKey: string;
+    chain?: SupportedChain;
   }): Promise<{ txHash: string }> {
-    const signer = this.getSigner(params.providerPrivateKey);
-    const escrowWithSigner = this.escrowContract.connect(signer);
+    const context = this.getContext(params.chain);
+    const signer = this.getSigner(params.providerPrivateKey, params.chain);
+    const escrowWithSigner = context.escrowContract.connect(signer);
 
     const tx = await escrowWithSigner.submit(params.jobId, params.deliverableHash);
     const receipt = await tx.wait();
@@ -209,20 +308,16 @@ class ContractService {
     return { txHash: receipt.hash };
   }
 
-  /**
-   * Complete job (evaluator perspective)
-   */
   async completeJob(params: {
     jobId: number;
     reason?: string;
     evaluatorPrivateKey: string;
+    chain?: SupportedChain;
   }): Promise<{ txHash: string }> {
-    const signer = this.getSigner(params.evaluatorPrivateKey);
-    const escrowWithSigner = this.escrowContract.connect(signer);
-
-    const reasonHash = params.reason
-      ? ethers.keccak256(ethers.toUtf8Bytes(params.reason))
-      : ethers.ZeroHash;
+    const context = this.getContext(params.chain);
+    const signer = this.getSigner(params.evaluatorPrivateKey, params.chain);
+    const escrowWithSigner = context.escrowContract.connect(signer);
+    const reasonHash = params.reason ? ethers.keccak256(ethers.toUtf8Bytes(params.reason)) : ethers.ZeroHash;
 
     const tx = await escrowWithSigner.complete(params.jobId, reasonHash);
     const receipt = await tx.wait();
@@ -230,20 +325,16 @@ class ContractService {
     return { txHash: receipt.hash };
   }
 
-  /**
-   * Reject job (evaluator perspective)
-   */
   async rejectJob(params: {
     jobId: number;
     reason?: string;
     evaluatorPrivateKey: string;
+    chain?: SupportedChain;
   }): Promise<{ txHash: string }> {
-    const signer = this.getSigner(params.evaluatorPrivateKey);
-    const escrowWithSigner = this.escrowContract.connect(signer);
-
-    const reasonHash = params.reason
-      ? ethers.keccak256(ethers.toUtf8Bytes(params.reason))
-      : ethers.ZeroHash;
+    const context = this.getContext(params.chain);
+    const signer = this.getSigner(params.evaluatorPrivateKey, params.chain);
+    const escrowWithSigner = context.escrowContract.connect(signer);
+    const reasonHash = params.reason ? ethers.keccak256(ethers.toUtf8Bytes(params.reason)) : ethers.ZeroHash;
 
     const tx = await escrowWithSigner.reject(params.jobId, reasonHash);
     const receipt = await tx.wait();
@@ -251,15 +342,14 @@ class ContractService {
     return { txHash: receipt.hash };
   }
 
-  /**
-   * Claim refund (permissionless after expiry)
-   */
   async claimRefund(params: {
     jobId: number;
     callerPrivateKey: string;
+    chain?: SupportedChain;
   }): Promise<{ txHash: string }> {
-    const signer = this.getSigner(params.callerPrivateKey);
-    const escrowWithSigner = this.escrowContract.connect(signer);
+    const context = this.getContext(params.chain);
+    const signer = this.getSigner(params.callerPrivateKey, params.chain);
+    const escrowWithSigner = context.escrowContract.connect(signer);
 
     const tx = await escrowWithSigner.claimRefund(params.jobId);
     const receipt = await tx.wait();
@@ -267,23 +357,189 @@ class ContractService {
     return { txHash: receipt.hash };
   }
 
-  /**
-   * Get USDC balance
-   */
-  async getUSDCBalance(address: string): Promise<string> {
-    const balance = await this.usdcContract.balanceOf(address);
+  async getUSDCBalance(address: string, chain?: SupportedChain): Promise<string> {
+    const balance = await this.getContext(chain).stablecoinContract.balanceOf(address);
     return balance.toString();
   }
 
-  /**
-   * Get USDC allowance
-   */
-  async getUSDCAllowance(owner: string, spender?: string): Promise<string> {
-    const allowance = await this.usdcContract.allowance(
+  async getUSDCAllowance(owner: string, spender?: string, chain?: SupportedChain): Promise<string> {
+    const context = this.getContext(chain);
+    const allowance = await context.stablecoinContract.allowance(
       owner,
-      spender || this.escrowContract.target
+      spender || context.escrowContract.target
     );
     return allowance.toString();
+  }
+
+  async simulateCreateJob(params: {
+    provider: string;
+    evaluator: string;
+    expiry: number;
+    hook?: string;
+    from?: string;
+    chain?: SupportedChain;
+  }): Promise<TransactionSimulation> {
+    const context = this.getContext(params.chain);
+    const data = context.escrowContract.interface.encodeFunctionData('createJob', [
+      params.provider,
+      params.evaluator,
+      params.expiry,
+      params.hook || ethers.ZeroAddress,
+    ]);
+
+    const warnings = !params.from ? ['No `from` address supplied, so gas estimation was skipped.'] : [];
+    const transaction = await this.buildSimulationTx({
+      chain: params.chain,
+      kind: 'createJob',
+      to: context.chainConfig.contracts.escrowRailERC20,
+      data,
+      from: params.from,
+    });
+
+    return {
+      ...this.getChainSummary(params.chain),
+      ok: true,
+      warnings,
+      transactions: [transaction],
+    };
+  }
+
+  async simulateFundJob(params: {
+    jobId: number;
+    amount: string;
+    from?: string;
+    chain?: SupportedChain;
+  }): Promise<TransactionSimulation> {
+    const context = this.getContext(params.chain);
+    const approveData = context.stablecoinContract.interface.encodeFunctionData('approve', [
+      context.chainConfig.contracts.escrowRailERC20,
+      params.amount,
+    ]);
+    const fundData = context.escrowContract.interface.encodeFunctionData('fund', [params.jobId, params.amount]);
+
+    const warnings = !params.from ? ['No `from` address supplied, so gas estimation was skipped.'] : [];
+    const transactions = await Promise.all([
+      this.buildSimulationTx({
+        chain: params.chain,
+        kind: 'approveStablecoin',
+        to: context.stablecoinAddress,
+        data: approveData,
+        from: params.from,
+      }),
+      this.buildSimulationTx({
+        chain: params.chain,
+        kind: 'fundJob',
+        to: context.chainConfig.contracts.escrowRailERC20,
+        data: fundData,
+        from: params.from,
+      }),
+    ]);
+
+    return {
+      ...this.getChainSummary(params.chain),
+      ok: true,
+      warnings,
+      transactions,
+    };
+  }
+
+  async simulateSubmitDeliverable(params: {
+    jobId: number;
+    deliverableHash: string;
+    from?: string;
+    chain?: SupportedChain;
+  }): Promise<TransactionSimulation> {
+    const context = this.getContext(params.chain);
+    const data = context.escrowContract.interface.encodeFunctionData('submit', [params.jobId, params.deliverableHash]);
+    const warnings = !params.from ? ['No `from` address supplied, so gas estimation was skipped.'] : [];
+    const transaction = await this.buildSimulationTx({
+      chain: params.chain,
+      kind: 'submitDeliverable',
+      to: context.chainConfig.contracts.escrowRailERC20,
+      data,
+      from: params.from,
+    });
+
+    return {
+      ...this.getChainSummary(params.chain),
+      ok: true,
+      warnings,
+      transactions: [transaction],
+    };
+  }
+
+  async simulateCompleteJob(params: {
+    jobId: number;
+    reasonHash: string;
+    from?: string;
+    chain?: SupportedChain;
+  }): Promise<TransactionSimulation> {
+    const context = this.getContext(params.chain);
+    const data = context.escrowContract.interface.encodeFunctionData('complete', [params.jobId, params.reasonHash]);
+    const warnings = !params.from ? ['No `from` address supplied, so gas estimation was skipped.'] : [];
+    const transaction = await this.buildSimulationTx({
+      chain: params.chain,
+      kind: 'completeJob',
+      to: context.chainConfig.contracts.escrowRailERC20,
+      data,
+      from: params.from,
+    });
+
+    return {
+      ...this.getChainSummary(params.chain),
+      ok: true,
+      warnings,
+      transactions: [transaction],
+    };
+  }
+
+  async simulateRejectJob(params: {
+    jobId: number;
+    reasonHash: string;
+    from?: string;
+    chain?: SupportedChain;
+  }): Promise<TransactionSimulation> {
+    const context = this.getContext(params.chain);
+    const data = context.escrowContract.interface.encodeFunctionData('reject', [params.jobId, params.reasonHash]);
+    const warnings = !params.from ? ['No `from` address supplied, so gas estimation was skipped.'] : [];
+    const transaction = await this.buildSimulationTx({
+      chain: params.chain,
+      kind: 'rejectJob',
+      to: context.chainConfig.contracts.escrowRailERC20,
+      data,
+      from: params.from,
+    });
+
+    return {
+      ...this.getChainSummary(params.chain),
+      ok: true,
+      warnings,
+      transactions: [transaction],
+    };
+  }
+
+  async simulateClaimRefund(params: {
+    jobId: number;
+    from?: string;
+    chain?: SupportedChain;
+  }): Promise<TransactionSimulation> {
+    const context = this.getContext(params.chain);
+    const data = context.escrowContract.interface.encodeFunctionData('claimRefund', [params.jobId]);
+    const warnings = !params.from ? ['No `from` address supplied, so gas estimation was skipped.'] : [];
+    const transaction = await this.buildSimulationTx({
+      chain: params.chain,
+      kind: 'claimRefund',
+      to: context.chainConfig.contracts.escrowRailERC20,
+      data,
+      from: params.from,
+    });
+
+    return {
+      ...this.getChainSummary(params.chain),
+      ok: true,
+      warnings,
+      transactions: [transaction],
+    };
   }
 }
 

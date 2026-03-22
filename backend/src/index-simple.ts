@@ -2,7 +2,7 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import { config } from './config';
-import { contractService } from './services/contract.service';
+import { contractService, SupportedChain } from './services/contract.service';
 import { ethers } from 'ethers';
 import { z } from 'zod';
 import { x402nService } from './services/x402n.service';
@@ -22,16 +22,31 @@ app.use(express.json());
 
 const stateNames = ['Open', 'Funded', 'Submitted', 'Completed', 'Rejected', 'Expired'];
 
-function getExplorerBaseUrl(): string {
-  return config.activeChainConfig.chainId === 11142220
-    ? 'https://celo-sepolia.blockscout.com'
-    : 'https://sepolia.basescan.org';
+const chainSchema = z.enum(['baseSepolia', 'celoSepolia']);
+
+function parseChain(value: unknown): SupportedChain | undefined {
+  const parsed = chainSchema.safeParse(value);
+  return parsed.success ? parsed.data : undefined;
 }
 
-function formatJobResponse(jobId: number, job: Awaited<ReturnType<typeof contractService.getJob>>) {
-  const explorerBase = getExplorerBaseUrl();
+function getRequestedChain(req: Request): SupportedChain | undefined {
+  return parseChain(req.query.chain ?? req.body?.chain);
+}
+
+function getChainSummary(chain?: SupportedChain) {
+  return contractService.getChainSummary(chain);
+}
+
+function formatJobResponse(
+  jobId: number,
+  job: Awaited<ReturnType<typeof contractService.getJob>>,
+  chain?: SupportedChain
+) {
+  const summary = getChainSummary(chain);
   return {
     jobId,
+    chain: summary.chain,
+    chainId: summary.chainId,
     client: job.client,
     provider: job.provider,
     evaluator: job.evaluator,
@@ -42,26 +57,27 @@ function formatJobResponse(jobId: number, job: Awaited<ReturnType<typeof contrac
     stateCode: Number(job.state),
     deliverable: job.deliverable,
     hook: job.hook,
-    explorerUrl: `${explorerBase}/address/${config.activeChainConfig.contracts.escrowRailERC20}`,
+    stablecoinAddress: summary.stablecoinAddress,
+    explorerBaseUrl: summary.explorerBaseUrl,
+    explorerUrl: `${summary.explorerBaseUrl}/address/${summary.escrowAddress}`,
   };
 }
 
 // Health check
-app.get('/health', async (_req: Request, res: Response) => {
-  const stablecoinAddress =
-    'usdcAddress' in config.activeChainConfig
-      ? config.activeChainConfig.usdcAddress
-      : config.activeChainConfig.cusdAddress;
+app.get('/health', async (req: Request, res: Response) => {
+  const requestedChain = getRequestedChain(req);
+  const summary = getChainSummary(requestedChain);
 
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     blockchain: {
-      network: config.blockchain.activeChain,
-      chainId: config.activeChainConfig.chainId,
-      escrowAddress: config.activeChainConfig.contracts.escrowRailERC20,
-      usdcAddress: stablecoinAddress,
+      network: summary.chain,
+      chainId: summary.chainId,
+      escrowAddress: summary.escrowAddress,
+      usdcAddress: summary.stablecoinAddress,
     },
+    supportedChains: contractService.listSupportedChains(),
     integrations: {
       x402nMockMode: config.x402n.mockMode,
       x402nBaseUrl: config.x402n.baseUrl,
@@ -70,13 +86,22 @@ app.get('/health', async (_req: Request, res: Response) => {
   });
 });
 
+app.get('/api/v1/chains', (_req: Request, res: Response) => {
+  res.json({
+    success: true,
+    defaultChain: config.blockchain.activeChain,
+    supportedChains: contractService.listSupportedChains(),
+  });
+});
+
 // GET /api/v1/jobs - List recent jobs from chain
 app.get('/api/v1/jobs', async (req: Request, res: Response) => {
   try {
+    const requestedChain = getRequestedChain(req);
     const limitRaw = Number(req.query.limit ?? 20);
     const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 20;
 
-    const nextJobId = await contractService.getNextJobId();
+    const nextJobId = await contractService.getNextJobId(requestedChain);
     const maxJobId = Math.max(nextJobId - 1, 0);
     const minJobId = Math.max(1, maxJobId - limit + 1);
 
@@ -88,8 +113,8 @@ app.get('/api/v1/jobs', async (req: Request, res: Response) => {
     const jobs = await Promise.all(
       jobIds.map(async (jobId) => {
         try {
-          const job = await contractService.getJob(jobId);
-          return formatJobResponse(jobId, job);
+          const job = await contractService.getJob(jobId, requestedChain);
+          return formatJobResponse(jobId, job, requestedChain);
         } catch {
           return null;
         }
@@ -97,6 +122,8 @@ app.get('/api/v1/jobs', async (req: Request, res: Response) => {
     );
 
     res.json({
+      chain: getChainSummary(requestedChain).chain,
+      chainId: getChainSummary(requestedChain).chainId,
       jobs: jobs.filter((job) => job !== null),
       pagination: {
         limit,
@@ -112,20 +139,21 @@ app.get('/api/v1/jobs', async (req: Request, res: Response) => {
 // GET /api/v1/jobs/:jobId - Get job details from blockchain
 app.get('/api/v1/jobs/:jobId', async (req: Request, res: Response) => {
   try {
+    const requestedChain = getRequestedChain(req);
     const jobId = parseInt(req.params.jobId, 10);
     if (isNaN(jobId) || jobId < 1) {
       res.status(400).json({ error: 'Invalid job ID' });
       return;
     }
 
-    const nextJobId = await contractService.getNextJobId();
+    const nextJobId = await contractService.getNextJobId(requestedChain);
     if (jobId >= nextJobId) {
       res.status(404).json({ error: 'Job not found' });
       return;
     }
 
-    const job = await contractService.getJob(jobId);
-    res.json(formatJobResponse(jobId, job));
+    const job = await contractService.getJob(jobId, requestedChain);
+    res.json(formatJobResponse(jobId, job, requestedChain));
   } catch (error) {
     console.error(`Error getting job ${req.params.jobId}:`, error);
     res.status(500).json({ error: 'Failed to get job' });
@@ -135,7 +163,8 @@ app.get('/api/v1/jobs/:jobId', async (req: Request, res: Response) => {
 // POST /api/v1/jobs - Create a new job
 app.post('/api/v1/jobs', async (req: Request, res: Response) => {
   try {
-    const { provider, evaluator, expiryDays } = req.body;
+    const { provider, evaluator, expiryDays, chain } = req.body;
+    const requestedChain = parseChain(chain);
 
     if (!provider || !evaluator) {
       res.status(400).json({ error: 'Missing provider or evaluator address' });
@@ -149,14 +178,18 @@ app.post('/api/v1/jobs', async (req: Request, res: Response) => {
       provider,
       evaluator,
       expiry,
+      chain: requestedChain,
       clientPrivateKey: config.blockchain.deployerPrivateKey!,
     });
+    const summary = getChainSummary(requestedChain);
 
     res.status(201).json({
       success: true,
+      chain: summary.chain,
+      chainId: summary.chainId,
       jobId: result.jobId,
       txHash: result.txHash,
-      explorerUrl: `${getExplorerBaseUrl()}/tx/${result.txHash}`,
+      explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
   } catch (error) {
     console.error('Error creating job:', error);
@@ -168,7 +201,8 @@ app.post('/api/v1/jobs', async (req: Request, res: Response) => {
 app.post('/api/v1/jobs/:jobId/fund', async (req: Request, res: Response) => {
   try {
     const jobId = parseInt(req.params.jobId, 10);
-    const { amount } = req.body; // Amount in USDC (e.g., "0.1")
+    const { amount, chain } = req.body; // Amount in USDC (e.g., "0.1")
+    const requestedChain = parseChain(chain);
 
     if (isNaN(jobId) || !amount) {
       res.status(400).json({ error: 'Invalid jobId or amount' });
@@ -180,15 +214,19 @@ app.post('/api/v1/jobs/:jobId/fund', async (req: Request, res: Response) => {
     const result = await contractService.fundJob({
       jobId,
       amount: amountWei.toString(),
+      chain: requestedChain,
       clientPrivateKey: config.blockchain.deployerPrivateKey!,
     });
+    const summary = getChainSummary(requestedChain);
 
     res.json({
       success: true,
+      chain: summary.chain,
+      chainId: summary.chainId,
       jobId,
       amount: amount + ' USDC',
       txHash: result.txHash,
-      explorerUrl: `${getExplorerBaseUrl()}/tx/${result.txHash}`,
+      explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
   } catch (error) {
     console.error('Error funding job:', error);
@@ -200,7 +238,8 @@ app.post('/api/v1/jobs/:jobId/fund', async (req: Request, res: Response) => {
 app.post('/api/v1/jobs/:jobId/submit', async (req: Request, res: Response) => {
   try {
     const jobId = parseInt(req.params.jobId, 10);
-    const { deliverable, providerPrivateKey } = req.body;
+    const { deliverable, providerPrivateKey, chain } = req.body;
+    const requestedChain = parseChain(chain);
 
     if (isNaN(jobId) || !deliverable || !providerPrivateKey) {
       res.status(400).json({ error: 'Missing jobId, deliverable, or providerPrivateKey' });
@@ -212,15 +251,19 @@ app.post('/api/v1/jobs/:jobId/submit', async (req: Request, res: Response) => {
     const result = await contractService.submitDeliverable({
       jobId,
       deliverableHash,
+      chain: requestedChain,
       providerPrivateKey,
     });
+    const summary = getChainSummary(requestedChain);
 
     res.json({
       success: true,
+      chain: summary.chain,
+      chainId: summary.chainId,
       jobId,
       deliverableHash,
       txHash: result.txHash,
-      explorerUrl: `${getExplorerBaseUrl()}/tx/${result.txHash}`,
+      explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
   } catch (error) {
     console.error('Error submitting deliverable:', error);
@@ -232,7 +275,8 @@ app.post('/api/v1/jobs/:jobId/submit', async (req: Request, res: Response) => {
 app.post('/api/v1/jobs/:jobId/complete', async (req: Request, res: Response) => {
   try {
     const jobId = parseInt(req.params.jobId, 10);
-    const { reason, evaluatorPrivateKey } = req.body;
+    const { reason, evaluatorPrivateKey, chain } = req.body;
+    const requestedChain = parseChain(chain);
 
     if (isNaN(jobId) || !evaluatorPrivateKey) {
       res.status(400).json({ error: 'Missing jobId or evaluatorPrivateKey' });
@@ -242,15 +286,19 @@ app.post('/api/v1/jobs/:jobId/complete', async (req: Request, res: Response) => 
     const result = await contractService.completeJob({
       jobId,
       reason: reason || 'Approved',
+      chain: requestedChain,
       evaluatorPrivateKey,
     });
+    const summary = getChainSummary(requestedChain);
 
     res.json({
       success: true,
+      chain: summary.chain,
+      chainId: summary.chainId,
       jobId,
       reason: reason || 'Approved',
       txHash: result.txHash,
-      explorerUrl: `${getExplorerBaseUrl()}/tx/${result.txHash}`,
+      explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
   } catch (error) {
     console.error('Error completing job:', error);
@@ -262,7 +310,8 @@ app.post('/api/v1/jobs/:jobId/complete', async (req: Request, res: Response) => 
 app.post('/api/v1/jobs/:jobId/reject', async (req: Request, res: Response) => {
   try {
     const jobId = parseInt(req.params.jobId, 10);
-    const { reason, evaluatorPrivateKey } = req.body;
+    const { reason, evaluatorPrivateKey, chain } = req.body;
+    const requestedChain = parseChain(chain);
 
     if (isNaN(jobId) || !evaluatorPrivateKey) {
       res.status(400).json({ error: 'Missing jobId or evaluatorPrivateKey' });
@@ -272,15 +321,19 @@ app.post('/api/v1/jobs/:jobId/reject', async (req: Request, res: Response) => {
     const result = await contractService.rejectJob({
       jobId,
       reason: reason || 'Rejected',
+      chain: requestedChain,
       evaluatorPrivateKey,
     });
+    const summary = getChainSummary(requestedChain);
 
     res.json({
       success: true,
+      chain: summary.chain,
+      chainId: summary.chainId,
       jobId,
       reason: reason || 'Rejected',
       txHash: result.txHash,
-      explorerUrl: `${getExplorerBaseUrl()}/tx/${result.txHash}`,
+      explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
     return;
   } catch (error) {
@@ -294,7 +347,8 @@ app.post('/api/v1/jobs/:jobId/reject', async (req: Request, res: Response) => {
 app.post('/api/v1/jobs/:jobId/claim-refund', async (req: Request, res: Response) => {
   try {
     const jobId = parseInt(req.params.jobId, 10);
-    const { callerPrivateKey } = req.body;
+    const { callerPrivateKey, chain } = req.body;
+    const requestedChain = parseChain(chain);
 
     if (isNaN(jobId) || !callerPrivateKey) {
       res.status(400).json({ error: 'Missing jobId or callerPrivateKey' });
@@ -303,19 +357,147 @@ app.post('/api/v1/jobs/:jobId/claim-refund', async (req: Request, res: Response)
 
     const result = await contractService.claimRefund({
       jobId,
+      chain: requestedChain,
       callerPrivateKey,
     });
+    const summary = getChainSummary(requestedChain);
 
     res.json({
       success: true,
+      chain: summary.chain,
+      chainId: summary.chainId,
       jobId,
       txHash: result.txHash,
-      explorerUrl: `${getExplorerBaseUrl()}/tx/${result.txHash}`,
+      explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
     return;
   } catch (error) {
     console.error('Error claiming refund:', error);
     res.status(500).json({ error: 'Failed to claim refund', details: (error as Error).message });
+    return;
+  }
+});
+
+const simulateJobActionSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('createJob'),
+    chain: chainSchema.optional(),
+    from: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+    provider: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    evaluator: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    expiryUnix: z.number().int().positive(),
+    hook: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+  }),
+  z.object({
+    action: z.literal('fundJob'),
+    chain: chainSchema.optional(),
+    from: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+    jobId: z.number().int().positive(),
+    amountUsdc: z.string().min(1),
+  }),
+  z.object({
+    action: z.literal('submitDeliverable'),
+    chain: chainSchema.optional(),
+    from: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+    jobId: z.number().int().positive(),
+    deliverable: z.string().min(1),
+  }),
+  z.object({
+    action: z.literal('completeJob'),
+    chain: chainSchema.optional(),
+    from: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+    jobId: z.number().int().positive(),
+    reason: z.string().optional(),
+  }),
+  z.object({
+    action: z.literal('rejectJob'),
+    chain: chainSchema.optional(),
+    from: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+    jobId: z.number().int().positive(),
+    reason: z.string().optional(),
+  }),
+  z.object({
+    action: z.literal('claimRefund'),
+    chain: chainSchema.optional(),
+    from: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+    jobId: z.number().int().positive(),
+  }),
+]);
+
+app.post('/api/v1/jobs/simulate', async (req: Request, res: Response) => {
+  try {
+    const payload = simulateJobActionSchema.parse(req.body);
+
+    switch (payload.action) {
+      case 'createJob': {
+        const simulation = await contractService.simulateCreateJob({
+          chain: payload.chain,
+          from: payload.from,
+          provider: payload.provider,
+          evaluator: payload.evaluator,
+          expiry: payload.expiryUnix,
+          hook: payload.hook,
+        });
+        res.json({ success: true, action: payload.action, simulation });
+        return;
+      }
+      case 'fundJob': {
+        const simulation = await contractService.simulateFundJob({
+          chain: payload.chain,
+          from: payload.from,
+          jobId: payload.jobId,
+          amount: ethers.parseUnits(payload.amountUsdc, 6).toString(),
+        });
+        res.json({ success: true, action: payload.action, simulation });
+        return;
+      }
+      case 'submitDeliverable': {
+        const simulation = await contractService.simulateSubmitDeliverable({
+          chain: payload.chain,
+          from: payload.from,
+          jobId: payload.jobId,
+          deliverableHash: ethers.keccak256(ethers.toUtf8Bytes(payload.deliverable)),
+        });
+        res.json({ success: true, action: payload.action, simulation });
+        return;
+      }
+      case 'completeJob': {
+        const simulation = await contractService.simulateCompleteJob({
+          chain: payload.chain,
+          from: payload.from,
+          jobId: payload.jobId,
+          reasonHash: payload.reason ? ethers.keccak256(ethers.toUtf8Bytes(payload.reason)) : ethers.ZeroHash,
+        });
+        res.json({ success: true, action: payload.action, simulation });
+        return;
+      }
+      case 'rejectJob': {
+        const simulation = await contractService.simulateRejectJob({
+          chain: payload.chain,
+          from: payload.from,
+          jobId: payload.jobId,
+          reasonHash: payload.reason ? ethers.keccak256(ethers.toUtf8Bytes(payload.reason)) : ethers.ZeroHash,
+        });
+        res.json({ success: true, action: payload.action, simulation });
+        return;
+      }
+      case 'claimRefund': {
+        const simulation = await contractService.simulateClaimRefund({
+          chain: payload.chain,
+          from: payload.from,
+          jobId: payload.jobId,
+        });
+        res.json({ success: true, action: payload.action, simulation });
+        return;
+      }
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid simulation payload', details: error.issues });
+      return;
+    }
+    console.error('Error simulating job action:', error);
+    res.status(500).json({ error: 'Failed to simulate job action', details: (error as Error).message });
     return;
   }
 });
