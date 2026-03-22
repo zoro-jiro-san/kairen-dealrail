@@ -1,86 +1,50 @@
 # Track Matrix
 
-This matrix maps the official Synthesis prize directions to the current DealRail repo state.
+This matrix maps the live Synthesis prize set to the current DealRail repo state.
 
-The percentages below are practical submission-readiness scores:
-- `90-100%`: submit confidently
-- `75-89%`: good stretch track if the story is framed carefully
-- `50-74%`: real implementation exists, but sponsor-grade proof is incomplete
-- `<50%`: keep as roadmap only
+## Readiness Labels
 
-## Priority Summary
-
-Submit confidently:
-- Open Track
-- Protocol Labs: Agents With Receipts / ERC-8004
-- Virtuals: ERC-8183 Open Build
-- Celo
-- AgentCash / x402 on a testnet-only basis
-
-Best stretch track:
-- Protocol Labs: Let the Agent Cook
-
-Keep out of the main submission unless new proof is added:
-- Base Agent Services on Base
-- MetaMask Delegations
-- Uniswap
-- Locus
-
-## Matrix
-
-| Sponsor / Track | Readiness | What Judges Want | Current Repo Coverage | Main Blocker | Fastest Resolution |
-|-----------------|-----------|------------------|----------------------|--------------|--------------------|
-| Synthesis Open Track | 95% | Clear system, real utility, coherent story | Full product narrative across browser, CLI, backend, escrow, and receipts | Final video packaging | Record one polished live walkthrough using Cloudflare + Railway |
-| Protocol Labs: Agents With Receipts / ERC-8004 | 90% | Identity, trust, receipts, reputation | ERC-8004 verifier, hook gates, reputation writes, discovery enrichment, tests, deployments | No canonical registered agent identity artifact in the submission pack yet | Add one operator-facing identity registration artifact or explicit registry lookup proof |
-| Virtuals: ERC-8183 Open Build | 92% | Real ERC-8183 commerce implementation | Escrow-first commerce loop is core to the product on Base Sepolia and Celo Sepolia | Could use one tighter ERC-8183 schema/receipt explanation for judges | Add a concise protocol mapping note and keep pointing to live flows |
-| Celo: Best Agent on Celo | 90% | Real utility on Celo rails | Celo Sepolia deployment, happy path, and reject path all evidenced | Needs only better demo packaging, not code | Include the Celo flow prominently in the final demo and submission text |
-| AgentCash / x402 | 85% | Real paid x402 request | x402 proxy path plus real Base Sepolia paid-request proof in the ledger | Only one canonical paid proof so far, testnet only | Add one more paid request or public service proof if time permits |
-| Protocol Labs: Let the Agent Cook | 70% | Discover -> plan -> execute -> verify -> submit, plus `agent.json` and `agent_log.json` | Multi-step agent path exists, CLI exists, docs are agent-friendly, but autonomy artifacts are not yet canonical | Missing `agent.json`, `agent_log.json`, and an honest agent-run package | Add truthful manifests and one structured end-to-end execution log |
-| Base: Agent Services on Base | 75% | Discoverable paid service on Base | Base Sepolia escrow evidence and x402 proof exist | Public discoverable service proof on Base is not yet canonical | Expose a clear public service endpoint and log one discoverable paid request |
-| MetaMask: Best Use of Delegations | 60% | Real delegated authorization flow | Delegation payload builder and signing path exist in backend/frontend | No delegated transaction hash in the ledger | Execute one delegated funding or settlement transaction and log it |
-| Uniswap: Agentic Finance | 55% | Real swap tx ids and sponsor-grade use | Quote and tx builder code exist; Base Sepolia is now documented as supported | No executed swap tx and no `UNISWAP_API_KEY`-backed live proof | Add the API key, perform one swap, and record the tx hash |
-| Locus: Best Use of Locus | 45% | Locus must be core and live | Live/mock bridge exists, mock mode is the default | No live Locus proof and no reason to claim it as core yet | Only upgrade if a real Locus operation is executed and logged |
-| Bankr / MoonPay / EigenCloud / others | 10-25% | Sponsor-specific core use | Not load-bearing in the current demo path | No meaningful evidence | Keep out of the submission unless built for real |
+- `High`: safe to submit around and emphasize
+- `Medium`: real implementation exists, but sponsor-grade proof is incomplete
+- `Low`: preview-only, under-evidenced, or roadmap-grade
 
 ## Recommended Track Lock
 
 Primary set:
 1. Synthesis Open Track
 2. Protocol Labs: Agents With Receipts / ERC-8004
-3. Virtuals: ERC-8183 Open Build
-4. Celo: Best Agent on Celo
-5. AgentCash / x402 on a testnet-only basis
+3. Protocol Labs: Let the Agent Cook
+4. Virtuals: ERC-8183 Open Build
+5. Celo: Best Agent on Celo
+6. AgentCash / x402 on a testnet-only basis
 
-Stretch set:
-6. Protocol Labs: Let the Agent Cook
+Keep secondary:
+- Base: Agent Services on Base
 
-## Why The Top 5 Are Best
+Keep out of the main pitch:
+- MetaMask Delegations
+- Uniswap
+- Locus
+- MoonPay / EigenCloud / others not load-bearing in the current product
 
-### Open Track
-- strongest overall system story
-- broadest evidence base
-- least dependent on one sponsor-specific artifact
+## Matrix
 
-### Protocol Labs / ERC-8004
-- trust is part of execution, not just profile display
-- verifier and hook change system behavior
-- strongest sponsor-to-product fit in the repo
+| Sponsor / Track | Readiness | What judges want | Current repo coverage | Main blocker | Next truthful step |
+|-----------------|-----------|------------------|----------------------|--------------|--------------------|
+| Synthesis Open Track | High | Coherent product, real value, solid proof | Browser desk, CLI, backend, contracts, multi-chain evidence | final demo packaging only | record one concise live walkthrough |
+| Protocol Labs: Agents With Receipts / ERC-8004 | High | Identity, trust, receipts, reputation | Verifier, hook, trust-aware discovery, settlement writes, tests | could use a tighter identity artifact in the demo pack | include one registry lookup or trust-loop callout |
+| Protocol Labs: Let the Agent Cook | High | Honest autonomy story, structured artifacts, reproducible run | live package, live backend path, `--json`, `agent.json`, `agent_log.json` | strongest gap is demo emphasis, not code | make the CLI run visible in final video |
+| Virtuals: ERC-8183 Open Build | High | Real commerce rail and clean protocol mapping | Escrow-backed commerce loop is the product core | mostly packaging | keep ERC-8183 mapping explicit |
+| Celo: Best Agent on Celo | High | Real utility on Celo rails | Celo Sepolia happy and reject proofs are recorded | none beyond packaging | include Celo in final demo |
+| AgentCash / x402 | High | Real machine payment proof | Base Sepolia paid-request proof plus x402 adapter surface | only one canonical proof so far | add another proof only if it is quick |
+| Base: Agent Services on Base | Medium | Paid service discoverability on Base | Base Sepolia evidence exists and discovery is coherent | provider market is still curated in mock mode | wire public market-backed supply or a public paid endpoint |
+| MetaMask Delegations | Low | Real delegated authorization and execution | payload builder and typed-data signing path | no delegated tx hash | add a real delegated tx or keep low |
+| Uniswap | Low | Real API-backed swap depth and tx proof | Base-only routing preview exists | no recorded swap tx and no sponsor-grade proof | add a real swap proof or keep low |
+| Locus | Low | Locus must be load-bearing and live | adapter exists | no canonical live proof | keep as roadmap unless a real run lands |
 
-### Virtuals / ERC-8183
-- the commerce rail is already the core product thesis
-- this track rewards the thing the repo is actually built around
+## Why This Lock Is Defensible
 
-### Celo
-- real testnet deployment breadth
-- both success and failure flows are already recorded
-
-### AgentCash / x402
-- now backed by a real paid-request settlement proof
-- useful as a truthful “agents that pay” extension
-
-## Upgrade Order For The Last Stretch Hours
-
-1. Package `agent.json` and `agent_log.json` to raise Let the Agent Cook.
-2. Add one delegated MetaMask tx if the flow is executable quickly.
-3. Add one Uniswap swap only if the API key and testnet funds are available.
-4. Leave Locus as roadmap unless a live tool run happens.
+- It matches what is actually live.
+- It maps directly to the strongest evidence artifacts.
+- It avoids claiming a fully live open marketplace when the current system is still curated in mock mode.
+- It turns the new autonomy packaging into a real strength instead of leaving it as a gap.
