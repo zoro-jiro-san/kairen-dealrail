@@ -109,13 +109,11 @@ Before first publish:
 npm docs:
 
 - https://docs.npmjs.com/about-scopes
-- https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages
+- https://docs.npmjs.com/creating-and-publishing-scoped-public-packages
 
 ## Demo Walkthrough
 
-A separate recordable CLI demo runner lives at:
-
-[`demo/dealrail-demo.sh`](/Users/sarthiborkar/Build/kairen-protocol/kairen-dealrail/cli/demo/dealrail-demo.sh)
+A separate recordable CLI demo runner lives at `demo/dealrail-demo.sh`.
 
 It animates typed commands, pauses between scenes, and runs a clean walkthrough for:
 
