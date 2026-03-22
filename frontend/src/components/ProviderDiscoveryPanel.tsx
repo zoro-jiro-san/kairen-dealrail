@@ -3,29 +3,45 @@
 import { useEffect, useState } from 'react';
 import { getErrorMessage, integrationsApi, ProviderCandidate } from '@/lib/api';
 
+const INITIAL_MIN_REPUTATION = '700';
+const INITIAL_MAX_BASE_PRICE = '0.2';
+const INITIAL_SOURCES = ['x402n', 'mock'];
+
 export function ProviderDiscoveryPanel() {
   const [providers, setProviders] = useState<ProviderCandidate[]>([]);
   const [query, setQuery] = useState('');
-  const [minReputation, setMinReputation] = useState('700');
-  const [maxBasePrice, setMaxBasePrice] = useState('0.2');
+  const [minReputation, setMinReputation] = useState(INITIAL_MIN_REPUTATION);
+  const [maxBasePrice, setMaxBasePrice] = useState(INITIAL_MAX_BASE_PRICE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sources, setSources] = useState<string[]>(['x402n', 'mock']);
+  const [sources, setSources] = useState<string[]>(INITIAL_SOURCES);
   const [availableSources, setAvailableSources] = useState<Array<{ id: string; enabled: boolean }>>([]);
 
   useEffect(() => {
-    loadProviders();
-    loadSources();
-  }, []);
+    void (async () => {
+      setLoading(true);
+      setError(null);
 
-  async function loadSources() {
-    try {
-      const res = await integrationsApi.listDiscoverySources();
-      setAvailableSources(res.sources);
-    } catch {
-      // non-blocking
-    }
-  }
+      try {
+        const [providersRes, sourcesRes] = await Promise.all([
+          integrationsApi.listProviders({
+            query: undefined,
+            minReputation: Number(INITIAL_MIN_REPUTATION),
+            maxBasePriceUsdc: Number(INITIAL_MAX_BASE_PRICE),
+            sources: INITIAL_SOURCES.join(','),
+          }),
+          integrationsApi.listDiscoverySources(),
+        ]);
+
+        setProviders(providersRes.providers);
+        setAvailableSources(sourcesRes.sources);
+      } catch (err) {
+        setError(getErrorMessage(err));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   async function loadProviders() {
     setLoading(true);

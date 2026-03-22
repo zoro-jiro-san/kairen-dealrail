@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { integrationsApi, getErrorMessage } from '@/lib/api';
+import { getEscrowAddress } from '@/lib/contracts';
 import { useAccount, useSendTransaction, useSignTypedData, useWaitForTransactionReceipt } from 'wagmi';
 import { keccak256, toBytes } from 'viem';
 
@@ -13,6 +14,9 @@ type BuiltTx = {
 };
 
 type Rail = 'x402n' | 'x402' | 'locus' | 'delegation' | 'uniswap';
+
+const BASE_SEPOLIA_CHAIN_ID = 84532;
+const BASE_SEPOLIA_ESCROW = getEscrowAddress(BASE_SEPOLIA_CHAIN_ID);
 
 const railCopy: Record<
   Rail,
@@ -186,7 +190,7 @@ export function IntegrationsWorkbench() {
       const result = await integrationsApi.buildDelegation({
         delegator: address || '0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e',
         delegate,
-        escrowTarget: '0x53d368b5467524F7d674B70F00138a283e1533ce',
+        escrowTarget: BASE_SEPOLIA_ESCROW,
         maxUsdc,
         expiryUnix: Math.floor(Date.now() / 1000) + 24 * 3600,
         allowedMethods: ['fund(uint256,uint256)', 'createJob(address,address,uint256,address)'],
@@ -208,8 +212,8 @@ export function IntegrationsWorkbench() {
         domain: {
           name: 'DealRailDelegationIntent',
           version: '1',
-          chainId: 84532,
-          verifyingContract: '0x53d368b5467524F7d674B70F00138a283e1533ce',
+          chainId: BASE_SEPOLIA_CHAIN_ID,
+          verifyingContract: BASE_SEPOLIA_ESCROW,
         },
         types: {
           DelegationIntent: [
@@ -225,7 +229,7 @@ export function IntegrationsWorkbench() {
         message: {
           delegator: (address || '0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e') as `0x${string}`,
           delegate: delegate as `0x${string}`,
-          target: '0x53d368b5467524F7d674B70F00138a283e1533ce',
+          target: BASE_SEPOLIA_ESCROW,
           maxUsdc,
           expiryUnix: BigInt(Math.floor(Date.now() / 1000) + 24 * 3600),
           methodsHash,

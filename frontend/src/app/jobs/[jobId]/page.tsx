@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { integrationsApi, jobsApi, Job, getErrorMessage } from '@/lib/api';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -55,11 +55,25 @@ export default function JobDetailPage() {
     hash,
   });
 
-  useEffect(() => {
-    if (jobId) {
-      loadJob();
+  const loadJob = useCallback(async () => {
+    if (!jobId) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const jobData = await jobsApi.getByJobId(jobId);
+      setJob(jobData);
+    } catch (error) {
+      console.error('Failed to load job:', error);
+      setError(getErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
   }, [jobId]);
+
+  useEffect(() => {
+    void loadJob();
+  }, [loadJob]);
 
   // Handle transaction confirmation and multi-step flows
   useEffect(() => {
@@ -85,7 +99,7 @@ export default function JobDetailPage() {
       } else {
         // Other transactions - reload job
         setTimeout(() => {
-          loadJob();
+          void loadJob();
           setActionSuccess('Transaction confirmed! Job updated.');
           setActionLoading(false);
           setFundingStep('idle');
@@ -93,23 +107,7 @@ export default function JobDetailPage() {
         }, 2000); // Wait 2s for state to propagate
       }
     }
-  }, [isConfirmed, jobId, chainId, fundingStep, fundAmount]);
-
-  async function loadJob() {
-    if (!jobId) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      const jobData = await jobsApi.getByJobId(jobId);
-      setJob(jobData);
-    } catch (error) {
-      console.error('Failed to load job:', error);
-      setError(getErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [chainId, fundAmount, fundingStep, isConfirmed, jobId, loadJob, writeContract]);
 
   // Fund Job action (approve + fund)
   async function handleFundJob() {
@@ -334,17 +332,17 @@ export default function JobDetailPage() {
                   </span>
                   {isClient && (
                     <span className="px-3 py-1 text-xs bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                      You're the Client
+                      You are the Client
                     </span>
                   )}
                   {isProvider && (
                     <span className="px-3 py-1 text-xs bg-cyan-500/20 text-cyan-400 rounded border border-cyan-500/30">
-                      You're the Provider
+                      You are the Provider
                     </span>
                   )}
                   {isEvaluator && (
                     <span className="px-3 py-1 text-xs bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">
-                      You're the Evaluator
+                      You are the Evaluator
                     </span>
                   )}
                 </div>

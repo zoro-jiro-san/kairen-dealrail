@@ -113,8 +113,14 @@ app.get('/api/v1/jobs', async (req: Request, res: Response) => {
 app.get('/api/v1/jobs/:jobId', async (req: Request, res: Response) => {
   try {
     const jobId = parseInt(req.params.jobId, 10);
-    if (isNaN(jobId)) {
+    if (isNaN(jobId) || jobId < 1) {
       res.status(400).json({ error: 'Invalid job ID' });
+      return;
+    }
+
+    const nextJobId = await contractService.getNextJobId();
+    if (jobId >= nextJobId) {
+      res.status(404).json({ error: 'Job not found' });
       return;
     }
 
