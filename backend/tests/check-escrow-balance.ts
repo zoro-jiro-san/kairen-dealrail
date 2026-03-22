@@ -1,12 +1,20 @@
 import { ethers } from 'ethers';
+import dotenv from 'dotenv';
+import { resolve } from 'path';
 
-const BASE_SEPOLIA_RPC = 'https://base-sepolia.g.alchemy.com/v2/JB7IYC9GSIzz-JMoQcnq2';
+dotenv.config({ path: resolve(__dirname, '../../.env') });
+
+const BASE_SEPOLIA_RPC = process.env.BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
 const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
-const ESCROW_ADDRESS = '0x53d368b5467524F7d674B70F00138a283e1533ce';
+const ESCROW_ADDRESS = process.env.ESCROW_RAIL_ERC20_BASE_SEPOLIA || '';
 
 const ERC20_ABI = ['function balanceOf(address account) view returns (uint256)'];
 
 async function main() {
+  if (!ESCROW_ADDRESS) {
+    throw new Error('Missing required env value ESCROW_RAIL_ERC20_BASE_SEPOLIA.');
+  }
+
   const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC);
   const usdc = new ethers.Contract(USDC_ADDRESS, ERC20_ABI, provider);
   

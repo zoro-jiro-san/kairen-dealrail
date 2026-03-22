@@ -1,6 +1,10 @@
 import { ethers } from 'ethers';
+import dotenv from 'dotenv';
+import { resolve } from 'path';
 
-const BASE_SEPOLIA_RPC = 'https://base-sepolia.g.alchemy.com/v2/JB7IYC9GSIzz-JMoQcnq2';
+dotenv.config({ path: resolve(__dirname, '../../.env') });
+
+const BASE_SEPOLIA_RPC = process.env.BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
 const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
 
 const DEPLOYER = '0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e';

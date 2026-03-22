@@ -1,7 +1,11 @@
 import { ethers } from 'ethers';
+import dotenv from 'dotenv';
+import { resolve } from 'path';
 
-const BASE_SEPOLIA_RPC = 'https://base-sepolia.g.alchemy.com/v2/JB7IYC9GSIzz-JMoQcnq2';
-const ESCROW_ADDRESS = '0x53d368b5467524F7d674B70F00138a283e1533ce';
+dotenv.config({ path: resolve(__dirname, '../../.env') });
+
+const BASE_SEPOLIA_RPC = process.env.BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
+const ESCROW_ADDRESS = process.env.ESCROW_RAIL_ERC20_BASE_SEPOLIA || '';
 
 const ESCROW_ABI = [
   'function getJob(uint256 jobId) view returns (tuple(address client, address provider, address evaluator, uint256 budget, uint256 expiry, uint8 state, bytes32 deliverable, address hook))',
@@ -9,6 +13,10 @@ const ESCROW_ABI = [
 ];
 
 async function main() {
+  if (!ESCROW_ADDRESS) {
+    throw new Error('Missing required env value ESCROW_RAIL_ERC20_BASE_SEPOLIA.');
+  }
+
   const provider = new ethers.JsonRpcProvider(BASE_SEPOLIA_RPC);
   const escrow = new ethers.Contract(ESCROW_ADDRESS, ESCROW_ABI, provider);
 
