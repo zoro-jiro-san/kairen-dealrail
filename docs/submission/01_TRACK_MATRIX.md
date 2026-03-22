@@ -2,67 +2,35 @@
 
 This matrix maps official Synthesis prize directions to the current DealRail repo state.
 
-## Priority Summary
-
-Submit with confidence:
-- Open Track
-- Protocol Labs: Agents With Receipts / ERC-8004
-- Celo
-
-Submit only if new proof is added:
-- MetaMask Delegations
-- Uniswap
-- Locus
-
-Do not center the submission on:
-- Bankr
-- Venice
-- ENS
-- Slice
-- Status
-- Self
-- Arkhai
-- other sponsors not load-bearing in the demonstrated path
+The percentages below are practical submission-readiness scores:
+- `90-100%`: submit confidently
+- `75-89%`: good stretch track if framed carefully
+- `50-74%`: real implementation exists, but sponsor-grade proof is incomplete
+- below `50%`: roadmap only
 
 ## Matrix
 
-| Sponsor / Track | What Judges Want | Current Repo Coverage | Evidence In Repo | Claim Level | Win Advice |
-|-----------------|------------------|----------------------|------------------|-------------|-----------|
-| Synthesis Open Track | Clear agent system, real utility, coherent multi-theme fit | Full product narrative exists across negotiation, trust, escrow, and settlement | Base + Celo tx ledger, tests, architecture docs | Strong | Make this the main story |
-| Protocol Labs: Agents With Receipts / ERC-8004 | Onchain identity, reputation, trust, receipts | ERC8004 verifier, hook gates, post-settlement feedback writes, discovery enrichment | Contracts, tests, deployments, tx ledger | Strong | This is the best sponsor-specific fit |
-| Protocol Labs: Let the Agent Cook | Full autonomous loop, agent manifest, agent log, tool use | Multi-step flow exists, but manifest/log packaging is not yet canonical in repo | Partial documentation only | Conditional | Only add if `agent.json` and `agent_log.json` are prepared truthfully |
-| Celo: Best Agent on Celo | Real utility using Celo payment rails | Celo Sepolia deployment and smoke tests for happy and reject paths | Canonical tx hashes in ledger | Strong | Best third track today |
-| MetaMask: Best Use of Delegations | Real delegated authorization patterns | ERC-7710 payload builder exists | Builder code only, no delegated tx proof | Partial | Needs one real delegated funding or settlement flow |
-| Uniswap: Agentic Finance | Real swaps and tx ids | Quote and tx builder endpoints exist | No swap tx ids recorded in ledger | Partial | Needs one real post-settlement swap tx |
-| Locus: Best Use of Locus | Locus must be core and working | Live/mock bridge exists, mock mode default | No live Locus payment proof recorded | Partial | Only worth adding if live operation is captured |
-| Merit / AgentCash / x402 | Paid x402 requests are core | x402 proxy, x402n bridge, and real Base Sepolia paid-request proof exist | Base Sepolia x402 settlement tx recorded in ledger | Strong on testnet | Valid stretch track if framed around testnet-paid proof |
-| Bankr | Real execution via Bankr gateway | Bankr service and neutral adapter scaffold exist | No confirmed live Bankr flow | Do not claim strongly | Mention only as future extension if asked |
-| Venice | Private cognition plus public action | No privacy-preserving compute integration | None | Do not claim | Exclude |
-| ENS | ENS as primary identity/communication layer | No canonical ENS implementation in active flow | None | Do not claim | Exclude |
-| Slice / Status / Self / Arkhai / others | Sponsor-specific load-bearing use | Not core to current demo path | None | Do not claim | Exclude |
+| Track | Readiness | Core claim | Files | Contract / Endpoint | Proof anchor | Main blocker | Fastest resolution |
+|------|-----------|-----------|-------|---------------------|--------------|--------------|--------------------|
+| Synthesis Open Track | 95% | DealRail is a real agent-commerce execution desk | `README.md`, `docs/submission/02_ARCHITECTURE.md`, `backend/src/index-simple.ts` | `EscrowRailERC20`, live frontend, live backend | Base + Celo ledger flows | Final demo packaging | Use the locked demo script and live URLs |
+| Protocol Labs ERC-8004 | 90% | ERC-8004 affects execution, not just labeling | `contracts/src/identity/ERC8004Verifier.sol`, `contracts/src/DealRailHook.sol`, `contracts/test/EscrowRailERC20Hook.t.sol` | `ERC8004Verifier`, `DealRailHook` | Base/Celo deployments + hook tests | Needs one clearer operator-facing identity artifact | Add explicit identity lookup or registration artifact |
+| Virtuals ERC-8183 | 92% | DealRail is already built around ERC-8183-style commerce flow | `contracts/src/EscrowRail.sol`, `contracts/src/EscrowRailERC20.sol`, `docs/submission/02_ARCHITECTURE.md` | escrow contracts | Base + Celo ledger flows | Mostly packaging | Keep protocol mapping explicit in final demo |
+| Celo | 90% | Real utility exists on Celo rails | `contracts/script/DeployCeloSepolia.s.sol`, `backend/tests/test-lifecycle-celo-sepolia.ts` | Celo Sepolia contracts | Celo happy + reject txs | Mostly packaging | Show happy + reject paths clearly |
+| AgentCash / x402 | 85% | DealRail can prove a real paid request | `backend/tests/proof-x402-testnet.ts`, `backend/src/services/x402.service.ts`, `backend/src/services/x402n.service.ts` | x402 paid-request path | `0x8dfabc6a77205b0740aa7bc48e230b7516acc76295536d18a6a30db19476940c` | Only one canonical paid proof | Add one more paid request if time allows |
+| Protocol Labs Let the Agent Cook | 70% | Agents already have a real CLI/JSON path into the system | `cli/src/cli.ts`, `cli/src/types.ts`, `AGENT.md` | live backend + CLI | CLI runtime + existing onchain evidence | Missing `agent.json` and `agent_log.json` | Add truthful manifests and one structured autonomous run |
+| Base Agent Services on Base | 75% | Base settlement and payment rails exist | `backend/src/index-simple.ts`, `backend/TRANSACTION_LEDGER.md` | Base Sepolia contracts + live backend | Base happy path + x402 proof | Discoverable public service proof is not canonical yet | Expose and log a public paid service |
+| MetaMask Delegations | 60% | Delegation builder exists | `backend/src/services/delegation.service.ts`, `frontend/src/components/IntegrationsWorkbench.tsx` | delegation build endpoint | builder payloads only | No delegated tx hash | Execute one delegated tx and log it |
+| Uniswap | 55% | Swap-building logic exists | `backend/src/services/uniswap.service.ts` | quote / tx builder path | no swap tx yet | No executed swap proof | Add `UNISWAP_API_KEY` and execute one swap |
+| Locus | 45% | Bridge exists | `backend/src/services/locus.service.ts`, `backend/src/services/execution.service.ts` | Locus bridge endpoints | none live | No live proof | Only claim if a live run is captured |
 
-## Why The Top 3 Are Best
+## Recommended Lock
 
-### 1. Open Track
-- Most forgiving of architecture breadth if the demo is coherent
-- DealRail spans three official themes well: pay, trust, cooperate
-- The repo has enough real evidence to support the broad thesis
+Primary:
+1. Open Track
+2. Protocol Labs ERC-8004
+3. Virtuals ERC-8183
+4. Celo
+5. AgentCash / x402 on a testnet-only basis
 
-### 2. Protocol Labs: ERC-8004
-- The trust layer is not cosmetic
-- ERC-8004 shapes provider verification, hook gating, and post-settlement reputation
-- This is the cleanest sponsor-to-product fit
-
-### 3. Celo
-- The project is actually deployed on Celo Sepolia
-- The ledger contains both happy and reject flows
-- Celo helps differentiate the project from a Base-only story
-
-## Highest-ROI Stretch Upgrades
-
-If there is time before publish, the best stretch upgrades are:
-
-1. Add one real delegated MetaMask flow and tx hash
-2. Add one real Uniswap post-settlement swap tx hash
-3. Add one real Locus paid operation
-4. Package an honest `agent.json` and `agent_log.json` for Protocol Labs autonomy track
+Stretch:
+6. Protocol Labs Let the Agent Cook
