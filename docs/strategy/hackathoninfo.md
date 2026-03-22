@@ -1,20 +1,22 @@
 # Hackathon Info — The Synthesis
 
-_Last updated: 2026-03-17 (tracks + workshop/status check refresh)_
+_Last updated: 2026-03-22 (official track catalog refresh + active track lock update)_
 
 ## 1) Canonical Sources
 - Main: https://synthesis.md/
 - Agent/API spec: https://synthesis.devfolio.co/skill.md
+- Submission spec: https://synthesis.md/submission/skill.md
 - Themes: https://synthesis.devfolio.co/themes.md
-- Prize catalog: https://synthesis.devfolio.co/catalog/prizes.md
+- Live track catalog API: https://synthesis.devfolio.co/catalog?page=1&limit=100
+- Prize catalog page: https://synthesis.devfolio.co/catalog/prizes.md
 - Updates channel: https://nsb.dev/synthesis-updates
 
 ---
 
 ## 2) Project & Ownership
 - **Project:** Kairen DealRail
-- **Repo:** https://github.com/zoro-jiro-san/kairen-dealrail
-- **Point of contact (agent):** Zoro
+- **Repo:** https://github.com/Kairen-Protocol/kairen-dealrail
+- **Point of contact (agent):** Zoro / NICO
 - **Human lead:** Sarthi
 
 ---
@@ -32,7 +34,7 @@ _Last updated: 2026-03-17 (tracks + workshop/status check refresh)_
 ---
 
 ## 4) Eligibility & Participation Requirements
-Based on the official skill/spec:
+Based on official skill/spec:
 
 ### Mandatory
 - Registered participant agent with platform API key
@@ -46,76 +48,63 @@ Based on the official skill/spec:
 - Participant = registered AI agent
 - Team = collaborators on one project
 - Project = submission tied to one team
-- Project can target one or more tracks
+- Project can target multiple tracks (platform limit applies)
 
 ---
 
 ## 5) Judging Signals (practical)
-From themes + rules + guidance:
-
 1. **Working > speculative**
-   - A functioning, scoped demo beats broad architecture-only claims.
-
 2. **Problem-solution coherence**
-   - Judges prioritize whether project solves a real problem over integration count.
-
 3. **Onchain verifiability**
-   - Clear, inspectable onchain actions materially strengthen submission.
-
 4. **Agent autonomy with human control**
-   - Strong entries show autonomous execution within human-defined safety bounds.
-
-5. **Clarity of evidence**
-   - tx hashes, event logs, architecture docs, and reproducible demo steps.
+5. **Clarity of evidence (tx hashes/events/repro steps)**
 
 ---
 
-## 6) Sponsor/Prize Track Landscape (what to watch)
-> There are 100+ prizes across many sponsor tracks. We focus only on tracks with strong product coherence for DealRail.
+## 6) Latest Official Track Landscape (refreshed)
+- Live catalog currently returns **46 tracks** (checked 2026-03-22).
+- Track inventory has shifted from earlier assumptions, so old “P0/P1/P2 shortlist” is deprecated.
+- Maintain track decisions from live catalog, not static historic lists.
 
-### P0 (must target)
-1. **Synthesis Open Track**
-2. **Agents With Receipts — ERC-8004 (Protocol Labs)**
-3. **Let the Agent Cook — No Humans Required (Protocol Labs)**
+### High-relevance tracks for DealRail (current names + UUID)
+1. **Synthesis Open Track** (`fdb76d08812b43f6a5f454744b66f590`)
+2. **Agents With Receipts — ERC-8004** (`3bf41be958da497bbb69f1a150c76af9`)
+3. **🤖 Let the Agent Cook — No Humans Required** (`10bd47fac07e4f85bda33ba482695b24`)
+4. **ERC-8183 Open Build** (`49c3d90b1f084c44a3585231dc733f83`)
+5. **Best Agent on Celo** (`ff26ab4933c84eea856a5c6bf513370b`)
+6. **Agent Services on Base** (`6f0e3d7dcadf4ef080d3f424963caff5`)
+7. **Escrow Ecosystem Extensions** (`88e91d848daf4d1bb0d40dec0074f59e`)
+8. **Agentic Finance (Best Uniswap API Integration)** (`020214c160fc43339dd9833733791e6b`)
+9. **Best Use of Locus** (`f50e31188e2641bc93764e7a6f26b0f6`)
+10. **Agents that pay** (`17ddda1d3cd1483aa4cfc45d493ac653`)
 
-### P1 (strong optional — choose max 1 or 2)
-4. **Best Use of Delegations (MetaMask)**
-5. **Agentic Finance (Uniswap API)**
-6. **Best Bankr LLM Gateway Use (Bankr)**
-
-### P2 (only if low overhead)
-7. **Build with AgentCash (Merit Systems)**
-8. **Best Use of Locus (Locus)**
-9. **Best Agent on Celo (Celo)**
-
-### Track selection rule
-- Do not chase too many tracks.
-- Target **2–3 tracks total** where integration is load-bearing in the demo path.
-
----
-
-## 7) Recommended Track Lock (for DealRail)
-
-### Proposed lock
-- **Primary:** Agents With Receipts — ERC-8004
-- **Primary:** Synthesis Open Track
-- **Optional third:** Best Use of Delegations (if implemented as core authorization boundary)
-
-### Rationale
-- Best alignment with DealRail’s core value: verifiable commitments + auditable settlement.
-- Keeps scope focused while still sponsor-competitive.
+### Secondary candidates (if implementation depth increases)
+- **Best Use of Delegations** (`0d69d56a8a084ac5b7dbe0dc1da73e1d`)
+- **Best Bankr LLM Gateway Use** (`dcaf0b1bf5d44c72a34bb771008e137a`)
 
 ---
 
-## 8) Submission Readiness Parameters (our checklist)
+## 7) Active Track Lock (current submission state)
+The project is currently aligned to a broad multi-track strategy (10 tracks) centered on:
+- ERC-8183 + ERC-8004 core proof
+- Base + Celo deployment evidence
+- Escrow/payment rail behavior
+- Uniswap and Locus integration endpoints
 
+Action rule:
+- Keep only tracks with evidence-backed implementation claims.
+- If a track claim cannot be proven by repo code + demo/evidence, remove it.
+
+---
+
+## 8) Submission Readiness Parameters
 ### Product completeness
-- [ ] End-to-end happy path works
+- [ ] End-to-end happy path works in demo recording
 - [ ] Dispute/failure path demonstrable
 - [ ] Human policy boundaries enforceable
 
 ### Onchain evidence
-- [ ] Contract deployed (testnet/mainnet as planned)
+- [ ] Contract deployed (as planned)
 - [ ] Real transactions executed
 - [ ] Event timeline captured
 
@@ -127,12 +116,12 @@ From themes + rules + guidance:
 ### Documentation quality
 - [ ] Architecture doc
 - [ ] README with run instructions
-- [ ] Demo script
+- [ ] Demo script/video
 - [ ] Collaboration log / development narrative
 
 ### Open-source compliance
-- [ ] Public repository
-- [ ] Build/test instructions
+- [x] Public repository
+- [ ] Build/test instructions verified fresh
 - [ ] No secrets in repo/history
 
 ---
@@ -141,43 +130,43 @@ From themes + rules + guidance:
 - [x] Idea + strategy docs
 - [x] Architecture + technical blueprint
 - [x] TX safety model
-- [x] Backend/frontend/contracts scaffolding present
-- [ ] Track lock finalized
+- [x] Backend/frontend/contracts scaffold + integrations
+- [x] Track lock updated to latest catalog naming
 - [ ] Final demo narrative frozen
-- [ ] Submission bundle finalized
+- [ ] Submission bundle polished (final media copy)
 
 ---
 
 ## 10) Immediate Next Actions
-1. Finalize track lock (max 3)
-2. Freeze MVP scope against selected tracks
-3. Ensure each selected track has explicit demo proof
-4. Gather onchain artifacts early for submission evidence
+1. Re-validate each selected track against concrete evidence file/endpoint/tx
+2. Freeze final demo script aligned to top-priority judging tracks
+3. Attach latest tx/event proofs into submission evidence docs
+4. Keep catalog UUID mapping current in this file if Devfolio changes names/IDs
 
 ---
 
 ## 11) Notes on Updates
 This file is the single source of truth for:
-- track updates
-- sponsor opportunities
+- live track update status
+- sponsor opportunity mapping
 - eligibility/rules summary
 - judging-oriented execution checks
 
-If sponsor tracks or rules shift, this file gets updated first.
+If sponsor tracks or rules shift, update this file first, then propagate to submission docs.
 
+---
 
-## 12) Latest Update Check (2026-03-17)
-Checked official pages for workshops/sessions/schedule updates:
-- `themes.md`
+## 12) Latest Update Check (2026-03-22)
+Checked official endpoints:
 - `skill.md`
-- `catalog/prizes.md`
-- main site
+- `submission/skill.md`
+- live catalog API (`/catalog`)
+- prize catalog page
 
 ### Result
-- No clearly published standalone workshop schedule page was found in these endpoints.
-- Core themes and sponsor prize catalog remain the primary actionable sources.
-- Continue monitoring the official updates channel: `https://nsb.dev/synthesis-updates`.
+- Track set has materially changed from earlier assumptions.
+- Catalog currently reports 46 tracks.
+- DealRail track map refreshed with current names + UUIDs.
 
 ### Action for us
-- Keep docs submission-ready without waiting on workshops.
-- If workshop/office-hour details appear, add them here immediately with date and link.
+- Keep this file synchronized with live catalog before any submission edit/publish cycle.
