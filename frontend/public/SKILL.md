@@ -1,7 +1,7 @@
 # DealRail Skill Index
 
-Canonical URL: `https://dealrail.kairen.xyz/skill.md`
-Uppercase alias: `https://dealrail.kairen.xyz/SKILL.md`
+Canonical URL: `https://dealrail.kairen.xyz/SKILL.md`
+Lowercase alias: `https://dealrail.kairen.xyz/skill.md`
 
 DealRail is an execution desk for agent commerce.
 Use this index when an agent needs to decide how to operate DealRail without loading the whole repo first.
@@ -10,7 +10,7 @@ Use this index when an agent needs to decide how to operate DealRail without loa
 
 1. Read this file.
 2. If the task is Base-track or public-surface oriented, open `/base`.
-3. If the task is guided operation, open `/docs` and choose the human or agent toggle.
+3. If the task is guided operation, open `/docs` and choose the human or agent toggle from the top shell.
 4. If the task is command-driven, use the CLI or the local `skills.sh` helper.
 
 ## Entry Modes
@@ -69,34 +69,36 @@ Shell entrypoints:
 - `./skills/dealrail.sh`
 
 Core role skills:
-- `/skills/buyer-agent/SKILL.md`
-- `/skills/provider-agent/SKILL.md`
-- `/skills/evaluator-agent/SKILL.md`
-- `/skills/transaction-ops/SKILL.md`
-- `/skills/checkpoints/SKILL.md`
-- `/skills/client-frontend/SKILL.md`
+- `skills/buyer-agent/SKILL.md`
+- `skills/provider-agent/SKILL.md`
+- `skills/evaluator-agent/SKILL.md`
+- `skills/transaction-ops/SKILL.md`
+- `skills/checkpoints/SKILL.md`
+- `skills/client-frontend/SKILL.md`
 
 Feature skills:
-- `/skills/provider-discovery/SKILL.md`
+- `skills/provider-discovery/SKILL.md`
   - provider scans, source mix, visible market depth
-- `/skills/negotiation-auction/SKILL.md`
+- `skills/negotiation-auction/SKILL.md`
   - RFOs, offer ranking, counter rounds, batch confirm, receipts
-- `/skills/escrow-lifecycle/SKILL.md`
+- `skills/escrow-lifecycle/SKILL.md`
   - create, fund, submit, complete, reject, refund
-- `/skills/machine-payments-x402/SKILL.md`
+- `skills/machine-payments-x402/SKILL.md`
   - x402 pay-per-call posture and proxy flows
-- `/skills/base-service-directory/SKILL.md`
+- `skills/base-service-directory/SKILL.md`
   - Base-facing public surface and track proof
-- `/skills/treasury-routing-preview/SKILL.md`
+- `skills/treasury-routing-preview/SKILL.md`
   - Base-only post-settlement routing preview
-- `/skills/delegation-builder/SKILL.md`
+- `skills/delegation-builder/SKILL.md`
   - MetaMask / ERC-7710 payload construction and bounds
 
 Repo-local reference skills:
-- `/.agents/skills/viem-integration/SKILL.md`
-- `/.agents/skills/swap-integration/SKILL.md`
-- `/.agents/skills/swap-planner/SKILL.md`
-- `/.agents/skills/pay-with-any-token/SKILL.md`
+- `.agents/skills/viem-integration/SKILL.md`
+- `.agents/skills/swap-integration/SKILL.md`
+- `.agents/skills/swap-planner/SKILL.md`
+- `.agents/skills/pay-with-any-token/SKILL.md`
+
+These are repo-local paths, not public URLs served by the frontend.
 
 ## Feature Routing
 
@@ -118,6 +120,13 @@ Use this map to choose the right skill quickly.
 - Base service directory is real, but it is not proof of a fully open live market.
 - Uniswap is preview-only until a real swap tx exists.
 - Delegation is a builder/signing path until a delegated tx exists.
+
+## Security Guardrails
+
+- Never ask for or paste raw private keys, seed phrases, or mnemonics into DealRail.
+- Keep signing client-side or on documented managed demo signers only.
+- Verify chain, role, job state, and route type before any mutating action.
+- Treat `smoke-celo` and similar funded-chain tests as explicit operator actions, not default agent steps.
 
 ## Recommended Commands
 

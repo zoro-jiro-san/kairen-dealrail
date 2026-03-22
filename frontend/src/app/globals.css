@@ -391,6 +391,67 @@ textarea {
   .shell-theme-toggle:hover {
     color: var(--terminal-fg);
   }
+
+  .shell-mode-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.9rem 1rem;
+    margin-top: 0.95rem;
+    padding-top: 0.95rem;
+    border-top: 1px solid color-mix(in srgb, var(--terminal-border) 82%, transparent);
+  }
+
+  .shell-mode-copy {
+    margin-top: 0.3rem;
+    max-width: 42rem;
+    font-size: 0.77rem;
+    line-height: 1.65;
+    color: var(--terminal-muted);
+  }
+
+  .shell-mode-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+    border-radius: 9999px;
+    border: 1px solid var(--terminal-border);
+    background: color-mix(in srgb, var(--terminal-panel) 90%, black 10%);
+    padding: 0.2rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  .shell-mode-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 5.6rem;
+    border-radius: 9999px;
+    padding: 0.45rem 0.9rem;
+    font-family: var(--font-plex-mono), monospace;
+    font-size: 0.69rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--terminal-muted);
+    transition: 0.15s ease;
+  }
+
+  .shell-mode-button:hover {
+    color: var(--terminal-fg);
+  }
+
+  .shell-mode-button-active {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--terminal-accent) 24%, var(--terminal-panel) 76%),
+      color-mix(in srgb, var(--terminal-ice) 12%, var(--terminal-panel) 88%)
+    );
+    color: var(--terminal-fg);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 8px 22px color-mix(in srgb, var(--terminal-accent) 16%, transparent);
+  }
 }
 
 @keyframes flowPulse {
