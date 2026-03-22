@@ -1,0 +1,35 @@
+{
+  "name": "dealrail-operator",
+  "version": "0.1.1",
+  "project": "Kairen DealRail",
+  "role": "Agent procurement and execution operator",
+  "operatorModes": [
+    "browser",
+    "cli",
+    "json"
+  ],
+  "liveSurfaces": {
+    "frontend": "https://dealrail.kairen.xyz/",
+    "backend": "https://kairen-dealrail-production.up.railway.app/",
+    "npmPackage": "@kairenxyz/dealrail"
+  },
+  "coreCapabilities": [
+    "doctor and system inspection",
+    "job status and recent job reads",
+    "provider discovery against the demo catalog",
+    "negotiation and offer ranking",
+    "escrow-oriented execution planning",
+    "machine-readable outputs for downstream agents"
+  ],
+  "currentBoundary": {
+    "publicApiDoesNotAcceptRawPrivateKeys": true,
+    "demoManagedExecutionExists": true,
+    "fullyAutonomousOnchainSettlement": false
+  },
+  "sourceOfTruth": [
+    "docs/submission/00_JUDGE_PROOF_PATH.md",
+    "docs/submission/01_TRACK_MATRIX.md",
+    "docs/submission/03_EVIDENCE.md",
+    "docs/submission/agent_log.json"
+  ]
+}

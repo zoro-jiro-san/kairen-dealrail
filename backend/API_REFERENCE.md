@@ -1,538 +1,317 @@
 # DealRail API Reference
 
-**Base URL:** `http://localhost:3001`
-**Status:** ✅ Running (Simplified Mode - No Database)
+## Base URLs
 
----
+- Live: `https://kairen-dealrail-production.up.railway.app`
+- Local: `http://localhost:3001`
 
-## Health Check
+## Important Public Safety Rule
 
-**Endpoint:** `GET /health`
+The public API does not accept raw private keys.
 
-**Response:**
-```json
-{
-  "status": "healthy",
-  "timestamp": "2026-03-15T21:20:08.951Z",
-  "blockchain": {
-    "network": "baseSepolia",
-    "chainId": 84532,
-    "escrowAddress": "0x53d368b5467524F7d674B70F00138a283e1533ce",
-    "usdcAddress": "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
-  }
-}
-```
+Public write flows are:
+- browser wallet signing
+- `/api/v1/jobs/simulate` for transaction planning
+- managed demo execution for demo jobs whose onchain participants match the server-managed demo actors
 
----
+## Health
 
-## Get Job
+### `GET /health`
 
-**Endpoint:** `GET /api/v1/jobs/:jobId`
+Returns:
+- active chain
+- escrow address
+- stablecoin address
+- public supported chain summaries
+- machine-payments posture
 
-**Example:**
+Example:
+
 ```bash
-curl http://localhost:3001/api/v1/jobs/5
+curl https://kairen-dealrail-production.up.railway.app/health
 ```
 
-**Response:**
+## Chains
+
+### `GET /api/v1/chains`
+
+Returns:
+- default chain
+- public supported chain metadata
+
+Example:
+
+```bash
+curl https://kairen-dealrail-production.up.railway.app/api/v1/chains
+```
+
+## Jobs
+
+### `GET /api/v1/jobs`
+
+List recent onchain jobs.
+
+Example:
+
+```bash
+curl "https://kairen-dealrail-production.up.railway.app/api/v1/jobs?chain=baseSepolia&limit=5"
+```
+
+### `GET /api/v1/jobs/:jobId`
+
+Read one job by onchain job ID.
+
+Example:
+
+```bash
+curl https://kairen-dealrail-production.up.railway.app/api/v1/jobs/5
+```
+
+### `POST /api/v1/jobs`
+
+Create a demo job using the server-managed client actor.
+
+Request:
+
 ```json
 {
-  "jobId": 5,
-  "client": "0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e",
   "provider": "0xef9C7E3Fea4f54CB3C6c8fa0978a0C8aB8f28fcF",
   "evaluator": "0xe872Bd6d99452C87BA54c7618FEc71f0DB23d4f2",
-  "budget": "0.1 USDC",
-  "budgetRaw": "100000",
-  "expiry": "2026-03-22T21:07:45.000Z",
-  "state": "Completed",
-  "stateCode": 3,
-  "deliverable": "0x25fe56e2dc670473cb290567ccdcc13a93eac30141afde046328ddb035774423",
-  "hook": "0x0000000000000000000000000000000000000000",
-  "explorerUrl": "https://sepolia.basescan.org/address/..."
+  "expiryDays": 7,
+  "chain": "baseSepolia"
 }
 ```
 
-**State Codes:**
-- `0` - Open
-- `1` - Funded
-- `2` - Submitted
-- `3` - Completed
-- `4` - Rejected
-- `5` - Expired
+### `POST /api/v1/jobs/:jobId/fund`
 
----
+Fund a demo job using the server-managed client actor.
 
-## List Recent Jobs
+Request:
 
-**Endpoint:** `GET /api/v1/jobs?limit=24`
-
-Returns recent onchain jobs in descending order by job ID.
-
----
-
-## Create Job
-
-**Endpoint:** `POST /api/v1/jobs`
-
-**Request Body:**
 ```json
 {
-  "provider": "0xef9C7E3Fea4f54CB3C6c8fa0978a0C8aB8f28fcF",
-  "evaluator": "0xe872Bd6d99452C87BA54c7618FEc71f0DB23d4f2",
-  "expiryDays": 7
+  "amount": "0.1",
+  "chain": "baseSepolia"
 }
 ```
 
-**Example:**
-```bash
-curl -X POST http://localhost:3001/api/v1/jobs \
-  -H "Content-Type: application/json" \
-  -d '{
-    "provider": "0xef9C7E3Fea4f54CB3C6c8fa0978a0C8aB8f28fcF",
-    "evaluator": "0xe872Bd6d99452C87BA54c7618FEc71f0DB23d4f2",
-    "expiryDays": 7
-  }'
-```
+### `POST /api/v1/jobs/:jobId/submit`
 
-**Response:**
+Submit a deliverable for a demo job.
+
+Request:
+
 ```json
 {
-  "success": true,
-  "jobId": 6,
-  "txHash": "0x...",
-  "explorerUrl": "https://sepolia.basescan.org/tx/0x..."
+  "deliverable": "Completed deliverable for job #6",
+  "chain": "baseSepolia"
 }
 ```
 
----
+Response notes:
+- succeeds only when the job provider matches the server-managed demo provider
+- rejects any `providerPrivateKey` field
 
-## Fund Job
+### `POST /api/v1/jobs/:jobId/complete`
 
-**Endpoint:** `POST /api/v1/jobs/:jobId/fund`
+Complete a demo job.
 
-**Request Body:**
+Request:
+
 ```json
 {
-  "amount": "0.1"
-}
-```
-
-**Example:**
-```bash
-curl -X POST http://localhost:3001/api/v1/jobs/6/fund \
-  -H "Content-Type: application/json" \
-  -d '{"amount": "0.1"}'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "jobId": 6,
-  "amount": "0.1 USDC",
-  "txHash": "0x...",
-  "explorerUrl": "https://sepolia.basescan.org/tx/0x..."
-}
-```
-
-**Note:** Uses deployer private key from .env
-
----
-
-## Submit Deliverable
-
-**Endpoint:** `POST /api/v1/jobs/:jobId/submit`
-
-**Request Body:**
-```json
-{
-  "deliverable": "My completed work content",
-  "providerPrivateKey": "0x..."
-}
-```
-
-**Example:**
-```bash
-curl -X POST http://localhost:3001/api/v1/jobs/6/submit \
-  -H "Content-Type: application/json" \
-  -d '{
-    "deliverable": "Completed deliverable for job #6",
-    "providerPrivateKey": "0xYOUR_PROVIDER_PRIVATE_KEY"
-  }'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "jobId": 6,
-  "deliverableHash": "0x...",
-  "txHash": "0x...",
-  "explorerUrl": "https://sepolia.basescan.org/tx/0x..."
-}
-```
-
----
-
-## Complete Job
-
-**Endpoint:** `POST /api/v1/jobs/:jobId/complete`
-
-**Request Body:**
-```json
-{
-  "reason": "Work approved - high quality",
-  "evaluatorPrivateKey": "0x..."
-}
-```
-
-**Example:**
-```bash
-curl -X POST http://localhost:3001/api/v1/jobs/6/complete \
-  -H "Content-Type: application/json" \
-  -d '{
-    "reason": "Excellent work, approved!",
-    "evaluatorPrivateKey": "0xYOUR_EVALUATOR_PRIVATE_KEY"
-  }'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "jobId": 6,
   "reason": "Approved",
-  "txHash": "0x...",
-  "explorerUrl": "https://sepolia.basescan.org/tx/0x..."
+  "chain": "baseSepolia"
 }
 ```
 
----
+Response notes:
+- succeeds only when the job evaluator matches the server-managed demo evaluator
+- rejects any `evaluatorPrivateKey` field
 
-## Reject Job
+### `POST /api/v1/jobs/:jobId/reject`
 
-**Endpoint:** `POST /api/v1/jobs/:jobId/reject`
+Reject a demo job.
 
-**Request Body:**
-```json
-{
-  "reason": "Quality mismatch",
-  "evaluatorPrivateKey": "0x..."
-}
-```
-
----
-
-## Claim Refund
-
-**Endpoint:** `POST /api/v1/jobs/:jobId/claim-refund`
-
-**Request Body:**
-```json
-{
-  "callerPrivateKey": "0x..."
-}
-```
-
----
-
-## x402n Negotiation Bridge
-
-### Create RFO
-**Endpoint:** `POST /api/v1/x402n/rfos`
+Request:
 
 ```json
 {
-  "serviceRequirement": "Generate benchmark report",
-  "maxBudgetUsdc": 0.12,
-  "maxDeliveryHours": 24,
-  "minReputationScore": 700,
-  "auctionMode": "reverse_auction",
-  "maxRounds": 3,
-  "batchSize": 2,
-  "autoCounterStepBps": 500,
-  "networkMode": "testnet"
+  "reason": "Rejected",
+  "chain": "celoSepolia"
 }
 ```
 
-### Get Negotiation
-**Endpoint:** `GET /api/v1/x402n/rfos/:negotiationId`
+### `POST /api/v1/jobs/:jobId/claim-refund`
 
-### Accept Offer
-**Endpoint:** `POST /api/v1/x402n/offers/:offerId/accept`
+Claim refund for a demo job.
+
+Request:
 
 ```json
 {
-  "negotiationId": "neg_1234abcd"
+  "chain": "baseSepolia"
 }
 ```
 
-### Run Counter Round
-**Endpoint:** `POST /api/v1/x402n/rfos/:negotiationId/counter`
+### `POST /api/v1/jobs/simulate`
 
-### Create Offer Batch
-**Endpoint:** `POST /api/v1/x402n/rfos/:negotiationId/batch`
+Build transaction payloads without signing or sending them.
 
-```json
-{
-  "offerIds": ["offer_1", "offer_2"]
-}
+Supported actions:
+- `createJob`
+- `fundJob`
+- `submitDeliverable`
+- `completeJob`
+- `rejectJob`
+- `claimRefund`
+
+Example:
+
+```bash
+curl -X POST https://kairen-dealrail-production.up.railway.app/api/v1/jobs/simulate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "fundJob",
+    "chain": "baseSepolia",
+    "from": "0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e",
+    "jobId": 2,
+    "amountUsdc": "0.1"
+  }'
 ```
-
-### Confirm Batch
-**Endpoint:** `POST /api/v1/x402n/rfos/:negotiationId/confirm`
-
-```json
-{
-  "batchId": "batch_abcd1234",
-  "selectedOfferId": "offer_1"
-}
-```
-
-### Savings Receipt
-**Endpoint:** `GET /api/v1/x402n/rfos/:negotiationId/receipt`
-
-### Negotiation Activity Feed
-**Endpoint:** `GET /api/v1/x402n/rfos/:negotiationId/activities?limit=30`
-
----
 
 ## Discovery
 
-### List Discovery Sources
-**Endpoint:** `GET /api/v1/discovery/sources`
+### `GET /api/v1/discovery/providers`
 
-### List Providers (multi-source)
-**Endpoint:** `GET /api/v1/discovery/providers`
+Return provider candidates before negotiation.
 
-Optional params:
-- `query`
-- `minReputation`
-- `maxBasePriceUsdc`
-- `sources` (comma-separated: `x402n,virtuals,near,imported,mock`)
-
-### Import External Providers
-**Endpoint:** `POST /api/v1/discovery/providers/import`
-
-Use this to ingest third-party marketplace exports into DealRail discovery.
-
-### Agent Identity (ERC-8004)
-**Endpoint:** `GET /api/v1/agents/:address`
-
----
-
-## Uniswap Quote (Base Mainnet)
-
-**Endpoint:** `GET /api/v1/integrations/uniswap/quote`
-
-**Query params:**
-- `tokenIn`: `USDC` or `WETH` (default `USDC`)
-- `tokenOut`: `USDC` or `WETH` (default `WETH`)
-- `amountIn`: human amount string (default `1`)
-- `fee`: pool fee tier (default `3000`)
-
-**Example:**
-```bash
-curl "http://localhost:3001/api/v1/integrations/uniswap/quote?tokenIn=USDC&tokenOut=WETH&amountIn=10&fee=3000"
-```
-
----
-
-## x402 Adapter
-
-### Status
-**Endpoint:** `GET /api/v1/integrations/x402/status`
-
-### Proxy Request
-**Endpoint:** `POST /api/v1/integrations/x402/proxy`
-
-```json
-{
-  "url": "https://example-x402-api.com/resource",
-  "method": "GET",
-  "paymentHeader": "optional-signed-payment-header"
-}
-```
-
-If the upstream endpoint returns `402 Payment Required`, the response includes challenge headers so the caller can complete payment and retry.
-
----
-
-## Uniswap Tx Builders
-
-### Build Approve Tx
-**Endpoint:** `POST /api/v1/integrations/uniswap/build-approve-tx`
-
-```json
-{
-  "token": "USDC",
-  "amount": "10"
-}
-```
-
-### Build Swap Tx (exactInputSingle)
-**Endpoint:** `POST /api/v1/integrations/uniswap/build-swap-tx`
-
-```json
-{
-  "tokenIn": "USDC",
-  "tokenOut": "WETH",
-  "amountIn": "10",
-  "amountOutMinimum": "0.001",
-  "fee": 3000,
-  "recipient": "0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e"
-}
-```
-
----
-
-### Build Post-Settlement Approve+Swap (from Job)
-**Endpoint:** `GET /api/v1/integrations/uniswap/post-settlement/:jobId`
+Important:
+- in mock mode, default discovery is the curated demo catalog
+- provider `source` remains explicit
 
 Example:
+
 ```bash
-curl "http://localhost:3001/api/v1/integrations/uniswap/post-settlement/12?tokenOut=WETH&fee=3000&slippageBps=300"
+curl "https://kairen-dealrail-production.up.railway.app/api/v1/discovery/providers?query=automation%20benchmark%20report"
 ```
 
-Requires job state = `Completed`.
+### `GET /api/v1/discovery/sources`
 
----
+List enabled discovery sources.
 
-## Locus MCP Bridge
+### `GET /api/v1/discovery/opportunities`
 
-### List Locus Tools
-**Endpoint:** `GET /api/v1/integrations/locus/tools`
+List unmatched buyer demand saved in the opportunity book.
 
-### Send USDC
-**Endpoint:** `POST /api/v1/integrations/locus/send-usdc`
+### `POST /api/v1/discovery/opportunities`
+
+Persist unmatched buyer demand for later provider pickup.
+
+## Negotiation
+
+### `POST /api/v1/x402n/rfos`
+
+Create a negotiation session.
+
+Example:
 
 ```json
 {
-  "fromAgentId": "buyer-agent",
-  "toAddress": "0xef9C7E3Fea4f54CB3C6c8fa0978a0C8aB8f28fcF",
-  "amountUsdc": "1",
-  "chain": "base-sepolia",
-  "memo": "DealRail hackathon payment"
+  "serviceRequirement": "automation benchmark report",
+  "maxBudgetUsdc": 0.12,
+  "maxDeliveryHours": 24,
+  "minReputationScore": 700,
+  "auctionMode": "reverse_auction"
 }
 ```
 
----
+### `GET /api/v1/x402n/rfos/:negotiationId`
 
-## MetaMask Delegation (ERC-7710) Builder
+Read the session state.
 
-### Build Delegation Payload
-**Endpoint:** `POST /api/v1/integrations/metamask/delegation/build`
+### `POST /api/v1/x402n/offers/:offerId/accept`
 
-```json
-{
-  "delegator": "0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e",
-  "delegate": "0xef9C7E3Fea4f54CB3C6c8fa0978a0C8aB8f28fcF",
-  "escrowTarget": "0x53d368b5467524F7d674B70F00138a283e1533ce",
-  "maxUsdc": "25",
-  "expiryUnix": 1773780000,
-  "allowedMethods": ["fund(uint256,uint256)", "createJob(address,address,uint256,address)"]
-}
-```
+Mark an offer as accepted for batching.
 
----
+### `POST /api/v1/x402n/rfos/:negotiationId/counter`
 
-## Execution Adapters
+Run one reverse-auction round.
 
-### List Execution Providers
-**Endpoint:** `GET /api/v1/execution/providers`
+### `POST /api/v1/x402n/rfos/:negotiationId/batch`
 
-### Submit Execution Request
-**Endpoint:** `POST /api/v1/execution/submit`
+Create a confirmation batch.
 
-```json
-{
-  "provider": "wallet",
-  "operation": "send-tx",
-  "payload": {
-    "to": "0x...",
-    "data": "0x...",
-    "value": "0",
-    "chainId": 8453
-  }
-}
-```
+### `POST /api/v1/x402n/rfos/:negotiationId/confirm`
 
-Providers currently exposed: `wallet`, `locus`, `bankr` (mock scaffold).
+Confirm a selected offer and generate a savings receipt.
 
-### Frontend Execution Notes
+### `GET /api/v1/x402n/rfos/:negotiationId/receipt`
 
-- The dashboard `Integration Workbench` can:
-  - build Uniswap approve/swap tx payloads,
-  - send those payloads through connected wallet,
-  - build delegation caveats,
-  - sign a delegation intent via EIP-712.
+Return the generated receipt.
 
-## Running the API
+### `GET /api/v1/x402n/rfos/:negotiationId/activities`
 
-**Start server:**
-```bash
-cd backend
-npm run dev:simple
-```
+Return the session activity feed.
 
-**Server runs on:** `http://localhost:3001`
+## Machine Payments
 
----
+### `GET /api/v1/payments/status`
 
-## Testing Workflow
+Return machine-payments provider posture.
 
-```bash
-# 1. Health check
-curl http://localhost:3001/health | jq .
+### `POST /api/v1/payments/proxy`
 
-# 2. Get existing job
-curl http://localhost:3001/api/v1/jobs/5 | jq .
+Proxy an HTTP request through the machine-payments adapter layer.
 
-# 3. Create new job
-curl -X POST http://localhost:3001/api/v1/jobs \
-  -H "Content-Type: application/json" \
-  -d '{"provider":"0xef9C7E3Fea4f54CB3C6c8fa0978a0C8aB8f28fcF","evaluator":"0xe872Bd6d99452C87BA54c7618FEc71f0DB23d4f2","expiryDays":7}' \
-  | jq .
+### `GET /api/v1/integrations/x402/status`
 
-# 4. Fund job (replace 6 with your jobId)
-curl -X POST http://localhost:3001/api/v1/jobs/6/fund \
-  -H "Content-Type: application/json" \
-  -d '{"amount":"0.1"}' \
-  | jq .
+Compatibility status endpoint for the x402 adapter.
 
-# 5. Submit deliverable (wait 3 seconds after funding)
-sleep 3
-curl -X POST http://localhost:3001/api/v1/jobs/6/submit \
-  -H "Content-Type: application/json" \
-  -d '{"deliverable":"Test deliverable","providerPrivateKey":"0xYOUR_PROVIDER_PRIVATE_KEY"}' \
-  | jq .
+### `POST /api/v1/integrations/x402/proxy`
 
-# 6. Complete job (wait 3 seconds after submit)
-sleep 3
-curl -X POST http://localhost:3001/api/v1/jobs/6/complete \
-  -H "Content-Type: application/json" \
-  -d '{"reason":"Approved","evaluatorPrivateKey":"0xYOUR_EVALUATOR_PRIVATE_KEY"}' \
-  | jq .
+Compatibility proxy endpoint for x402-style requests.
 
-# 7. Verify completion
-curl http://localhost:3001/api/v1/jobs/6 | jq .
-```
+## Delegations
 
----
+### `POST /api/v1/integrations/metamask/delegation/build`
 
-## Notes
+Build a delegation payload. This is a payload-construction surface, not a canonical delegated execution proof.
 
-**Current Mode:** Simplified (No Database)
-- Reads jobs directly from blockchain
-- No persistent storage
-- Perfect for frontend development
+## Uniswap
 
-**For Production:**
-- Set up Supabase (see `docs/guides/SUPABASE_SETUP.md`)
-- Use `npm run dev` instead of `npm run dev:simple`
-- Database will cache jobs and enable advanced queries
+### `GET /api/v1/integrations/uniswap/quote`
 
----
+Build a quote for the current Base-oriented integration path.
 
-**API Status:** ✅ Fully Operational
-**Last Updated:** March 15, 2026
+### `POST /api/v1/integrations/uniswap/build-approve-tx`
+
+Build an approval transaction payload.
+
+### `POST /api/v1/integrations/uniswap/build-swap-tx`
+
+Build a swap transaction payload.
+
+### `GET /api/v1/integrations/uniswap/post-settlement/:jobId`
+
+Build post-settlement approve and swap payloads from a completed job.
+
+## Locus
+
+### `POST /api/v1/integrations/locus/send-usdc`
+
+Call the Locus payout bridge.
+
+### `GET /api/v1/integrations/locus/tools`
+
+List available Locus tools.
+
+## Execution Provider Registry
+
+### `GET /api/v1/execution/providers`
+
+List available execution rails.
+
+### `POST /api/v1/execution/submit`
+
+Submit an execution request through the neutral execution provider layer.

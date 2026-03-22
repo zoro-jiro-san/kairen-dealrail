@@ -1,0 +1,39 @@
+{
+  "artifactVersion": 1,
+  "capturedAt": "2026-03-22",
+  "source": "docs/progress/DEMO_VALIDATION_2026-03-22.md",
+  "runtime": "cli/dist/cli.js",
+  "apiBase": "http://localhost:3001",
+  "commands": [
+    {
+      "command": "DEALRAIL_API_URL=http://localhost:3001 node dist/cli.js status --json",
+      "outcome": "ok",
+      "observed": [
+        "health endpoint returned healthy",
+        "active chain was baseSepolia",
+        "completed jobs were visible through the CLI"
+      ]
+    },
+    {
+      "command": "DEALRAIL_API_URL=http://localhost:3001 node dist/cli.js jobs --limit 4 --json",
+      "outcome": "ok",
+      "observed": [
+        "CLI returned recent onchain jobs",
+        "Base job #2 was visible in the job list"
+      ]
+    },
+    {
+      "command": "DEALRAIL_API_URL=http://localhost:3001 node dist/cli.js vend \"automation benchmark report\" --budget 0.12 --hours 24 --json",
+      "outcome": "ok",
+      "observed": [
+        "negotiation neg_c40dce13 was created",
+        "three offers were ranked",
+        "best offer price was 0.09 USDC"
+      ]
+    }
+  ],
+  "limitations": [
+    "recorded run is against a local backend from the validated demo day",
+    "the CLI negotiation path does not yet auto-accept and settle onchain in one command"
+  ]
+}
