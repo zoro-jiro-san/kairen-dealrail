@@ -1,9 +1,8 @@
 name = "kairen-dealrail-frontend"
+main = ".open-next/worker.js"
+compatibility_date = "2026-03-22"
 compatibility_flags = ["nodejs_compat"]
-compatibility_date = "2025-01-01"
 
-# Cloudflare Pages configuration
-pages_build_output_dir = ".vercel/output/static"
-
-# This file helps ensure consistent environment settings
-# The nodejs_compat flag enables Node.js API compatibility in the Edge Runtime
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"

@@ -9,6 +9,7 @@
 # Next.js
 /.next/
 /out/
+/.open-next/
 
 # Production
 /build
@@ -32,3 +33,4 @@ yarn-error.log*
 # Typescript
 *.tsbuildinfo
 next-env.d.ts
+cloudflare-env.d.ts

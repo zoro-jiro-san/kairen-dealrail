@@ -45,6 +45,25 @@ npm run type-check
 
 The dev server runs on `http://localhost:3000`.
 
+## Cloudflare Workers
+
+This frontend should be deployed from the [`frontend`](.) directory, not the monorepo root.
+
+Use the supported OpenNext adapter path, not `@cloudflare/next-on-pages`.
+
+```bash
+cd frontend
+npm install
+npm run build:worker
+npm run deploy:worker
+```
+
+Important Cloudflare setting for Git-based deploys:
+- Root Directory: `frontend`
+- Build command: `npm run build:worker` if you are using a custom build command
+
+If Cloudflare runs the build from the repo root, it will fail to detect Next.js because the real app package is in `frontend/package.json`, not the root `package.json`.
+
 ## Important Files
 
 - [`src/app/page.tsx`](src/app/page.tsx)
