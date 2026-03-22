@@ -1,6 +1,7 @@
 # Kairen DealRail — Architecture Diagrams
 
-> Visual architecture reference for hackathon development
+> Historical / planning-era diagram set.
+> For the canonical submission visuals, use `docs/submission/06_VISUAL_ARCHITECTURE.md` first.
 
 ---
 

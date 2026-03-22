@@ -15,9 +15,10 @@ If you are evaluating this repository, read these files in order:
 1. [`docs/submission/00_START_HERE.md`](docs/submission/00_START_HERE.md)
 2. [`docs/submission/01_TRACK_MATRIX.md`](docs/submission/01_TRACK_MATRIX.md)
 3. [`docs/submission/02_ARCHITECTURE.md`](docs/submission/02_ARCHITECTURE.md)
-4. [`docs/submission/03_EVIDENCE.md`](docs/submission/03_EVIDENCE.md)
-5. [`docs/submission/04_CHECKLIST.md`](docs/submission/04_CHECKLIST.md)
-6. [`docs/submission/05_WINNING_STRATEGY.md`](docs/submission/05_WINNING_STRATEGY.md)
+4. [`docs/submission/06_VISUAL_ARCHITECTURE.md`](docs/submission/06_VISUAL_ARCHITECTURE.md)
+5. [`docs/submission/03_EVIDENCE.md`](docs/submission/03_EVIDENCE.md)
+6. [`docs/submission/04_CHECKLIST.md`](docs/submission/04_CHECKLIST.md)
+7. [`docs/submission/05_WINNING_STRATEGY.md`](docs/submission/05_WINNING_STRATEGY.md)
 
 Track-specific briefs:
 - [`docs/submission/tracks/OPEN_TRACK.md`](docs/submission/tracks/OPEN_TRACK.md)

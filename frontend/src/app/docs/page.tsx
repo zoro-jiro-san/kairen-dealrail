@@ -26,6 +26,43 @@ const lifecycle = [
   { title: '5. Receipt', desc: 'The terminal and dashboard keep a record of settlement, refund, and evidence.' },
 ];
 
+const architectureColumns = [
+  {
+    title: 'Input Layer',
+    kicker: 'People + agents',
+    points: ['Human operator defines bounds', 'Buyer agent requests service', 'Provider agent responds', 'Evaluator agent decides completion or rejection'],
+  },
+  {
+    title: 'Coordination Layer',
+    kicker: 'Frontend + backend',
+    points: ['UI captures intent and role', 'Backend ranks offers and tracks lifecycle', 'Discovery adds provider context', 'Integrations workbench prepares downstream rails'],
+  },
+  {
+    title: 'Settlement Layer',
+    kicker: 'Onchain execution',
+    points: ['EscrowRail creates jobs', 'Stable tokens fund escrow', 'Deliverables move state forward', 'Completion or rejection resolves value flow'],
+  },
+  {
+    title: 'Trust Layer',
+    kicker: 'ERC-8004 loop',
+    points: ['Verifier resolves identity', 'Hook can block unsafe actions', 'Settlement can update reputation', 'Trust data becomes reusable for the next deal'],
+  },
+];
+
+const rails = [
+  { label: 'Negotiation', detail: 'x402n sessions, ranking, reverse-auction rounds' },
+  { label: 'Escrow', detail: 'ERC-8183-style lifecycle on Base Sepolia and Celo Sepolia' },
+  { label: 'Trust', detail: 'ERC-8004 verifier plus reputation hook callbacks' },
+  { label: 'Extensions', detail: 'Delegation, Uniswap, Locus, and x402 adapter surfaces' },
+];
+
+const signalFlow = [
+  { title: 'Signal 01', body: 'Intent becomes a structured request with a budget, deadline, and role model.' },
+  { title: 'Signal 02', body: 'Discovery and negotiation narrow the market to a provider-evaluator pair that can actually execute.' },
+  { title: 'Signal 03', body: 'Escrow turns that offchain intent into an onchain commitment that neither side can silently rewrite.' },
+  { title: 'Signal 04', body: 'Evaluation finalizes the deal and lets trust data feed back into the next coordination loop.' },
+];
+
 export default function DocsPage() {
   return (
     <div className="space-y-8">
@@ -83,6 +120,56 @@ export default function DocsPage() {
               <div className="mt-3 text-sm leading-6 text-[var(--terminal-muted)]">{item.desc}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="terminal-panel rounded-[1.5rem] p-6 md:p-7">
+        <div className="terminal-kicker">Visual Architecture</div>
+        <div className="mt-2 max-w-3xl text-sm leading-7 text-[var(--terminal-muted)]">
+          Read DealRail as a four-layer system: actors create demand, the coordination layer turns that into an offer,
+          escrow moves it onchain, and the trust layer closes the loop with reputation-aware settlement.
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-4">
+          {architectureColumns.map((column) => (
+            <div key={column.title} className="rounded-[1.4rem] border border-[var(--terminal-border)] bg-black/10 p-5">
+              <div className="terminal-kicker">{column.kicker}</div>
+              <h3 className="mt-2 text-lg font-semibold">{column.title}</h3>
+              <div className="mt-4 space-y-3">
+                {column.points.map((point) => (
+                  <div key={point} className="rounded-xl border border-[var(--terminal-border)] bg-black/20 px-3 py-2 text-sm leading-6 text-[var(--terminal-muted)]">
+                    {point}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-8">
+          <div className="terminal-kicker">Signal Flow</div>
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
+            {signalFlow.map((step) => (
+              <div key={step.title} className="rounded-[1.35rem] border border-[var(--terminal-border)] bg-black/10 p-5">
+                <div className="terminal-label">{step.title}</div>
+                <div className="mt-3 text-sm leading-6 text-[var(--terminal-muted)]">{step.body}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-4">
+          <div className="terminal-kicker">Core Rails</div>
+          <div className="mt-5 space-y-3">
+            {rails.map((rail) => (
+              <div key={rail.label} className="rounded-[1.1rem] border border-[var(--terminal-border)] bg-black/10 px-4 py-3">
+                <div className="terminal-label">{rail.label}</div>
+                <div className="mt-2 text-sm leading-6 text-[var(--terminal-muted)]">{rail.detail}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

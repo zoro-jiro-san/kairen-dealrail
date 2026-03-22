@@ -11,9 +11,10 @@ Read order:
 1. [`submission/00_START_HERE.md`](submission/00_START_HERE.md)
 2. [`submission/01_TRACK_MATRIX.md`](submission/01_TRACK_MATRIX.md)
 3. [`submission/02_ARCHITECTURE.md`](submission/02_ARCHITECTURE.md)
-4. [`submission/03_EVIDENCE.md`](submission/03_EVIDENCE.md)
-5. [`submission/04_CHECKLIST.md`](submission/04_CHECKLIST.md)
-6. [`submission/05_WINNING_STRATEGY.md`](submission/05_WINNING_STRATEGY.md)
+4. [`submission/06_VISUAL_ARCHITECTURE.md`](submission/06_VISUAL_ARCHITECTURE.md)
+5. [`submission/03_EVIDENCE.md`](submission/03_EVIDENCE.md)
+6. [`submission/04_CHECKLIST.md`](submission/04_CHECKLIST.md)
+7. [`submission/05_WINNING_STRATEGY.md`](submission/05_WINNING_STRATEGY.md)
 
 Track briefs:
 - [`submission/tracks/OPEN_TRACK.md`](submission/tracks/OPEN_TRACK.md)

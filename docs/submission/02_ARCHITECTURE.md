@@ -2,6 +2,8 @@
 
 This document describes the canonical architecture currently supported by the repo.
 
+For the visual version, read [`06_VISUAL_ARCHITECTURE.md`](06_VISUAL_ARCHITECTURE.md).
+
 ## System Shape
 
 DealRail has four layers:
@@ -10,6 +12,29 @@ DealRail has four layers:
 2. Onchain escrow and settlement
 3. Trust and reputation hooks
 4. Optional downstream execution adapters
+
+## High-Level System Map
+
+```mermaid
+flowchart LR
+  H[Human operator] --> UI[Frontend UI]
+  BA[Buyer agent] --> UI
+  PA[Provider agent] --> UI
+  EA[Evaluator agent] --> UI
+
+  UI --> API[Backend API]
+
+  API --> NEG[x402n negotiation]
+  API --> DISC[Provider discovery]
+  API --> ESC[Escrow lifecycle]
+  API --> EXEC[Execution adapters]
+
+  DISC --> ERC[ERC-8004 identity and reputation]
+  ESC --> CHAIN[(Base Sepolia / Celo Sepolia)]
+  EXEC --> UNI[Uniswap]
+  EXEC --> LOC[Locus]
+  EXEC --> DEL[Delegation builder]
+```
 
 ## Canonical Demo Path
 
@@ -75,6 +100,35 @@ buyer policy -> x402n negotiation -> provider selection -> createJob -> fund
 provider submit -> evaluator complete/reject -> escrow releases or refund path remains available
 after settlement -> DealRailHook can write ERC-8004 reputation
 optional -> prepare downstream Uniswap / Locus / delegation operations
+```
+
+## Canonical Settlement Flow
+
+```mermaid
+sequenceDiagram
+  participant Buyer
+  participant Frontend
+  participant Backend
+  participant Escrow as EscrowRailERC20
+  participant Hook as DealRailHook
+  participant Evaluator
+
+  Buyer->>Frontend: define task, budget, deadline
+  Frontend->>Backend: create negotiation session
+  Backend-->>Frontend: ranked offers + trust context
+  Buyer->>Frontend: confirm selected provider
+  Frontend->>Backend: create job
+  Backend->>Escrow: createJob
+  Buyer->>Frontend: fund escrow
+  Frontend->>Backend: fund job
+  Backend->>Escrow: fund
+  Escrow->>Hook: beforeAction / afterAction
+  Frontend->>Backend: submit deliverable
+  Backend->>Escrow: submit
+  Evaluator->>Backend: complete or reject
+  Backend->>Escrow: complete or reject
+  Escrow->>Hook: beforeAction / afterAction
+  Hook->>Hook: optional ERC-8004 reputation update
 ```
 
 ## What Is Implemented Versus Optional
