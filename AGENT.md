@@ -6,6 +6,7 @@ Live surfaces:
 - Browser desk: `https://dealrail.kairen.xyz/`
 - Backend API: `https://kairen-dealrail-production.up.railway.app/`
 - Agent package: `@kairenxyz/dealrail`
+- Public skill index: `https://dealrail.kairen.xyz/skill.md`
 
 ## Canonical Rule
 
@@ -27,6 +28,7 @@ DealRail is the execution desk in the Kairen stack: humans use the browser desk,
 
 ```bash
 npx @kairenxyz/dealrail doctor --json
+npx @kairenxyz/dealrail services --json
 npx @kairenxyz/dealrail status --json
 npx @kairenxyz/dealrail vend "automation benchmark report" --budget 0.12 --hours 24 --json
 ```
@@ -82,3 +84,8 @@ If you edit product behavior:
 - keep `STATUS.md`, `backend/TRANSACTION_LEDGER.md`, and live URLs aligned
 - preserve the human path and agent path together
 - prefer scenario-first explanations over generic protocol slogans
+
+If you need operating guidance:
+- start with `frontend/public/skill.md`
+- use `./skills.sh features` for the feature map
+- load the matching repo-local skill before acting on discovery, negotiation, escrow, Base, routing, or delegation
