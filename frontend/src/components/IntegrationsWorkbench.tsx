@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { integrationsApi, getErrorMessage } from '@/lib/api';
+import { getEscrowAddress } from '@/lib/contracts';
 import { useAccount, useSendTransaction, useSignTypedData, useWaitForTransactionReceipt } from 'wagmi';
 import { keccak256, toBytes } from 'viem';
 
@@ -14,6 +15,9 @@ type BuiltTx = {
 
 type Rail = 'x402n' | 'x402' | 'locus' | 'delegation' | 'uniswap';
 
+const BASE_SEPOLIA_CHAIN_ID = 84532;
+const BASE_SEPOLIA_ESCROW = getEscrowAddress(BASE_SEPOLIA_CHAIN_ID);
+
 const railCopy: Record<
   Rail,
   {
@@ -25,18 +29,18 @@ const railCopy: Record<
   }
 > = {
   x402n: {
-    title: 'x402n Negotiation',
+    title: 'Market Competition',
     when: 'Use when the buyer does not know the winning provider yet and wants ranked offers before settlement.',
     avoid: 'Avoid when the endpoint and fixed price are already known.',
     input: 'Buyer requirement, budget, delivery target, provider supply.',
     output: 'Shortlist, negotiation session, confirmed deal posture.',
   },
   x402: {
-    title: 'x402 Simple Payment',
-    when: 'Use when the agent already knows the endpoint and wants a simple payment handshake.',
+    title: 'Machine Payments',
+    when: 'Use when the agent already knows the endpoint and wants an Ethereum-native pay-per-call handshake.',
     avoid: 'Avoid when provider discovery or multi-round negotiation still needs to happen.',
-    input: 'Endpoint URL and optional payment header.',
-    output: 'Gateway response from the x402-compatible server.',
+    input: 'Payment provider, endpoint URL, and optional payment header.',
+    output: 'Gateway response from the selected machine-payment adapter.',
   },
   locus: {
     title: 'Locus Payout Rail',
@@ -71,7 +75,7 @@ export function IntegrationsWorkbench() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [x402Status, setX402Status] = useState<{ endpoints?: string[] } | null>(null);
+  const [x402Status, setX402Status] = useState<{ endpoints?: string[]; primaryProvider?: string } | null>(null);
   const [locusTools, setLocusTools] = useState<Array<{ name?: string; id?: string; description?: string }>>([]);
   const [executionProviders, setExecutionProviders] = useState<Array<{ id: string; mode: string; useCase: string }>>([]);
   const [providersPreview, setProvidersPreview] = useState<Array<{ serviceName: string; source: string; basePriceUsdc: string | null }>>([]);
@@ -98,7 +102,7 @@ export function IntegrationsWorkbench() {
     void (async () => {
       try {
         const [x402, locus, execution, providers] = await Promise.all([
-          integrationsApi.getX402Status().catch(() => ({ endpoints: [] })),
+          integrationsApi.getMachinePaymentsStatus().catch(() => ({ endpoints: [] })),
           integrationsApi.listLocusTools().catch(() => ({ tools: [] })),
           integrationsApi.listExecutionProviders().catch(() => ({ providers: [] })),
           integrationsApi.listProviders().catch(() => ({ providers: [] })),
@@ -186,7 +190,7 @@ export function IntegrationsWorkbench() {
       const result = await integrationsApi.buildDelegation({
         delegator: address || '0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e',
         delegate,
-        escrowTarget: '0x53d368b5467524F7d674B70F00138a283e1533ce',
+        escrowTarget: BASE_SEPOLIA_ESCROW,
         maxUsdc,
         expiryUnix: Math.floor(Date.now() / 1000) + 24 * 3600,
         allowedMethods: ['fund(uint256,uint256)', 'createJob(address,address,uint256,address)'],
@@ -208,8 +212,8 @@ export function IntegrationsWorkbench() {
         domain: {
           name: 'DealRailDelegationIntent',
           version: '1',
-          chainId: 84532,
-          verifyingContract: '0x53d368b5467524F7d674B70F00138a283e1533ce',
+          chainId: BASE_SEPOLIA_CHAIN_ID,
+          verifyingContract: BASE_SEPOLIA_ESCROW,
         },
         types: {
           DelegationIntent: [
@@ -225,7 +229,7 @@ export function IntegrationsWorkbench() {
         message: {
           delegator: (address || '0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e') as `0x${string}`,
           delegate: delegate as `0x${string}`,
-          target: '0x53d368b5467524F7d674B70F00138a283e1533ce',
+          target: BASE_SEPOLIA_ESCROW,
           maxUsdc,
           expiryUnix: BigInt(Math.floor(Date.now() / 1000) + 24 * 3600),
           methodsHash,
@@ -241,7 +245,8 @@ export function IntegrationsWorkbench() {
     setLoading(true);
     setError(null);
     try {
-      const result = await integrationsApi.proxyX402({
+      const result = await integrationsApi.proxyMachinePayment({
+        provider: 'x402',
         url: x402Url,
         method: 'GET',
         paymentHeader: x402PaymentHeader || undefined,
@@ -259,11 +264,11 @@ export function IntegrationsWorkbench() {
       return (
         <div className="space-y-4">
           <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5">
-            <div className="font-semibold">How x402n fits into DealRail</div>
+            <div className="font-semibold">How competition fits into DealRail</div>
             <div className="mt-3 space-y-3 text-sm leading-6 text-[var(--terminal-muted)]">
               <div>1. `scan` or `buy` discovers supply from provider feeds.</div>
-              <div>2. x402n handles negotiation and offer ranking when the winner is not known yet.</div>
-              <div>3. Once an offer is accepted, DealRail routes the outcome into escrow, delegation, or payout rails.</div>
+              <div>2. The market layer handles ranking and counter-rounds when the winner is not known yet.</div>
+              <div>3. Once an offer is accepted, DealRail routes the outcome into machine payment, escrow, delegation, or payout rails.</div>
             </div>
           </div>
 
@@ -291,13 +296,13 @@ export function IntegrationsWorkbench() {
       return (
         <div className="space-y-4">
           <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5 space-y-3">
-            <div className="font-semibold">x402 Payment Probe</div>
-            <p className="text-sm leading-6 text-[var(--terminal-muted)]">Use only when the endpoint is already known and negotiation is over.</p>
-            <input value={x402Url} onChange={(e) => setX402Url(e.target.value)} className="terminal-input" placeholder="x402 endpoint URL" />
+            <div className="font-semibold">Machine Payment Probe</div>
+            <p className="text-sm leading-6 text-[var(--terminal-muted)]">Use only when the endpoint is already known and negotiation is over. x402 is the first adapter.</p>
+            <input value={x402Url} onChange={(e) => setX402Url(e.target.value)} className="terminal-input" placeholder="machine-payment endpoint URL" />
             <input value={x402PaymentHeader} onChange={(e) => setX402PaymentHeader(e.target.value)} className="terminal-input" placeholder="Optional X-PAYMENT header" />
-            <button onClick={probeX402} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Call x402 Endpoint</button>
+            <button onClick={probeX402} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Call Payment Adapter</button>
           </div>
-          <pre className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 overflow-auto text-xs text-[var(--terminal-muted)]">{x402Out || 'x402 response will appear here.'}</pre>
+          <pre className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 overflow-auto text-xs text-[var(--terminal-muted)]">{x402Out || 'Machine-payment response will appear here.'}</pre>
         </div>
       );
     }
@@ -416,6 +421,9 @@ export function IntegrationsWorkbench() {
               {(x402Status?.endpoints || []).map((endpoint) => (
                 <span key={endpoint} className="terminal-chip">{endpoint}</span>
               ))}
+              {x402Status?.primaryProvider ? (
+                <span className="terminal-chip">payments:{x402Status.primaryProvider}</span>
+              ) : null}
               {executionProviders.map((provider) => (
                 <span key={provider.id} className="terminal-chip">{provider.id}:{provider.mode}</span>
               ))}

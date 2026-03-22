@@ -1,7 +1,7 @@
 # Kairen DealRail
 
-DealRail is an agentic commerce execution rail for machine-to-machine deals.
-It combines offchain negotiation, onchain escrow, evaluator-mediated settlement, and ERC-8004 reputation hooks.
+DealRail is an Ethereum-first machine-commerce execution desk for agent-to-agent and human-assisted service deals.
+It combines market competition, machine payments, onchain escrow, evaluator-mediated settlement, and ERC-8004 reputation hooks.
 
 Hackathon context:
 - Event: The Synthesis
@@ -64,7 +64,7 @@ This repo intentionally separates strong claims from partial claims.
 | MetaMask: Best Use of Delegations | Delegation payload builder implemented, live delegated execution not evidenced | Partial |
 | Uniswap: Agentic Finance | Quote + transaction builders implemented, no swap tx evidence in ledger | Partial |
 | Locus: Best Use of Locus | Bridge implemented, mock-first by default, live evidence not included | Partial |
-| Merit / AgentCash / x402 | x402 and x402n surfaces exist, no live paid x402 proof captured here | Partial |
+| Merit / AgentCash / x402 | Machine-payments adapter surface exists with x402-first posture, no live paid x402 proof captured here | Partial |
 | Bankr, Venice, ENS, Slice, Status, Self, Arkhai, others | Not submission targets in current repo state | Do not claim |
 
 Full matrix:
@@ -72,9 +72,9 @@ Full matrix:
 
 ## Architecture In One Pass
 
-1. A buyer defines constraints and requests offers through the x402n negotiation bridge.
+1. A buyer defines constraints and requests offers through the market competition bridge.
 2. Candidate providers are ranked and enriched with ERC-8004 trust data when available.
-3. A selected deal is committed onchain through the ERC-8183 escrow contract.
+3. The desk chooses machine payment for immediate calls or commits the selected deal onchain through the ERC-8183 escrow contract.
 4. Funds are locked in escrow until the provider submits a deliverable.
 5. An evaluator completes or rejects the job.
 6. DealRailHook can enforce trust gates before actions and write ERC-8004 reputation after settlement.

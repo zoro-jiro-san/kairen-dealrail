@@ -21,8 +21,8 @@ const roleGuides = [
 const lifecycle = [
   { title: '1. Intent', desc: 'The first message defines who is acting and what the deal is trying to achieve.' },
   { title: '2. Market Scan', desc: 'Discovery rails surface available providers, prices, reputation, and execution options.' },
-  { title: '3. Offer Formation', desc: 'Reverse auction or direct quote formation converts market interest into candidate offers.' },
-  { title: '4. Escrow Path', desc: 'One offer is confirmed and translated into an onchain escrow lifecycle.' },
+  { title: '3. Offer Formation', desc: 'Competition or direct quote formation converts market interest into candidate offers.' },
+  { title: '4. Payment + Escrow Path', desc: 'One offer is confirmed and translated into machine payment or an onchain escrow lifecycle.' },
   { title: '5. Receipt', desc: 'The terminal and dashboard keep a record of settlement, refund, and evidence.' },
 ];
 
@@ -50,10 +50,10 @@ const architectureColumns = [
 ];
 
 const rails = [
-  { label: 'Negotiation', detail: 'x402n sessions, ranking, reverse-auction rounds' },
+  { label: 'Competition', detail: 'ranked offers, counter rounds, and provider selection' },
   { label: 'Escrow', detail: 'ERC-8183-style lifecycle on Base Sepolia and Celo Sepolia' },
   { label: 'Trust', detail: 'ERC-8004 verifier plus reputation hook callbacks' },
-  { label: 'Extensions', detail: 'Delegation, Uniswap, Locus, and x402 adapter surfaces' },
+  { label: 'Extensions', detail: 'Machine payments, delegation, Uniswap, and payout adapter surfaces' },
 ];
 
 const signalFlow = [
@@ -80,10 +80,10 @@ export default function DocsPage() {
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-12">
         <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-5">
           <div className="terminal-kicker">What It Is</div>
-          <h2 className="mt-2 text-2xl font-semibold">A service-commerce rail, not a chat UI</h2>
+          <h2 className="mt-2 text-2xl font-semibold">An Ethereum machine-commerce desk, not a chat UI</h2>
           <div className="mt-5 space-y-4 text-sm leading-7 text-[var(--terminal-muted)]">
             <p>DealRail is for agent-driven or human-assisted service deals where both sides need structured price discovery.</p>
-            <p>The main value is not messaging. The main value is turning intent into a market scan, an offer, an escrow path, and a receipt.</p>
+            <p>The main value is not messaging. The main value is turning intent into a market scan, an offer, a payment posture, an escrow path, and a receipt.</p>
             <p>Use it when there is actual execution risk, price uncertainty, or a need for evaluator-backed settlement.</p>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function DocsPage() {
         <div className="terminal-kicker">Visual Architecture</div>
         <div className="mt-2 max-w-3xl text-sm leading-7 text-[var(--terminal-muted)]">
           Read DealRail as a four-layer system: actors create demand, the coordination layer turns that into an offer,
-          escrow moves it onchain, and the trust layer closes the loop with reputation-aware settlement.
+          payment and escrow make it executable, and the trust layer closes the loop with reputation-aware settlement.
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-4">

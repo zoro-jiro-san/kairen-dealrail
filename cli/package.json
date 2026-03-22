@@ -1,11 +1,31 @@
 {
-  "name": "@kairen/dealrail-cli",
+  "name": "@kairenxyz/dealrail",
   "version": "0.1.0",
   "private": false,
   "type": "module",
-  "description": "Publishable CLI for DealRail procurement, negotiation, and escrow rails",
+  "description": "CLI and SDK for DealRail procurement, negotiation, and escrow rails",
+  "license": "MIT",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zoro-jiro-san/kairen-dealrail.git",
+    "directory": "cli"
+  },
+  "homepage": "https://github.com/zoro-jiro-san/kairen-dealrail/tree/main/cli",
+  "bugs": {
+    "url": "https://github.com/zoro-jiro-san/kairen-dealrail/issues"
+  },
+  "keywords": [
+    "dealrail",
+    "cli",
+    "agents",
+    "procurement",
+    "escrow",
+    "ethereum",
+    "machine-payments",
+    "x402"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,13 +40,17 @@
     "README.md",
     "demo"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc --noEmit -p tsconfig.json",
     "cli": "tsx src/cli.ts",
     "demo": "tsx src/cli.ts demo",
     "demo:walkthrough": "bash demo/dealrail-demo.sh",
-    "start": "node dist/cli.js"
+    "start": "node dist/cli.js",
+    "pack:dry-run": "npm pack --dry-run"
   },
   "engines": {
     "node": ">=20"

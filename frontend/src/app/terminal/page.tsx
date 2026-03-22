@@ -8,6 +8,7 @@ import { CliDemoTerminal } from '@/components/CliDemoTerminal';
 
 const stepMap: Record<string, string[]> = {
   help: ['Read command map', 'Choose a role or rail'],
+  doctor: ['Check backend reachability', 'Read discovery and rail posture', 'Choose the next human or agent path'],
   status: ['Check backend health', 'Confirm active chain and escrow'],
   start_flow: ['Capture policy', 'Discover supply', 'Run reverse auction', 'Batch and confirm'],
   start_ops: ['Create job', 'Fund escrow', 'Submit deliverable', 'Resolve settlement'],
@@ -60,6 +61,10 @@ export default function TerminalPage() {
             <div className="terminal-kicker">Desk Guide</div>
             <div className="mt-5 space-y-4 text-sm leading-6 text-[var(--terminal-muted)]">
               <div>
+                <div className="terminal-label">`doctor`</div>
+                Run this first. It tells you what is live, what is still mock, how much supply the desk can see, and what command to run next.
+              </div>
+              <div>
                 <div className="terminal-label">`scan`</div>
                 Use this before buying. It answers whether the desk actually has supply for your request.
               </div>
@@ -71,6 +76,28 @@ export default function TerminalPage() {
               <div>
                 <div className="terminal-label">`sell`</div>
                 Use this when you are bringing provider inventory into the desk.
+              </div>
+            </div>
+          </div>
+
+          <div className="terminal-panel rounded-[1.5rem] p-6">
+            <div className="terminal-kicker">Operator Lanes</div>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-[1.2rem] border border-[var(--terminal-border)] bg-black/10 p-4">
+                <div className="terminal-label">Human</div>
+                <div className="mt-2 text-sm font-semibold">Doctor, inspect, decide, then settle.</div>
+                <div className="mt-2 text-xs leading-5 text-[var(--terminal-muted)]">
+                  Use the browser terminal to understand market posture before you commit to a job.
+                </div>
+                <div className="mt-3 terminal-mono text-[11px] text-[var(--terminal-accent)]">doctor -&gt; vend benchmark report under 0.12 usdc in 24h</div>
+              </div>
+              <div className="rounded-[1.2rem] border border-[var(--terminal-border)] bg-black/10 p-4">
+                <div className="terminal-label">Agent</div>
+                <div className="mt-2 text-sm font-semibold">Preflight in JSON, then dispatch the request.</div>
+                <div className="mt-2 text-xs leading-5 text-[var(--terminal-muted)]">
+                  Use the publishable CLI when another agent needs machine-readable posture and deterministic output.
+                </div>
+                <div className="mt-3 terminal-mono text-[11px] text-[var(--terminal-accent)]">dealrail doctor --json -&gt; dealrail vend ... --json</div>
               </div>
             </div>
           </div>

@@ -13,8 +13,13 @@ function getEnv(key: string, defaultValue?: string): string {
   return value || '';
 }
 
+function getOptionalEnv(key: string, defaultValue = ''): string {
+  return process.env[key] || defaultValue;
+}
+
 export const config = {
   server: {
+    host: getEnv('HOST', getEnv('NODE_ENV', 'development') === 'production' ? '0.0.0.0' : '127.0.0.1'),
     port: parseInt(getEnv('PORT', '3001'), 10),
     nodeEnv: getEnv('NODE_ENV', 'development'),
   },
@@ -77,11 +82,11 @@ export const config = {
     url: getEnv('DATABASE_URL', 'postgresql://localhost:5432/dealrail'),
   },
   bankr: {
-    apiKey: getEnv('BANKR_API_KEY', ''),
+    apiKey: getOptionalEnv('BANKR_API_KEY'),
     apiUrl: getEnv('BANKR_API_URL', 'https://api.bankr.bot'),
   },
   ipfs: {
-    pinataJwt: getEnv('PINATA_JWT', ''),
+    pinataJwt: getOptionalEnv('PINATA_JWT'),
     gateway: getEnv('PINATA_GATEWAY', 'https://gateway.pinata.cloud'),
   },
   integrations: {
@@ -93,7 +98,7 @@ export const config = {
     },
     locus: {
       mcpUrl: getEnv('LOCUS_MCP_URL', 'https://mcp.paywithlocus.com/mcp'),
-      apiKey: getEnv('LOCUS_API_KEY', ''),
+      apiKey: getOptionalEnv('LOCUS_API_KEY'),
       mockMode: getEnv('LOCUS_MOCK_MODE', 'true').toLowerCase() !== 'false',
       sendUsdcTool: getEnv('LOCUS_SEND_USDC_TOOL', 'send_usdc'),
     },
@@ -106,14 +111,14 @@ export const config = {
       x402nEnabled: getEnv('DISCOVERY_X402N_ENABLED', 'true').toLowerCase() !== 'false',
       virtualsEnabled: getEnv('DISCOVERY_VIRTUALS_ENABLED', 'false').toLowerCase() === 'true',
       nearEnabled: getEnv('DISCOVERY_NEAR_ENABLED', 'false').toLowerCase() === 'true',
-      virtualsServicesUrl: getEnv('DISCOVERY_VIRTUALS_SERVICES_URL', ''),
-      nearServicesUrl: getEnv('DISCOVERY_NEAR_SERVICES_URL', ''),
+      virtualsServicesUrl: getOptionalEnv('DISCOVERY_VIRTUALS_SERVICES_URL'),
+      nearServicesUrl: getOptionalEnv('DISCOVERY_NEAR_SERVICES_URL'),
       timeoutMs: parseInt(getEnv('DISCOVERY_TIMEOUT_MS', '3500'), 10),
     },
   },
   x402n: {
     baseUrl: getEnv('X402N_BASE_URL', 'https://x402n.kairen.xyz/api/v1'),
-    apiKey: getEnv('X402N_API_KEY', ''),
+    apiKey: getOptionalEnv('X402N_API_KEY'),
     // Default to mock mode for deterministic hackathon demos.
     mockMode: getEnv('X402N_MOCK_MODE', 'true').toLowerCase() !== 'false',
   },

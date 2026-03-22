@@ -50,6 +50,7 @@ app.use((err: Error, _req: Request, res: Response, _next: any) => {
 });
 
 // Start server
+const HOST = config.server.host;
 const PORT = config.server.port;
 
 async function startServer() {
@@ -62,10 +63,10 @@ async function startServer() {
     await eventListenerService.start('latest');
 
     // Start HTTP server
-    app.listen(PORT, () => {
-      console.log(`✅ DealRail API server running on port ${PORT}`);
-      console.log(`   Health: http://localhost:${PORT}/health`);
-      console.log(`   API: http://localhost:${PORT}/api/v1`);
+    app.listen(PORT, HOST, () => {
+      console.log(`✅ DealRail API server running on ${HOST}:${PORT}`);
+      console.log(`   Health: http://${HOST}:${PORT}/health`);
+      console.log(`   API: http://${HOST}:${PORT}/api/v1`);
       console.log(`   Chain ID: ${config.blockchain.chainId}`);
       console.log(`   Escrow: ${config.blockchain.escrowAddress}`);
     });

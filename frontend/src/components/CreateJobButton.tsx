@@ -60,8 +60,7 @@ export function CreateJobButton() {
     }
   }, [isSuccess]);
 
-  useEffect(() => {
-    if (!isOpen) return;
+  function openModal() {
     const prefProvider = localStorage.getItem('dealrail.prefProvider');
     const prefEvaluator = localStorage.getItem('dealrail.prefEvaluator');
     if (prefProvider && /^0x[a-fA-F0-9]{40}$/.test(prefProvider)) {
@@ -70,7 +69,8 @@ export function CreateJobButton() {
     if (prefEvaluator && /^0x[a-fA-F0-9]{40}$/.test(prefEvaluator)) {
       setEvaluator(prefEvaluator);
     }
-  }, [isOpen]);
+    setIsOpen(true);
+  }
 
   // Show error if transaction fails
   useEffect(() => {
@@ -82,7 +82,7 @@ export function CreateJobButton() {
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={openModal}
         className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
       >
         + Create New Job

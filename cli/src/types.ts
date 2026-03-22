@@ -10,6 +10,7 @@ export type HealthCheck = {
   integrations?: {
     x402nMockMode?: boolean;
     x402nBaseUrl?: string;
+    machinePaymentsPrimary?: string;
   };
 };
 
@@ -56,8 +57,15 @@ export type LocusToolsResponse = {
     | Array<{ name?: string; description?: string }>;
 };
 
-export type X402StatusResponse = {
+export type MachinePaymentsStatusResponse = {
   success: boolean;
+  primaryProvider: string;
+  providers: Array<{
+    id: string;
+    mode: string;
+    settlementModel: string;
+    useCase: string;
+  }>;
   useCase: string;
   endpoints: string[];
 };
@@ -186,4 +194,39 @@ export type VendResult = {
   negotiation: NegotiationSession;
   bestOffer: NegotiationOffer | null;
   queuedOpportunity?: Opportunity | null;
+};
+
+export type DoctorReport = {
+  apiBase: string;
+  backend: {
+    ok: boolean;
+    status?: string;
+    network?: string;
+    chainId?: number;
+    escrowAddress?: string;
+    marketMode?: string;
+    machinePaymentsPrimary?: string;
+    error?: string;
+  };
+  discovery: {
+    enabledSources: string[];
+    providerCount: number;
+    liveProviderCount: number;
+    mockProviderCount: number;
+  };
+  rails: {
+    executionProviders: number;
+    locusMode: string;
+    paymentProvider: string;
+  };
+  jobs: {
+    recentCount: number;
+    totalOnchain: number;
+    latestState: string | null;
+  };
+  warnings: string[];
+  nextSteps: {
+    human: string;
+    agent: string;
+  };
 };

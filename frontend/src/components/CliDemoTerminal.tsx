@@ -21,6 +21,21 @@ type DemoScene = {
 
 const SCENES: DemoScene[] = [
   {
+    id: 'doctor',
+    kicker: 'Preflight',
+    title: 'Doctor the desk before dispatch',
+    command: 'dealrail doctor --json',
+    note: 'Shows whether the desk is reachable, how much supply is live, and what is still demo-only.',
+    badge: 'doctor',
+    output: [
+      { tone: 'ok', text: '"backend": { "ok": true, "chainId": 84532 }' },
+      { tone: 'warn', text: '"marketMode": "demo/mock"' },
+      { tone: 'ok', text: '"paymentProvider": "x402"' },
+      { tone: 'warn', text: '"providerCount": 3, "liveProviderCount": 0, "mockProviderCount": 3' },
+      { tone: 'system', text: '"nextSteps": { "human": "dealrail vend ...", "agent": "dealrail vend ... --json" }' },
+    ],
+  },
+  {
     id: 'help',
     kicker: 'Command Deck',
     title: 'Start with the deck',
@@ -50,6 +65,7 @@ const SCENES: DemoScene[] = [
       { tone: 'ok', text: '"chainId": 84532' },
       { tone: 'ok', text: '"escrowAddress": "0xE25B10057556e9714d2ac60992b68f4E61481cF9"' },
       { tone: 'warn', text: '"x402nMockMode": true' },
+      { tone: 'ok', text: '"machinePaymentsPrimary": "x402"' },
     ],
   },
   {
@@ -87,13 +103,14 @@ const SCENES: DemoScene[] = [
     kicker: 'Integrations',
     title: 'Reveal the available execution rails',
     command: 'dealrail rails --json',
-    note: 'Summarizes wallet-native execution, Locus bridge mode, and x402 usage.',
+    note: 'Summarizes wallet-native execution, Locus bridge mode, and machine-payments posture.',
     badge: 'rails',
     output: [
       { tone: 'ok', text: '"wallet": "live"' },
       { tone: 'warn', text: '"locus": "mock"' },
       { tone: 'ok', text: '"bankr": "mock"' },
-      { tone: 'system', text: '"x402": "POST /api/v1/integrations/x402/proxy"' },
+      { tone: 'system', text: '"primaryProvider": "x402"' },
+      { tone: 'system', text: '"payments": "POST /api/v1/payments/proxy"' },
       { tone: 'system', text: '"useCase": "pay-per-call API/data purchases + escrow settlement"' },
     ],
   },

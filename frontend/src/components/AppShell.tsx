@@ -14,14 +14,17 @@ const NAV = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window === 'undefined') {
+      return 'dark';
+    }
+
+    return window.localStorage.getItem('dealrail.theme') === 'light' ? 'light' : 'dark';
+  });
 
   useEffect(() => {
-    const saved = window.localStorage.getItem('dealrail.theme');
-    const nextTheme = saved === 'light' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    document.documentElement.dataset.theme = nextTheme;
-  }, []);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   function toggleTheme() {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
@@ -59,7 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="ml-2">
             <ConnectButton />
           </div>
-          <button type="button" onClick={toggleTheme} className="terminal-btn terminal-mono text-xs uppercase">
+          <button type="button" onClick={toggleTheme} className="terminal-btn terminal-mono text-xs uppercase" suppressHydrationWarning>
             {theme === 'dark' ? 'Light' : 'Dark'}
           </button>
         </div>

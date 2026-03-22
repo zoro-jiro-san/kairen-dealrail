@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { animateDemo, renderHelp, renderJob, renderJobs, renderProviders, renderRails, renderStatus, renderVend } from './ascii.js';
+import { animateDemo, renderDoctor, renderHelp, renderJob, renderJobs, renderProviders, renderRails, renderStatus, renderVend } from './ascii.js';
 import { DealRailClient } from './client.js';
-import type { VendResult } from './types.js';
+import type { DoctorReport, VendResult } from './types.js';
 
 type FlagMap = Record<string, string | boolean>;
 
@@ -64,10 +64,108 @@ function queryFrom(positionals: string[], fallback?: string): string {
   return positionals.join(' ').trim() || fallback || '';
 }
 
+async function buildDoctorReport(client: DealRailClient, apiBase: string): Promise<DoctorReport> {
+  const warnings: string[] = [];
+
+  try {
+    const health = await client.health();
+    const [sources, providers, execution, locus, payments, jobs] = await Promise.all([
+      client.listSources().catch(() => null),
+      client.listProviders().catch(() => null),
+      client.listExecutionProviders().catch(() => null),
+      client.listLocusTools().catch(() => null),
+      client.machinePaymentsStatus().catch(() => null),
+      client.listJobs(4).catch(() => null),
+    ]);
+
+    const providerList = providers?.providers ?? [];
+    const liveProviderCount = providerList.filter((provider) => provider.source !== 'mock').length;
+    const mockProviderCount = providerList.filter((provider) => provider.source === 'mock').length;
+    const enabledSources = (sources?.sources ?? []).filter((source) => source.enabled).map((source) => source.id);
+    const locusMode = Array.isArray(locus?.tools) ? 'live' : locus?.tools?.mode ?? 'fallback';
+
+    if (health.integrations?.x402nMockMode) {
+      warnings.push('competition is still in demo/mock mode');
+    }
+    if (providerList.length === 0) {
+      warnings.push('no provider supply is currently discoverable');
+    } else if (liveProviderCount === 0) {
+      warnings.push('provider discovery is returning mock supply only');
+    }
+    if (locusMode !== 'live') {
+      warnings.push(`locus payout rail is ${locusMode}`);
+    }
+
+    return {
+      apiBase,
+      backend: {
+        ok: true,
+        status: health.status,
+        network: health.blockchain.network,
+        chainId: health.blockchain.chainId,
+        escrowAddress: health.blockchain.escrowAddress,
+        marketMode: health.integrations?.x402nMockMode ? 'demo/mock' : 'live',
+        machinePaymentsPrimary: health.integrations?.machinePaymentsPrimary ?? 'x402',
+      },
+      discovery: {
+        enabledSources,
+        providerCount: providerList.length,
+        liveProviderCount,
+        mockProviderCount,
+      },
+      rails: {
+        executionProviders: execution?.providers.length ?? 0,
+        locusMode,
+        paymentProvider: payments?.primaryProvider ?? health.integrations?.machinePaymentsPrimary ?? 'x402',
+      },
+      jobs: {
+        recentCount: jobs?.jobs.length ?? 0,
+        totalOnchain: jobs?.pagination?.totalOnchain ?? 0,
+        latestState: jobs?.jobs[0]?.state ?? null,
+      },
+      warnings,
+      nextSteps: {
+        human: 'dealrail vend "automation benchmark report" --budget 0.12 --hours 24',
+        agent: 'dealrail vend "automation benchmark report" --budget 0.12 --hours 24 --json',
+      },
+    };
+  } catch (error) {
+    return {
+      apiBase,
+      backend: {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      discovery: {
+        enabledSources: [],
+        providerCount: 0,
+        liveProviderCount: 0,
+        mockProviderCount: 0,
+      },
+      rails: {
+        executionProviders: 0,
+        locusMode: 'unknown',
+        paymentProvider: 'unknown',
+      },
+      jobs: {
+        recentCount: 0,
+        totalOnchain: 0,
+        latestState: null,
+      },
+      warnings: ['backend is unreachable from the current API base'],
+      nextSteps: {
+        human: 'start the backend, then rerun dealrail doctor',
+        agent: 'fix DEALRAIL_API_URL or start the backend, then rerun dealrail doctor --json',
+      },
+    };
+  }
+}
+
 async function run(): Promise<void> {
   const { command, flags, positionals } = parseArgs(process.argv.slice(2));
   const json = readBoolean(flags, 'json');
-  const client = new DealRailClient(resolveApiBase(flags));
+  const apiBase = resolveApiBase(flags);
+  const client = new DealRailClient(apiBase);
 
   switch (command) {
     case 'help':
@@ -77,6 +175,15 @@ async function run(): Promise<void> {
     case 'demo':
       await animateDemo(readNumber(flags, 'loops') ?? 2, readNumber(flags, 'delay') ?? 700);
       return;
+
+    case 'doctor': {
+      const report = await buildDoctorReport(client, apiBase);
+      process.stdout.write(json ? stringify(report) : `${renderDoctor(report)}\n`);
+      if (!report.backend.ok) {
+        process.exitCode = 1;
+      }
+      return;
+    }
 
     case 'status': {
       const status = await client.health();
@@ -146,12 +253,12 @@ async function run(): Promise<void> {
     }
 
     case 'rails': {
-      const [execution, locus, x402] = await Promise.all([
+      const [execution, locus, payments] = await Promise.all([
         client.listExecutionProviders(),
         client.listLocusTools(),
-        client.x402Status(),
+        client.machinePaymentsStatus(),
       ]);
-      process.stdout.write(json ? stringify({ execution, locus, x402 }) : `${renderRails(execution, locus, x402)}\n`);
+      process.stdout.write(json ? stringify({ execution, locus, payments }) : `${renderRails(execution, locus, payments)}\n`);
       return;
     }
 

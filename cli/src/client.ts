@@ -7,9 +7,9 @@ import type {
   Job,
   JobsListResponse,
   LocusToolsResponse,
+  MachinePaymentsStatusResponse,
   NegotiationSession,
   Opportunity,
-  X402StatusResponse,
 } from './types.js';
 
 export type RequestOptions = {
@@ -46,8 +46,8 @@ export class DealRailClient {
     return this.request('/api/v1/integrations/locus/tools');
   }
 
-  async x402Status(): Promise<X402StatusResponse> {
-    return this.request('/api/v1/integrations/x402/status');
+  async machinePaymentsStatus(): Promise<MachinePaymentsStatusResponse> {
+    return this.request('/api/v1/payments/status');
   }
 
   async listJobs(limit = 10): Promise<JobsListResponse> {

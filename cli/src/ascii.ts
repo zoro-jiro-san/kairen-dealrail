@@ -1,12 +1,13 @@
 import type {
+  DoctorReport,
   DiscoveryProvidersResponse,
   ExecutionProvidersResponse,
   HealthCheck,
   Job,
   LocusToolsResponse,
+  MachinePaymentsStatusResponse,
   NegotiationOffer,
   VendResult,
-  X402StatusResponse,
 } from './types.js';
 
 const WIDTH = 58;
@@ -67,6 +68,7 @@ export function renderHelp(): string {
     box('COMMAND DECK', [
       'dealrail help',
       'dealrail demo',
+      'dealrail doctor [--json]',
       'dealrail status [--json]',
       'dealrail scan <query> [--max-price 0.12] [--min-reputation 700]',
       'dealrail providers <query>',
@@ -74,6 +76,9 @@ export function renderHelp(): string {
       'dealrail rails',
       'dealrail jobs [--limit 8]',
       'dealrail job <id>',
+      '',
+      'human lane: dealrail doctor -> vend -> jobs',
+      'agent lane: dealrail doctor --json -> vend --json',
       '',
       'set DEALRAIL_API_URL or pass --api http://localhost:3001',
     ]),
@@ -142,8 +147,33 @@ export function renderStatus(status: HealthCheck): string {
       section('backend', status.status),
       section('chain', `${status.blockchain.network ?? 'unknown'} (${status.blockchain.chainId})`),
       section('market', status.integrations?.x402nMockMode ? 'demo/mock' : 'live'),
+      section('payments', status.integrations?.machinePaymentsPrimary ?? 'x402'),
       section('escrow', status.blockchain.escrowAddress),
       section('stablecoin', status.blockchain.usdcAddress),
+    ]),
+  ].join('\n');
+}
+
+export function renderDoctor(report: DoctorReport): string {
+  return [
+    renderBanner(),
+    '',
+    box('PRECHECK / DOCTOR', [
+      section('api', report.apiBase),
+      section('backend', report.backend.ok ? 'reachable' : 'offline'),
+      section('chain', report.backend.chainId ? `${report.backend.network ?? 'unknown'} (${report.backend.chainId})` : 'unknown'),
+      section('market', report.backend.marketMode ?? 'unknown'),
+      section('payments', report.rails.paymentProvider),
+      section('supply', `${report.discovery.providerCount} providers`),
+      section('jobs', `${report.jobs.totalOnchain} onchain`),
+      '',
+      `enabled sources :: ${report.discovery.enabledSources.join(', ') || 'none'}`,
+      `providers :: live ${report.discovery.liveProviderCount} / mock ${report.discovery.mockProviderCount}`,
+      `execution :: ${report.rails.executionProviders} providers / locus ${report.rails.locusMode}`,
+      ...(report.warnings.length > 0 ? ['', ...report.warnings.slice(0, 4).map((warning) => `warn :: ${warning}`)] : ['', 'warn :: none']),
+      '',
+      `next human :: ${shorten(report.nextSteps.human, WIDTH - 14)}`,
+      `next agent :: ${shorten(report.nextSteps.agent, WIDTH - 14)}`,
     ]),
   ].join('\n');
 }
@@ -191,17 +221,19 @@ export function renderVend(result: VendResult): string {
 export function renderRails(
   execution: ExecutionProvidersResponse,
   locus: LocusToolsResponse,
-  x402: X402StatusResponse
+  payments: MachinePaymentsStatusResponse
 ): string {
   const locusMode = Array.isArray(locus.tools) ? 'live' : locus.tools.mode ?? 'fallback';
   return [
     renderBanner(),
     '',
     box('RAIL BOARD', [
-      section('x402 endpoints', String(x402.endpoints.length)),
+      section('payments', payments.primaryProvider),
+      section('pay endpoints', String(payments.endpoints.length)),
       section('execution', String(execution.providers.length)),
       section('locus', locusMode),
       '',
+      ...payments.providers.map((provider) => `${provider.id} :: ${provider.mode} :: ${provider.settlementModel}`),
       ...execution.providers.map((provider) => `${provider.id} :: ${provider.mode} :: ${provider.useCase}`),
     ]),
   ].join('\n');

@@ -11,8 +11,8 @@ import { locusService } from './services/locus.service';
 import { delegationService } from './services/delegation.service';
 import { discoveryService } from './services/discovery.service';
 import { executionService } from './services/execution.service';
-import { x402Service } from './services/x402.service';
 import { opportunityBookService } from './services/opportunity-book.service';
+import { machinePaymentsService } from './services/machine-payments.service';
 
 const app: Express = express();
 
@@ -65,6 +65,7 @@ app.get('/health', async (_req: Request, res: Response) => {
     integrations: {
       x402nMockMode: config.x402n.mockMode,
       x402nBaseUrl: config.x402n.baseUrl,
+      machinePaymentsPrimary: 'x402',
     },
   });
 });
@@ -112,8 +113,14 @@ app.get('/api/v1/jobs', async (req: Request, res: Response) => {
 app.get('/api/v1/jobs/:jobId', async (req: Request, res: Response) => {
   try {
     const jobId = parseInt(req.params.jobId, 10);
-    if (isNaN(jobId)) {
+    if (isNaN(jobId) || jobId < 1) {
       res.status(400).json({ error: 'Invalid job ID' });
+      return;
+    }
+
+    const nextJobId = await contractService.getNextJobId();
+    if (jobId >= nextJobId) {
+      res.status(404).json({ error: 'Job not found' });
       return;
     }
 
@@ -779,15 +786,47 @@ app.get('/api/v1/integrations/locus/tools', async (_req: Request, res: Response)
   }
 });
 
+// GET /api/v1/payments/status
+app.get('/api/v1/payments/status', (_req: Request, res: Response) => {
+  res.json(machinePaymentsService.getStatus());
+  return;
+});
+
+// POST /api/v1/payments/proxy
+app.post('/api/v1/payments/proxy', async (req: Request, res: Response) => {
+  const schema = z.object({
+    provider: z.enum(['x402']).optional(),
+    url: z.string().url(),
+    method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']).optional(),
+    headers: z.record(z.string()).optional(),
+    body: z.unknown().optional(),
+    paymentHeader: z.string().optional(),
+  });
+
+  try {
+    const payload = schema.parse(req.body);
+    const result = await machinePaymentsService.proxyRequest(payload);
+    res.status(result.status === 402 ? 402 : 200).json(result);
+    return;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: 'Invalid machine payments payload', details: error.issues });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to call machine payment provider', details: (error as Error).message });
+    return;
+  }
+});
+
 // GET /api/v1/integrations/x402/status
 app.get('/api/v1/integrations/x402/status', (_req: Request, res: Response) => {
+  const status = machinePaymentsService.getStatus();
   res.json({
-    success: true,
-    useCase:
-      'Use x402 for pay-per-call API/data purchases; keep DealRail escrow for milestone settlement and dispute resolution.',
-    endpoints: [
-      'POST /api/v1/integrations/x402/proxy',
-    ],
+    success: status.success,
+    primaryProvider: status.primaryProvider,
+    providers: status.providers,
+    useCase: status.useCase,
+    endpoints: ['POST /api/v1/integrations/x402/proxy', ...status.endpoints],
   });
   return;
 });
@@ -804,7 +843,7 @@ app.post('/api/v1/integrations/x402/proxy', async (req: Request, res: Response) 
 
   try {
     const payload = schema.parse(req.body);
-    const result = await x402Service.proxyRequest(payload);
+    const result = await machinePaymentsService.proxyRequest({ ...payload, provider: 'x402' });
     res.status(result.status === 402 ? 402 : 200).json(result);
     return;
   } catch (error) {
@@ -1074,12 +1113,13 @@ app.use((err: Error, _req: Request, res: Response, _next: any) => {
 });
 
 // Start server
+const HOST = config.server.host;
 const PORT = config.server.port;
 
-app.listen(PORT, () => {
-  console.log('✅ DealRail API server running (Simplified - No Database)');
-  console.log(`   Health: http://localhost:${PORT}/health`);
-  console.log(`   API: http://localhost:${PORT}/api/v1`);
+app.listen(PORT, HOST, () => {
+  console.log(`✅ DealRail API server running (Simplified - No Database) on ${HOST}:${PORT}`);
+  console.log(`   Health: http://${HOST}:${PORT}/health`);
+  console.log(`   API: http://${HOST}:${PORT}/api/v1`);
   console.log(`   Network: ${config.blockchain.activeChain}`);
   console.log(`   Chain ID: ${config.activeChainConfig.chainId}`);
   console.log(`   Escrow: ${config.activeChainConfig.contracts.escrowRailERC20}`);

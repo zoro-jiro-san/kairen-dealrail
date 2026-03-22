@@ -42,17 +42,17 @@ export function JobCard({ job, currentAddress }: JobCardProps) {
             </span>
             {isClient && (
               <span className="px-2 py-1 text-xs bg-blue-500/20 text-blue-400 rounded border border-blue-500/30">
-                You're Client
+                You are Client
               </span>
             )}
             {isProvider && (
               <span className="px-2 py-1 text-xs bg-cyan-500/20 text-cyan-400 rounded border border-cyan-500/30">
-                You're Provider
+                You are Provider
               </span>
             )}
             {isEvaluator && (
               <span className="px-2 py-1 text-xs bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">
-                You're Evaluator
+                You are Evaluator
               </span>
             )}
           </div>
