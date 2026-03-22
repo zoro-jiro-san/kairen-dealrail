@@ -27,7 +27,7 @@ async function main() {
   );
 
   const facilitator = new HTTPFacilitatorClient({
-    url: 'https://facilitator.x402.org',
+    url: 'https://x402.org/facilitator',
   });
 
   const resourceServer = new x402ResourceServer(facilitator).register(
