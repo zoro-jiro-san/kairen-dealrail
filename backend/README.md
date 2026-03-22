@@ -1,203 +1,65 @@
 # DealRail Backend
 
-Backend API for DealRail - EIP-8183 compliant agentic commerce platform with BankrBot payments.
+This package contains the API and integration layer for DealRail.
 
-## Architecture
+## Canonical Submission Path
 
-- **Framework**: Express.js + TypeScript
-- **Database**: PostgreSQL + Prisma ORM
-- **Blockchain**: ethers.js v6 (Base Sepolia)
-- **Payments**: BankrBot API integration
-- **Storage**: IPFS via Pinata
-
-## Quick Start
-
-### 1. Install Dependencies
+For the hackathon demo and judging flow, the canonical server is:
 
 ```bash
-npm install
+npm run dev:simple
 ```
 
-### 2. Configure Environment
+That starts [`src/index-simple.ts`](src/index-simple.ts), which:
+- reads job state directly from chain
+- exposes escrow lifecycle endpoints
+- exposes negotiation, discovery, delegation, Uniswap, Locus, and x402-related adapters
+- avoids requiring a database for the main demo path
+
+## Important Files
+
+- [`src/index-simple.ts`](src/index-simple.ts): canonical demo API surface
+- [`src/config.ts`](src/config.ts): canonical network and contract configuration
+- [`src/services/contract.service.ts`](src/services/contract.service.ts): onchain lifecycle calls
+- [`src/services/x402n.service.ts`](src/services/x402n.service.ts): negotiation flow
+- [`src/services/discovery.service.ts`](src/services/discovery.service.ts): provider discovery and ERC-8004 enrichment
+- [`src/services/delegation.service.ts`](src/services/delegation.service.ts): ERC-7710 delegation payload builder
+- [`src/services/uniswap.service.ts`](src/services/uniswap.service.ts): quote and tx builders
+- [`src/services/locus.service.ts`](src/services/locus.service.ts): Locus bridge
+- [`TRANSACTION_LEDGER.md`](TRANSACTION_LEDGER.md): canonical demo evidence
+
+## Current Canonical Networks
+
+### Base Sepolia
+- EscrowRailERC20: `0xE25B10057556e9714d2ac60992b68f4E61481cF9`
+- DealRailHook: `0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e`
+- ERC8004Verifier: `0xDB23657606957B32B385eC0A917d2818156668AC`
+
+### Celo Sepolia
+- EscrowRailERC20: `0xB9dfa53326016415ca6fb9eb16A0f050c8d15C74`
+- DealRailHook: `0x04B0D16f790A5F83dc48c7e4D05467ff2eA57519`
+- ERC8004Verifier: `0x2700e5B26909301967DFeECE9cb931B9bA3bA2df`
+
+## Commands
 
 ```bash
-cp .env.example .env
-# Edit .env with your values
+npm run dev:simple
+npm run build
+npm run smoke:celo-sepolia
 ```
 
-### 3. Setup Database
+## Notes On Partial Integrations
 
-```bash
-# Generate Prisma client
-npm run db:generate
+These backend surfaces exist, but should only be claimed strongly if live proof is recorded:
+- MetaMask delegated execution
+- Uniswap swaps
+- Locus live calls
+- AgentCash or x402 paid requests
+- Bankr live execution
 
-# Push schema to database
-npm run db:push
+## Evidence
 
-# Or run migrations (for production)
-npm run db:migrate
-```
-
-### 4. Start Development Server
-
-```bash
-npm run dev
-```
-
-Server will start on `http://localhost:3000`
-
-## API Endpoints
-
-### Health Check
-
-```bash
-GET /health
-```
-
-Returns server status and blockchain configuration.
-
-### Jobs
-
-```bash
-# List all jobs
-GET /api/v1/jobs?client=0x...&state=OPEN&limit=50&offset=0
-
-# Get job by database ID
-GET /api/v1/jobs/:id
-
-# Get job by on-chain job ID
-GET /api/v1/jobs/onchain/:jobId
-
-# Get job artifacts
-GET /api/v1/jobs/:id/artifacts
-
-# Get settlement proof
-GET /api/v1/jobs/:id/proof
-```
-
-## Services
-
-### Event Listener Service
-
-Listens to blockchain events from the EscrowRail contract and syncs job state to the database.
-
-**Features:**
-- Real-time event monitoring for all job state changes
-- Reorg-safe event processing with deduplication
-- Historical event sync from specific block numbers
-- Automatic state updates for jobs
-
-**Events tracked:**
-- `JobCreated` - New job created
-- `JobFunded` - Job funded with escrow
-- `JobSubmitted` - Work submitted by provider
-- `JobCompleted` - Job approved by evaluator
-- `JobRejected` - Job rejected (refund issued)
-- `JobExpired` - Job expired past deadline
-
-The event listener starts automatically when the server starts and syncs from the latest block. To sync from a specific block, modify the start parameter in `src/index.ts`.
-
-### BankrBot Service
-
-Handles payment execution via BankrBot API.
-
-```typescript
-import { bankrService } from './services/bankr.service';
-
-// Submit transaction
-const result = await bankrService.submitTransaction({
-  transaction: {
-    to: escrowAddress,
-    chainId: 84532,
-    data: encodedData,
-    value: amount,
-  },
-  waitForConfirmation: true,
-});
-```
-
-### IPFS Service
-
-Uploads artifacts and proofs to IPFS via Pinata.
-
-```typescript
-import { ipfsService } from './services/ipfs.service';
-
-// Pin JSON data
-const cid = await ipfsService.pinJSON({
-  jobId: 1,
-  deliverable: '...',
-});
-
-// Pin file
-const fileCid = await ipfsService.pinFile(buffer, 'deliverable.pdf');
-```
-
-## Database Schema
-
-### Models
-
-- **Job**: Main job/deal record (synced from blockchain events)
-- **Artifact**: Negotiation artifacts and evidence
-- **SettlementProof**: Generated settlement proofs
-- **IdentityCache**: Cached identity verification results
-- **ProcessedEvent**: Event processing tracker for reorg handling
-
-### Enums
-
-- **JobState**: `OPEN | FUNDED | SUBMITTED | COMPLETED | REJECTED | EXPIRED`
-- **ArtifactKind**: `TERMS_DRAFT | COUNTER_OFFER | ACCEPTANCE | EVIDENCE | AMENDMENT | OTHER`
-
-## Development
-
-### Scripts
-
-```bash
-npm run dev          # Start dev server with hot reload
-npm run build        # Build TypeScript
-npm run start        # Run production build
-npm run db:studio    # Open Prisma Studio
-npm run lint         # Run ESLint
-npm run format       # Format code with Prettier
-```
-
-### Environment Variables
-
-See `.env.example` for all required variables.
-
-Key variables:
-- `DATABASE_URL`: PostgreSQL connection string
-- `RPC_URL`: Base Sepolia RPC endpoint
-- `ESCROW_ADDRESS`: Deployed EscrowRail contract address
-- `BANKR_API_KEY`: BankrBot API key
-- `PINATA_JWT`: Pinata IPFS JWT
-
-## Deployment
-
-### Railway/Render
-
-1. Create PostgreSQL addon
-2. Set environment variables
-3. Deploy from GitHub
-4. Run migrations: `npm run db:migrate`
-
-### Docker (Optional)
-
-```bash
-docker build -t dealrail-backend .
-docker run -p 3000:3000 --env-file .env dealrail-backend
-```
-
-## Next Steps
-
-- [x] Implement event listener for contract events
-- [ ] Add WebSocket support for real-time updates
-- [ ] Implement settlement proof generation
-- [ ] Add identity verification endpoints
-- [ ] Add rate limiting and authentication
-- [ ] Deploy contracts to Base Sepolia
-- [ ] Test full integration with BankrBot
-
-## License
-
-MIT
+Use these files when judging or verifying claims:
+- [`../docs/submission/03_EVIDENCE.md`](../docs/submission/03_EVIDENCE.md)
+- [`TRANSACTION_LEDGER.md`](TRANSACTION_LEDGER.md)
+- [`../STATUS.md`](../STATUS.md)

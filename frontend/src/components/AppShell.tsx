@@ -36,7 +36,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
           <div className="min-w-fit">
             <div className="terminal-kicker">DealRail</div>
-            <div className="mt-1 text-sm font-semibold">Agent Deal Desk</div>
+            <div className="mt-1 text-sm font-semibold">Machine Procurement Desk</div>
           </div>
           <nav className="ml-auto flex items-center gap-2 overflow-x-auto whitespace-nowrap">
             {NAV.map((item) => {

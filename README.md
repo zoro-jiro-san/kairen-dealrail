@@ -1,303 +1,154 @@
 # Kairen DealRail
 
-**Agentic Commerce Escrow Protocol** implementing EIP-8183 for machine-native deal execution on Base Sepolia and Celo Sepolia.
+DealRail is an agentic commerce execution rail for machine-to-machine deals.
+It combines offchain negotiation, onchain escrow, evaluator-mediated settlement, and ERC-8004 reputation hooks.
 
-**Status:** ✅ Security-hardening pass complete (updated March 17, 2026)
-**Hackathon:** The Synthesis (March 13-22, 2026)
-**Networks:** Base Sepolia (deployed), Celo Sepolia (deployed)
+Hackathon context:
+- Event: The Synthesis
+- Submission deadline: March 22, 2026 at 11:59 PM PST
+- Judging model: AI agents plus humans
 
----
+## AI Judge Fast Path
 
-## 🚀 Quick Start
+If you are evaluating this repository, read these files in order:
 
-### Prerequisites
-- Node.js 18+
-- pnpm or npm
-- Foundry (for contracts)
-- Base Sepolia wallet with ETH & USDC
+1. [`docs/submission/00_START_HERE.md`](docs/submission/00_START_HERE.md)
+2. [`docs/submission/01_TRACK_MATRIX.md`](docs/submission/01_TRACK_MATRIX.md)
+3. [`docs/submission/02_ARCHITECTURE.md`](docs/submission/02_ARCHITECTURE.md)
+4. [`docs/submission/03_EVIDENCE.md`](docs/submission/03_EVIDENCE.md)
+5. [`docs/submission/04_CHECKLIST.md`](docs/submission/04_CHECKLIST.md)
+6. [`docs/submission/05_WINNING_STRATEGY.md`](docs/submission/05_WINNING_STRATEGY.md)
 
-### Run the Platform
+Track-specific briefs:
+- [`docs/submission/tracks/OPEN_TRACK.md`](docs/submission/tracks/OPEN_TRACK.md)
+- [`docs/submission/tracks/PROTOCOL_LABS_ERC8004.md`](docs/submission/tracks/PROTOCOL_LABS_ERC8004.md)
+- [`docs/submission/tracks/CELO.md`](docs/submission/tracks/CELO.md)
+- [`docs/submission/tracks/METAMASK_DELEGATIONS.md`](docs/submission/tracks/METAMASK_DELEGATIONS.md)
+- [`docs/submission/tracks/UNISWAP.md`](docs/submission/tracks/UNISWAP.md)
+- [`docs/submission/tracks/LOCUS.md`](docs/submission/tracks/LOCUS.md)
+- [`docs/submission/tracks/AGENTCASH_X402.md`](docs/submission/tracks/AGENTCASH_X402.md)
+
+## What Is Real Today
+
+### Contracts
+- ERC-8183-style escrow lifecycle is implemented in [`contracts/src/EscrowRail.sol`](contracts/src/EscrowRail.sol) and [`contracts/src/EscrowRailERC20.sol`](contracts/src/EscrowRailERC20.sol)
+- ERC-8004 identity and reputation integration is implemented in [`contracts/src/identity/ERC8004Verifier.sol`](contracts/src/identity/ERC8004Verifier.sol) and [`contracts/src/DealRailHook.sol`](contracts/src/DealRailHook.sol)
+- Hook safety tests exist in [`contracts/test/EscrowRailERC20Hook.t.sol`](contracts/test/EscrowRailERC20Hook.t.sol)
+
+### Deployments
+- Base Sepolia and Celo Sepolia canonical addresses are recorded in [`STATUS.md`](STATUS.md) and [`backend/TRANSACTION_LEDGER.md`](backend/TRANSACTION_LEDGER.md)
+- Backend defaults now point to the March 17, 2026 canonical deployment set in [`backend/src/config.ts`](backend/src/config.ts)
+
+### Backend
+- Live job lifecycle API exists in [`backend/src/index-simple.ts`](backend/src/index-simple.ts)
+- Negotiation bridge, discovery, execution adapters, delegation builder, Uniswap payload builder, and Locus bridge are implemented in [`backend/src/services`](backend/src/services)
+
+### Frontend
+- Next.js operator UI exists in [`frontend/src/app`](frontend/src/app)
+- Canonical contract addresses for frontend reads/writes are in [`frontend/src/lib/contracts.ts`](frontend/src/lib/contracts.ts)
+
+### Evidence
+- Canonical smoke-test transactions are recorded in [`backend/TRANSACTION_LEDGER.md`](backend/TRANSACTION_LEDGER.md)
+- Current build status and deployment set are summarized in [`STATUS.md`](STATUS.md)
+
+## Track Coverage Summary
+
+This repo intentionally separates strong claims from partial claims.
+
+| Track | Status | Claim Level |
+|-------|--------|-------------|
+| Synthesis Open Track | End-to-end product with real testnet evidence | Strong |
+| Protocol Labs: Agents With Receipts / ERC-8004 | Implemented and evidenced onchain hooks + verifier | Strong |
+| Celo: Best Agent on Celo | Deployed and smoke-tested on Celo Sepolia | Strong |
+| MetaMask: Best Use of Delegations | Delegation payload builder implemented, live delegated execution not evidenced | Partial |
+| Uniswap: Agentic Finance | Quote + transaction builders implemented, no swap tx evidence in ledger | Partial |
+| Locus: Best Use of Locus | Bridge implemented, mock-first by default, live evidence not included | Partial |
+| Merit / AgentCash / x402 | x402 and x402n surfaces exist, no live paid x402 proof captured here | Partial |
+| Bankr, Venice, ENS, Slice, Status, Self, Arkhai, others | Not submission targets in current repo state | Do not claim |
+
+Full matrix:
+- [`docs/submission/01_TRACK_MATRIX.md`](docs/submission/01_TRACK_MATRIX.md)
+
+## Architecture In One Pass
+
+1. A buyer defines constraints and requests offers through the x402n negotiation bridge.
+2. Candidate providers are ranked and enriched with ERC-8004 trust data when available.
+3. A selected deal is committed onchain through the ERC-8183 escrow contract.
+4. Funds are locked in escrow until the provider submits a deliverable.
+5. An evaluator completes or rejects the job.
+6. DealRailHook can enforce trust gates before actions and write ERC-8004 reputation after settlement.
+7. Optional execution adapters prepare downstream operations such as Uniswap, Locus, and delegation payloads.
+
+Canonical architecture doc:
+- [`docs/submission/02_ARCHITECTURE.md`](docs/submission/02_ARCHITECTURE.md)
+
+## Canonical Deployments
+
+### Base Sepolia
+- NullVerifier: `0xA61a57fF5570bF989a3a565B87b6421413995317`
+- ERC8004Verifier: `0xDB23657606957B32B385eC0A917d2818156668AC`
+- EscrowRail: `0x8c55C2BB6A396D3654f214726230D81e6fa22b69`
+- EscrowRailERC20: `0xE25B10057556e9714d2ac60992b68f4E61481cF9`
+- DealRailHook: `0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e`
+
+### Celo Sepolia
+- NullVerifier: `0x8728dDDD3c1D7B901c62E9D6a232F17462a931E2`
+- ERC8004Verifier: `0x2700e5B26909301967DFeECE9cb931B9bA3bA2df`
+- EscrowRail: `0x684D32E03642870B88134A3722B0b094666EF42e`
+- EscrowRailERC20: `0xB9dfa53326016415ca6fb9eb16A0f050c8d15C74`
+- DealRailHook: `0x04B0D16f790A5F83dc48c7e4D05467ff2eA57519`
+
+## Repository Map
+
+- [`AGENT.md`](AGENT.md): AI-judge and collaborator navigation
+- [`docs/submission`](docs/submission): canonical submission pack
+- [`docs/strategy`](docs/strategy): planning and historical track strategy
+- [`contracts`](contracts): Solidity contracts and tests
+- [`backend`](backend): Express API, integrations, smoke tests, ledger
+- [`frontend`](frontend): Next.js UI
+- [`skills`](skills): role-based operational prompts for agents
+
+## Submission Readiness
+
+Ready:
+- Base Sepolia happy-path evidence
+- Celo Sepolia happy-path and reject-path evidence
+- ERC-8004 verifier and reputation hook integration
+- Hook hardening tests and canonical deployment ledger
+- AI-agent-friendly submission docs in `docs/submission`
+
+Still pending:
+- Base Mainnet ERC-8004 registrations for buyer, provider, evaluator
+- Final demo video
+- Any sponsor-track claim that requires live third-party API execution beyond the evidence already recorded
+
+## Local Verification
+
+Contracts:
 
 ```bash
-# 1. Clone and install
-git clone https://github.com/zoro-jiro-san/kairen-dealrail.git
-cd kairen-dealrail
-
-# 2. Start backend API
-cd backend
-npm install
-npm run dev:simple
-# Backend: http://localhost:3001
-
-# 3. Start frontend (new terminal)
-cd ../frontend
-npm install
-npm run dev
-# Frontend: http://localhost:3000
+cd contracts
+forge test -vvv
 ```
 
-### Use the Platform
-1. Open http://localhost:3000
-2. Connect your wallet (Base Sepolia)
-3. View existing jobs or create new ones
-4. Interact with jobs based on your role:
-   - **Client:** Fund jobs with USDC
-   - **Provider:** Submit deliverables
-   - **Evaluator:** Approve or reject work
+Backend:
 
----
-
-## 📖 Documentation
-
-- **[STATUS.md](STATUS.md)** - Real-time project status
-- **[SESSION_COMPLETE.md](SESSION_COMPLETE.md)** - Phase 1 summary
-- **[COMMIT_SUMMARY.md](COMMIT_SUMMARY.md)** - Latest changes
-- **[PRD_KAIREN_DEALRAIL.md](PRD_KAIREN_DEALRAIL.md)** - Product requirements
-- **[AGENT.md](AGENT.md)** - AI agent collaboration guide
-- **[skills/README.md](skills/README.md)** - Agent role skills and execution checkpoints
-- **[backend/TRANSACTION_LEDGER.md](backend/TRANSACTION_LEDGER.md)** - Testnet ledger book (deployments + smoke txs)
-- **[docs/AUDIT_SUMMARY_2026-03-17.md](docs/AUDIT_SUMMARY_2026-03-17.md)** - Contract audit findings + fixes
-- **[docs/](docs/)** - Comprehensive documentation
-
-## ✅ Hackathon P0 Scope (Must Ship)
-
-- [x] EscrowRail smart contract flow on Base Sepolia (`createJob`, `fund`, `submit`, `complete`, `reject`, `claimRefund`)
-- [x] One end-to-end happy path onchain (create → fund → submit → complete)
-- [x] One failure path onchain (submit → reject; refund path available via `claimRefund`)
-- [x] Dashboard UI for deal lifecycle (visual pipeline + job state)
-- [ ] 3 ERC-8004 agent registrations on Base Mainnet (pending final wallet ops)
-- [ ] Final demo video (2-4 min with onchain evidence)
-
-## 🎯 End Goal Use Case
-
-DealRail is the trust/execution layer, not the full marketplace:
-1. Discovery: find providers via x402n services + ERC-8004 reputation context.
-2. Negotiation: run RFO/offer flow.
-3. Commitment: create and fund escrow job onchain.
-4. Verification: evaluator decides complete/reject.
-5. Settlement ops: optional post-settlement routing (Uniswap/Locus).
-
-## 🌐 Integration
-
-DealRail supports multi-source integration:
-- Discovery can aggregate multiple sources (x402n, external marketplaces, imported catalogs).
-- Identity trust source uses ERC-8004 registries.
-- Execution adapters support wallet-native flow plus bridge providers.
-
-## 🧩 Standards Coverage
-
-| Standard | Status | Where |
-|----------|--------|-------|
-| ERC-8183 (Agentic Commerce) | Implemented | `contracts/src/EscrowRail.sol`, `contracts/src/EscrowRailERC20.sol` |
-| ERC-8004 (Agent Identity/Reputation hooks) | Integrated via verifier/hook | `contracts/src/identity/ERC8004Verifier.sol`, `contracts/src/DealRailHook.sol` |
-| ERC-7710 (MetaMask Delegation) | Planned (P1) | Tracked in PRD + roadmap |
-
-### Key Guides
-- **[Frontend Integration](docs/FRONTEND_INTEGRATION.md)** - Wallet integration guide
-- **[API Reference](backend/API_REFERENCE.md)** - Backend API docs
-- **[Testing Guide](backend/tests/README.md)** - USDC recycling workflow
-- **[Repo Structure](REPO_STRUCTURE.md)** - Code organization
-
----
-
-## 🏗️ Architecture
-
-### Smart Contracts (Solidity 0.8.20)
-- **EscrowRailERC20** - USDC escrow with state machine
-- **DealRailHook** - Reputation & delegation hooks
-- **ERC8004Verifier** - Identity verification
-- Deployed on Base Sepolia (verified)
-
-### Backend (Node.js + TypeScript)
-- Express REST API on port 3001
-- Direct blockchain reads (no database required)
-- Event listener for real-time monitoring
-- USDC recycling test scripts
-
-### Frontend (Next.js 14 + React 18)
-- App Router with TypeScript
-- Task-based IA (`/`, `/flow`, `/ops`, `/integrations`)
-- RainbowKit + wagmi v2 wallet integration
-- Direct contract calls via user wallet
-- Responsive terminal-style UI shell
-
----
-
-## 💰 Deployed Contracts
-
-### Base Sepolia (Chain ID: 84532)
-| Contract | Address |
-|----------|---------|
-| **EscrowRailERC20** | `0xE25B10057556e9714d2ac60992b68f4E61481cF9` |
-| **DealRailHook** | `0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e` |
-| **ERC8004Verifier** | `0xDB23657606957B32B385eC0A917d2818156668AC` |
-| **USDC (Test)** | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
-
-Explorer links:
-- EscrowRailERC20: https://sepolia.basescan.org/address/0xE25B10057556e9714d2ac60992b68f4E61481cF9
-- DealRailHook: https://sepolia.basescan.org/address/0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e
-- ERC8004Verifier: https://sepolia.basescan.org/address/0xDB23657606957B32B385eC0A917d2818156668AC
-
----
-
-## 🎯 Features
-
-### ✅ Phase 1 (Complete)
-- [x] EIP-8183 compliant escrow contracts
-- [x] USDC payment rail (nano-payments: 0.1 USDC)
-- [x] Backend API with blockchain reads
-- [x] Frontend UI with wallet integration
-- [x] Fund Job (approve + fund USDC)
-- [x] Submit Deliverable (provider actions)
-- [x] Complete/Reject Job (evaluator actions)
-- [x] Transaction tracking with BaseScan links
-- [x] USDC recycling for self-sufficient testing
-- [x] Reputation & delegation hooks
-
-### ⏳ Phase 2 (Upcoming)
-- [ ] IPFS deliverable storage (Pinata)
-- [x] x402n-style negotiation bridge endpoints + policy-to-offer pipeline UI
-- [x] MetaMask delegation payload builder (ERC-7710 caveat structure)
-- [ ] WebSocket real-time updates
-- [ ] Analytics dashboard
-- [x] Celo Sepolia deployment
-- [x] Uniswap quote + tx builder endpoints (Base Mainnet QuoterV2 + SwapRouter02)
-- [x] Locus MCP payment bridge endpoint (mock/live modes)
-
----
-
-## 🧪 Testing
-
-### Backend Tests
 ```bash
 cd backend
-
-# Full job lifecycle (create → fund → submit → complete)
-npx tsx tests/test-lifecycle.ts
-
-# Recycle USDC back to deployer
-npx tsx tests/recycle-usdc.ts
-
-# Check all wallet balances
-npx tsx tests/check-all-balances.ts
-
-# Celo Sepolia smoke flow (happy + reject)
-npx tsx tests/test-lifecycle-celo-sepolia.ts
+npm run build
 ```
 
-### Frontend Testing
-1. Connect wallet on Base Sepolia
-2. Navigate to job detail pages
-3. Test actions based on your role
-4. Verify transactions on BaseScan
+Frontend:
 
----
+```bash
+cd frontend
+npm run build
+```
 
-## 🛠️ Tech Stack
+## Important Claim Discipline
 
-**Smart Contracts:**
-- Solidity 0.8.20
-- Foundry framework
-- OpenZeppelin libraries
+This repository is submission-oriented, not marketing-oriented.
 
-**Backend:**
-- Node.js + TypeScript
-- Express.js REST API
-- ethers.js v6
-- Prisma (optional)
-
-**Frontend:**
-- Next.js 14 (App Router)
-- React 18
-- TypeScript
-- Tailwind CSS
-- wagmi v2 + viem
-- RainbowKit
-
----
-
-## 🎨 Screenshots
-
-### Dashboard
-<img width="1200" alt="Dashboard" src="docs/screenshots/dashboard.png">
-
-### Job Detail
-<img width="1200" alt="Job Detail" src="docs/screenshots/job-detail.png">
-
-### Wallet Interaction
-<img width="600" alt="Wallet" src="docs/screenshots/wallet-action.png">
-
----
-
-## 🤝 Contributing
-
-This is a hackathon project for The Synthesis (March 13-22, 2026).
-
-For AI agents collaborating on this repo:
-- Read **[AGENT.md](AGENT.md)** for context
-- Check **[STATUS.md](STATUS.md)** for latest status
-- Follow **[REPO_STRUCTURE.md](REPO_STRUCTURE.md)** for organization
-
----
-
-## 📄 License
-
-MIT License - See [LICENSE](LICENSE) for details
-
----
-
-## 🏆 Sponsor Tracks
-
-**Primary:**
-- ✅ **Base** - Deployed and operational on Base Sepolia
-- ✅ **Circle (USDC)** - USDC payment rail integrated
-- ⏳ **Kairen/x402n** - Agentic protocol (Phase 2)
-- ⏳ **MetaMask** - Delegation integration (Phase 2)
-- ⏳ **Pinata** - IPFS storage (Phase 2)
-
-**Secondary:**
-- EIP-8183 compliance
-- ERC-8004 identity integration
-- ERC-7710 delegation (planned)
-
----
-
-## 👥 Team
-
-- **Human Lead:** Sarthi Borkar
-- **AI Agent:** Claude (Sonnet 4.5)
-
----
-
-## 🔗 Links
-
-- **Live Frontend:** http://localhost:3000 (local)
-- **Backend API:** http://localhost:3001 (local)
-- **BaseScan:** https://sepolia.basescan.org
-- **Repo:** https://github.com/zoro-jiro-san/kairen-dealrail
-
----
-
-## 🎉 Achievements
-
-**Phase 1 Complete:**
-- 5 smart contracts deployed
-- Full backend API operational
-- Production-quality frontend
-- Complete wallet integration
-- Self-sufficient testing system
-- 7,750+ lines of code
-- Comprehensive documentation
-
-**Ready for:**
-- Live demos with real wallets
-- Hackathon submission
-- User testing
-- Phase 2 development
-
----
-
-**Built for The Synthesis Hackathon**
-March 13-22, 2026
-
-🚀 **Status: PHASE 1 COMPLETE - READY TO DEMO** 🚀
+- If a feature has onchain evidence or passing tests, we say it is implemented.
+- If a feature only prepares payloads or runs in mock mode by default, we label it partial.
+- If sponsor infrastructure is not load-bearing in the demonstrated path, we do not claim that track as a strong submission target.

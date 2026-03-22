@@ -1,0 +1,37 @@
+{
+  "name": "@kairen/dealrail-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Publishable CLI for DealRail procurement, negotiation, and escrow rails",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "dealrail": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "cli": "tsx src/cli.ts",
+    "demo": "tsx src/cli.ts demo",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

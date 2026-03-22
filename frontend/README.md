@@ -1,223 +1,75 @@
 # DealRail Frontend
 
-Modern web interface for DealRail - EIP-8183 compliant agentic commerce platform.
+This package contains the operator and judge-facing UI for DealRail.
 
-## Tech Stack
+## Current Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: TailwindCSS
-- **Web3**: Wagmi v2 + viem
-- **Wallet**: RainbowKit
-- **State**: React Query (TanStack Query)
-- **API Client**: Axios + SWR
+- Next.js 16
+- React 18
+- wagmi + viem
+- RainbowKit
+- Tailwind CSS
 
-## Quick Start
+## Canonical Contracts
 
-### 1. Install Dependencies
+Configured in [`src/lib/contracts.ts`](src/lib/contracts.ts):
+
+### Base Sepolia
+- EscrowRailERC20: `0xE25B10057556e9714d2ac60992b68f4E61481cF9`
+- USDC: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
+- DealRailHook: `0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e`
+
+### Celo Sepolia
+- EscrowRailERC20: `0xB9dfa53326016415ca6fb9eb16A0f050c8d15C74`
+- Stable token: `0x01C5C0122039549AD1493B8220cABEdD739BC44E`
+- DealRailHook: `0x04B0D16f790A5F83dc48c7e4D05467ff2eA57519`
+
+## Main Routes
+
+- `/`: landing and system overview
+- `/dashboard`: deal pipeline dashboard
+- `/flow`: lifecycle overview
+- `/integrations`: sponsor-related integration workbench
+- `/terminal`: operator-centric terminal view
+- `/jobs/[jobId]`: job details
+- `/docs`: in-app docs surface
+
+## Commands
 
 ```bash
 npm install
-```
-
-### 2. Configure Environment
-
-```bash
-cp .env.example .env.local
-# Edit .env.local with your values
-```
-
-Required variables:
-- `NEXT_PUBLIC_API_URL` - Backend API URL (default: http://localhost:3001)
-- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` - Get from [WalletConnect Cloud](https://cloud.walletconnect.com)
-
-### 3. Contract Addresses (Already Configured)
-
-The following contracts are deployed on Base Sepolia:
-
-```typescript
-Escrow: 0x53d368b5467524F7d674B70F00138a283e1533ce
-USDC:   0x036CbD53842c5426634e7929541eC2318f3dCF7e
-```
-
-These are already configured in `src/lib/contracts.ts`.
-
-### 4. Start Development Server
-
-```bash
 npm run dev
+npm run build
+npm run type-check
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser.
+The dev server runs on `http://localhost:3000`.
 
-## Project Structure
+## Important Files
 
-```
-frontend/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── layout.tsx          # Root layout
-│   │   ├── page.tsx            # Home page
-│   │   ├── providers.tsx       # Web3 providers
-│   │   └── globals.css         # Global styles
-│   ├── components/             # React components
-│   │   ├── JobsList.tsx        # Job listing with filters
-│   │   ├── JobCard.tsx         # Individual job card
-│   │   └── CreateJobButton.tsx # Job creation modal
-│   ├── hooks/                  # Custom React hooks
-│   ├── lib/                    # Utilities and config
-│   │   ├── wagmi.ts            # Wagmi configuration
-│   │   ├── contracts.ts        # Contract ABIs and addresses
-│   │   └── api.ts              # Backend API client
-│   └── types/                  # TypeScript types
-├── public/                     # Static assets
-├── package.json
-├── tsconfig.json
-├── next.config.js
-└── tailwind.config.js
-```
+- [`src/app/page.tsx`](src/app/page.tsx)
+- [`src/components/AppShell.tsx`](src/components/AppShell.tsx)
+- [`src/components/HeroFlowArchitecture.tsx`](src/components/HeroFlowArchitecture.tsx)
+- [`src/components/DealPipelineDashboard.tsx`](src/components/DealPipelineDashboard.tsx)
+- [`src/lib/api.ts`](src/lib/api.ts)
+- [`src/lib/contracts.ts`](src/lib/contracts.ts)
 
-## Features
+## Integration Status From The UI Perspective
 
-### ✅ Implemented
+Strongly grounded:
+- escrow lifecycle views
+- chain-aware contract reads
+- operator-oriented architecture and job navigation
 
-- **Wallet Connection**: RainbowKit integration with multiple wallet support
-- **Job Listing**: View all jobs with filtering (All, Client, Provider)
-- **Job Creation**: Create new jobs via smart contract
-- **Job Cards**: Display job details with state badges
-- **Real-time Updates**: React Query for data synchronization
-- **Responsive Design**: Mobile-first TailwindCSS styling
-- **Type Safety**: Full TypeScript coverage
+Exposed but not sponsor-proof-complete:
+- delegation builders
+- Uniswap payload flows
+- Locus calls
+- x402 and x402n workbench flows
 
-### ✅ Newly Completed
-
-- **Job Detail View**: Full job information page with state timeline
-- **Backend Health Check**: Real-time backend connectivity monitoring
-- **Enhanced Dashboard**: Polished stats display with icons
-- **Simplified API Integration**: Works with blockchain-reading backend
-- **Error Boundaries**: Graceful error handling throughout
-
-### 🔄 Future Enhancements
-
-- Fund job with USDC (via backend proxy)
-- Submit work deliverables (via backend proxy)
-- Approve/reject submissions (evaluator, via backend proxy)
-- Claim refunds for expired jobs
-- Artifact upload and viewing (IPFS)
-- Settlement proof display
-- Real-time blockchain event listening
-
-## Components
-
-### JobsList
-
-Displays paginated list of jobs with filtering:
-- **All Jobs**: All jobs in the system
-- **My Jobs (Client)**: Jobs created by connected wallet
-- **My Work (Provider)**: Jobs assigned to connected wallet
-
-```tsx
-<JobsList address={connectedAddress} />
-```
-
-### JobCard
-
-Individual job card showing:
-- Job ID and state
-- Budget in ETH
-- Party addresses (client, provider, evaluator)
-- Expiry countdown
-- Role badges for current user
-
-### CreateJobButton
-
-Modal form for creating new jobs:
-- Provider address input
-- Evaluator address input
-- Expiry date picker
-- Transaction confirmation
-
-## Web3 Integration
-
-### Wagmi v2 Configuration
-
-Located in `src/lib/wagmi.ts`:
-- Configured for Base Sepolia and Base Mainnet
-- Injected wallet + WalletConnect connectors
-- HTTP transport for RPC calls
-
-### Contract Interaction
-
-Using Wagmi hooks:
-
-```tsx
-import { useContractRead, useContractWrite } from 'wagmi';
-import { ESCROW_ABI, getEscrowAddress } from '@/lib/contracts';
-
-// Read job data
-const { data: job } = useContractRead({
-  address: getEscrowAddress(chainId),
-  abi: ESCROW_ABI,
-  functionName: 'getJob',
-  args: [jobId],
-});
-
-// Write: Create job
-const { writeContract } = useContractWrite();
-writeContract({
-  address: getEscrowAddress(chainId),
-  abi: ESCROW_ABI,
-  functionName: 'createJob',
-  args: [provider, evaluator, expiry, hook],
-});
-```
-
-## Backend API Integration
-
-API client in `src/lib/api.ts`:
-
-```typescript
-import { jobsApi } from '@/lib/api';
-
-// List jobs
-const jobs = await jobsApi.list({ client: address });
-
-// Get job by ID
-const job = await jobsApi.getById(1);
-
-// Get job by on-chain job ID
-const job = await jobsApi.getByJobId(42);
-```
-
-## Styling
-
-Using TailwindCSS with custom configuration:
-- Dark theme by default
-- Custom color palette (primary blue/cyan)
-- Responsive breakpoints
-- Gradient backgrounds
-- Glass morphism effects
-
-## Scripts
-
-```bash
-npm run dev        # Start dev server
-npm run build      # Build for production
-npm run start      # Start production server
-npm run lint       # Run ESLint
-npm run type-check # TypeScript type checking
-```
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Push code to GitHub
-2. Import project in Vercel
-3. Set environment variables
-4. Deploy
-
-### Manual Build
+For the canonical submission story, use:
+- [`../docs/submission/00_START_HERE.md`](../docs/submission/00_START_HERE.md)
+- [`../docs/submission/05_WINNING_STRATEGY.md`](../docs/submission/05_WINNING_STRATEGY.md)
 
 ```bash
 npm run build

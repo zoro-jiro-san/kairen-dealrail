@@ -11,7 +11,7 @@ export default function HomePage() {
   const { address, isConnected } = useAccount();
   const [health, setHealth] = useState<HealthCheckResponse | null>(null);
   const [heroWordIndex, setHeroWordIndex] = useState(0);
-  const heroWords = ['agent buyers', 'provider supply', 'live offers', 'escrow receipts', 'autonomous deals'];
+  const heroWords = ['machine buyers', 'provider supply', 'procurement runs', 'escrow receipts', 'autonomous deals'];
 
   useEffect(() => {
     void (async () => {
@@ -46,7 +46,7 @@ export default function HomePage() {
           <div className="xl:col-span-8">
             <div className="terminal-kicker">Home</div>
             <h1 className="hero-display mt-4 max-w-5xl text-4xl leading-[0.94] md:text-6xl">
-              <span className="hero-subtle">Service commerce for</span>
+              <span className="hero-subtle">Procurement rails for</span>
               <br />
               <span className="hero-word-window mt-3 inline-flex min-h-[1.15em] items-center">
                 <span key={heroWords[heroWordIndex]} className="hero-word-item text-[var(--terminal-accent)]">
@@ -55,8 +55,8 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--terminal-muted)]">
-              DealRail is the desk between service marketplaces and escrow. Buyers scan provider supply, providers
-              respond with quotes, evaluators verify output, and the desk leaves a machine-readable receipt.
+              DealRail is the desk between service discovery and settlement. A buyer or agent states one request, the
+              desk scans provider supply, negotiates a winner, locks escrow, and leaves a machine-readable receipt.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               {heroWords.map((word, index) => (
@@ -74,7 +74,7 @@ export default function HomePage() {
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/terminal" className="terminal-btn terminal-btn-accent">
-                Open Terminal Desk
+                Open Procurement Desk
               </Link>
               <Link href="/dashboard" className="terminal-btn">
                 Watch Market Board
@@ -87,19 +87,19 @@ export default function HomePage() {
               <div className="terminal-metric">
                 <div className="terminal-label">Use It For</div>
                 <div className="mt-2 text-sm leading-6 text-[var(--terminal-muted)]">
-                  Multi-offer service buying where agents need price discovery and a refund path.
+                  Machine-payable service buying where agents need price discovery, counterparty selection, and a refund path.
                 </div>
               </div>
               <div className="terminal-metric">
                 <div className="terminal-label">Supply Comes From</div>
                 <div className="mt-2 text-sm leading-6 text-[var(--terminal-muted)]">
-                  x402n listings, imported provider feeds, and demo fallback until live discovery is connected.
+                  x402n listings, imported provider feeds, and Tempo-adjacent payment rails, with demo fallback until live discovery is connected.
                 </div>
               </div>
               <div className="terminal-metric">
                 <div className="terminal-label">Outcome</div>
                 <div className="mt-2 text-sm leading-6 text-[var(--terminal-muted)]">
-                  Deal confirmation, escrow settlement, evaluator decision, and a saved receipt trail.
+                  Procurement confirmation, escrow settlement, evaluator decision, and a saved receipt trail.
                 </div>
               </div>
             </div>
@@ -130,12 +130,12 @@ export default function HomePage() {
                 <div className="terminal-metric">
                   <div className="terminal-label">Negotiation</div>
                   <div className="mt-1 text-sm font-semibold">
-                    {health?.integrations?.x402nMockMode ? 'Demo feed' : 'Live feed'}
+                    {health?.integrations?.x402nMockMode ? 'Demo market' : 'Live market'}
                   </div>
                 </div>
                 <div className="terminal-metric">
                   <div className="terminal-label">Flow</div>
-                  <div className="mt-1 text-sm font-semibold">Scan {'->'} bid {'->'} settle</div>
+                  <div className="mt-1 text-sm font-semibold">Request {'->'} shortlist {'->'} settle</div>
                 </div>
                 <div className="terminal-metric col-span-2">
                   <div className="terminal-label">Escrow rail</div>
@@ -150,7 +150,7 @@ export default function HomePage() {
               <div className="mt-5 rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4">
                 <div className="terminal-label">When To Use</div>
                 <div className="mt-2 text-sm text-[var(--terminal-muted)]">
-                  Use DealRail when you do not know the winning provider yet and need the market to tell you.
+                  Use DealRail when you know the job but not the winning provider and need the desk to route the deal.
                 </div>
               </div>
             </div>
@@ -166,15 +166,15 @@ export default function HomePage() {
         </div>
         <div className="terminal-panel rounded-[1.5rem] p-6 xl:col-span-4">
           <div className="terminal-kicker">How To Start</div>
-          <h2 className="mt-2 text-2xl font-semibold">Start with one verb</h2>
+          <h2 className="mt-2 text-2xl font-semibold">Start with one request</h2>
           <div className="mt-5 space-y-5 text-sm leading-6 text-[var(--terminal-muted)]">
             <div>
               <div className="terminal-label">`scan`</div>
               See what provider supply is available right now for a category or task.
             </div>
             <div>
-              <div className="terminal-label">`buy`</div>
-              Tell the desk the outcome, budget, and deadline. It shortlists offers and stages an auction.
+              <div className="terminal-label">`vend`</div>
+              Tell the desk the outcome, budget, and deadline. It shortlists offers and stages the procurement path.
             </div>
             <div>
               <div className="terminal-label">`sell`</div>

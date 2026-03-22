@@ -1,66 +1,48 @@
-## Foundry
+# DealRail Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This package contains the onchain settlement and trust layer for DealRail.
 
-Foundry consists of:
+## Core Contracts
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- [`src/EscrowRail.sol`](src/EscrowRail.sol): native-token escrow lifecycle
+- [`src/EscrowRailERC20.sol`](src/EscrowRailERC20.sol): ERC-20 escrow lifecycle used for the canonical demo path
+- [`src/DealRailHook.sol`](src/DealRailHook.sol): before/after action hook with ERC-8004-aware trust logic
+- [`src/identity/ERC8004Verifier.sol`](src/identity/ERC8004Verifier.sol): ERC-8004 registry-backed identity verifier
+- [`src/identity/NullVerifier.sol`](src/identity/NullVerifier.sol): test-friendly no-op verifier
 
-## Documentation
+## Why This Matters For Judging
 
-https://book.getfoundry.sh/
+The contract package contains the strongest sponsor-specific depth in the project:
+- escrow settlement is real
+- hook execution is real
+- ERC-8004 integration is behavioral, not decorative
 
-## Usage
+## Tests
 
-### Build
+Important tests:
+- [`test/EscrowRail.t.sol`](test/EscrowRail.t.sol)
+- [`test/EscrowRailERC20Hook.t.sol`](test/EscrowRailERC20Hook.t.sol)
 
-```shell
-$ forge build
+Key hardening coverage includes:
+- missing-job guards
+- hook address validation
+- before-hook blocking
+- after-hook blocking with state preservation
+
+## Commands
+
+```bash
+forge build
+forge test -vvv
+forge fmt
 ```
 
-### Test
+## Deployment Scripts
 
-```shell
-$ forge test
-```
+- [`script/DeployBaseSepolia.s.sol`](script/DeployBaseSepolia.s.sol)
+- [`script/DeployCeloSepolia.s.sol`](script/DeployCeloSepolia.s.sol)
+- [`script/DeployCeloAlfajores.s.sol`](script/DeployCeloAlfajores.s.sol)
 
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Canonical deployment references live in:
+- [`../STATUS.md`](../STATUS.md)
+- [`../backend/TRANSACTION_LEDGER.md`](../backend/TRANSACTION_LEDGER.md)

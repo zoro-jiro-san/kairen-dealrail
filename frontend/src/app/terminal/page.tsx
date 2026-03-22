@@ -36,15 +36,16 @@ export default function TerminalPage() {
         <div className="relative z-10 flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="terminal-kicker">Terminal</div>
-            <h1 className="mt-2 text-3xl font-semibold">Market desk for service deals</h1>
+            <h1 className="mt-2 text-3xl font-semibold">Procurement desk for machine-payable services</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--terminal-muted)]">
-              Start with `scan`, `buy`, `sell`, `rails`, or `status`. The desk should make the market legible before it
-              asks you to settle anything.
+              Start with `scan`, `providers`, `buy`, `vend`, `sell`, `rails`, or `status`. The desk should make the
+              market legible before it asks you to settle anything.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <span className="terminal-chip">No redirects</span>
             <span className="terminal-chip">Supply-aware</span>
+            <span className="terminal-chip">Tempo-inspired</span>
             <span className="terminal-chip">Receipt-first</span>
           </div>
         </div>
@@ -63,8 +64,9 @@ export default function TerminalPage() {
                 Use this before buying. It answers whether the desk actually has supply for your request.
               </div>
               <div>
-                <div className="terminal-label">`buy`</div>
-                Use this when you know the job but not the winner.
+                <div className="terminal-label">`vend`</div>
+                Use this when you want the procurement-style path: state the need, budget, and delivery target, then
+                let the desk shortlist providers.
               </div>
               <div>
                 <div className="terminal-label">`sell`</div>

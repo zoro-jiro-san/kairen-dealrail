@@ -81,8 +81,8 @@ export function HeroFlowArchitecture() {
           <div className="terminal-kicker">Protocol Flow</div>
           <h2 className="mt-2 text-2xl font-semibold">One desk from scan to receipt</h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--terminal-muted)]">
-            Referenced from the local `x402n` protocol flow pattern, but adapted for DealRail: discover supply, lock an
-            offer, settle with escrow, and emit a receipt.
+            Referenced from the local `vending-machine` procurement model, but adapted for DealRail: discover supply,
+            lock an offer, settle with escrow, and emit a receipt.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

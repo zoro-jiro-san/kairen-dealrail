@@ -24,11 +24,11 @@ export const config = {
       chainId: 84532,
       rpcUrl: getEnv('BASE_SEPOLIA_RPC', 'https://sepolia.base.org'),
       contracts: {
-        escrowRail: getEnv('ESCROW_RAIL_BASE_SEPOLIA', '0x8148Eb0F451e43af3286541806339157678f7F4F'),
-        escrowRailERC20: getEnv('ESCROW_RAIL_ERC20_BASE_SEPOLIA', '0x53d368b5467524F7d674B70F00138a283e1533ce'),
-        dealRailHook: getEnv('DEALRAIL_HOOK_BASE_SEPOLIA', '0x61B73b679E3BE2256dAa90A3c37E10AEacD8a9Cc'),
-        erc8004Verifier: getEnv('ERC8004_VERIFIER_BASE_SEPOLIA', '0x668Dcc3a039CBef0054AAF244763db419BE6A521'),
-        nullVerifier: getEnv('NULL_VERIFIER_BASE_SEPOLIA', '0xA6eb0b8B88fb7172D2e404A8523C8E62e3efa7Bf'),
+        escrowRail: getEnv('ESCROW_RAIL_BASE_SEPOLIA', '0x8c55C2BB6A396D3654f214726230D81e6fa22b69'),
+        escrowRailERC20: getEnv('ESCROW_RAIL_ERC20_BASE_SEPOLIA', '0xE25B10057556e9714d2ac60992b68f4E61481cF9'),
+        dealRailHook: getEnv('DEALRAIL_HOOK_BASE_SEPOLIA', '0x5fA109A74a688a49D254a21C2F3ab238E2A7F62e'),
+        erc8004Verifier: getEnv('ERC8004_VERIFIER_BASE_SEPOLIA', '0xDB23657606957B32B385eC0A917d2818156668AC'),
+        nullVerifier: getEnv('NULL_VERIFIER_BASE_SEPOLIA', '0xA61a57fF5570bF989a3a565B87b6421413995317'),
       },
       usdcAddress: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
     },
@@ -37,15 +37,15 @@ export const config = {
       chainId: 11142220,
       rpcUrl: getEnv('CELO_SEPOLIA_RPC', getEnv('CELO_ALFAJORES_RPC', 'https://forno.celo-sepolia.celo-testnet.org')),
       contracts: {
-        escrowRail: getEnv('ESCROW_RAIL_CELO_SEPOLIA', getEnv('ESCROW_RAIL_CELO_ALFAJORES', '')),
+        escrowRail: getEnv('ESCROW_RAIL_CELO_SEPOLIA', getEnv('ESCROW_RAIL_CELO_ALFAJORES', '0x684D32E03642870B88134A3722B0b094666EF42e')),
         escrowRailERC20: getEnv(
           'ESCROW_RAIL_ERC20_CELO_SEPOLIA',
-          getEnv('ESCROW_RAIL_ERC20_CELO_ALFAJORES', '')
+          getEnv('ESCROW_RAIL_ERC20_CELO_ALFAJORES', '0xB9dfa53326016415ca6fb9eb16A0f050c8d15C74')
         ),
-        dealRailHook: getEnv('DEALRAIL_HOOK_CELO_SEPOLIA', getEnv('DEALRAIL_HOOK_CELO_ALFAJORES', '')),
+        dealRailHook: getEnv('DEALRAIL_HOOK_CELO_SEPOLIA', getEnv('DEALRAIL_HOOK_CELO_ALFAJORES', '0x04B0D16f790A5F83dc48c7e4D05467ff2eA57519')),
         erc8004Verifier: getEnv(
           'ERC8004_VERIFIER_CELO_SEPOLIA',
-          getEnv('ERC8004_VERIFIER_CELO_ALFAJORES', '')
+          getEnv('ERC8004_VERIFIER_CELO_ALFAJORES', '0x2700e5B26909301967DFeECE9cb931B9bA3bA2df')
         ),
       },
       cusdAddress: getEnv(

@@ -1,64 +1,41 @@
-# DealRail Documentation
+# DealRail Docs
 
-Organized documentation for the Kairen DealRail project.
+This directory now has two distinct layers:
 
-## Structure
+## 1. Canonical Submission Docs
 
-```
-docs/
-├── architecture/           # Technical architecture documents
-│   ├── ARCHITECTURE.md                 # Original architecture overview
-│   ├── ARCHITECTURE_DIAGRAMS.md        # Visual diagrams
-│   └── ARCHITECTURE_V2_EIP8183.md     # V2 with EIP-8183 spec
-│
-├── strategy/              # Hackathon strategy and planning
-│   ├── HACKATHON_STRATEGY.md          # Overall hackathon approach
-│   ├── HACKATHON_TRACKS.md            # 10 sponsor track details
-│   ├── EXECUTIVE_SUMMARY.md           # Project summary
-│   ├── INTEGRATION_STRATEGY_REVISED.md # Sponsor integration plans
-│   ├── PROJECT_STATUS.md              # Current project state
-│   ├── ROADMAP.md                     # Build roadmap
-│   ├── IDEA.md                        # Original project idea
-│   └── hackathoninfo.md               # Hackathon rules and info
-│
-├── progress/              # Daily build logs
-│   ├── DAY1_PROGRESS.md               # March 13-14: Phase 0
-│   ├── DAY2_CONTINUED_PROGRESS.md     # March 14: Completion
-│   └── SESSION_FRONTEND_INTEGRATION.md # March 15: Integration session
-│
-├── guides/                # Setup and deployment guides
-│   ├── DEPLOYMENT_GUIDE.md            # How to deploy contracts
-│   ├── MANUAL_SETUP_REQUIRED.md       # Manual setup steps
-│   ├── FRONTEND_INTEGRATION.md        # Wallet integration guide
-│   └── TESTING_GUIDE.md               # USDC recycling tests
-│
-└── reference/             # External reference materials
-    ├── FORGEID_INTEGRATION_ANALYSIS.md # ForgeID analysis
-    ├── FORGEID_QUICK_REFERENCE.md     # ForgeID quick ref
-    └── compass_artifact*.md           # Research artifacts
-```
+Use [`docs/submission`](submission) for hackathon judging, sponsor review, and final narrative packaging.
 
-## Quick Links
+Read order:
 
-**Primary Documents:**
-- **[PRD](../PRD_KAIREN_DEALRAIL.md)** — Single source of truth for the project
-- **[Resources](../RESOURCES_DEALRAIL.md)** — All SDKs, APIs, contracts, faucets
-- **[Architecture V2](architecture/ARCHITECTURE_V2_EIP8183.md)** — Current technical architecture
+1. [`submission/00_START_HERE.md`](submission/00_START_HERE.md)
+2. [`submission/01_TRACK_MATRIX.md`](submission/01_TRACK_MATRIX.md)
+3. [`submission/02_ARCHITECTURE.md`](submission/02_ARCHITECTURE.md)
+4. [`submission/03_EVIDENCE.md`](submission/03_EVIDENCE.md)
+5. [`submission/04_CHECKLIST.md`](submission/04_CHECKLIST.md)
+6. [`submission/05_WINNING_STRATEGY.md`](submission/05_WINNING_STRATEGY.md)
 
-**For Building:**
-- [Deployment Guide](guides/DEPLOYMENT_GUIDE.md)
-- [Manual Setup](guides/MANUAL_SETUP_REQUIRED.md)
-- [Hackathon Tracks](strategy/HACKATHON_TRACKS.md)
+Track briefs:
+- [`submission/tracks/OPEN_TRACK.md`](submission/tracks/OPEN_TRACK.md)
+- [`submission/tracks/PROTOCOL_LABS_ERC8004.md`](submission/tracks/PROTOCOL_LABS_ERC8004.md)
+- [`submission/tracks/CELO.md`](submission/tracks/CELO.md)
+- [`submission/tracks/METAMASK_DELEGATIONS.md`](submission/tracks/METAMASK_DELEGATIONS.md)
+- [`submission/tracks/UNISWAP.md`](submission/tracks/UNISWAP.md)
+- [`submission/tracks/LOCUS.md`](submission/tracks/LOCUS.md)
+- [`submission/tracks/AGENTCASH_X402.md`](submission/tracks/AGENTCASH_X402.md)
 
-**For Context:**
-- [Project Status](strategy/PROJECT_STATUS.md)
-- [Day 1 Progress](progress/DAY1_PROGRESS.md)
-- [Day 2 Progress](progress/DAY2_CONTINUED_PROGRESS.md)
+## 2. Historical and Working Docs
 
-## For New Contributors
+These are still useful, but they are not the canonical submission story:
 
-Start here:
-1. Read [PRD](../PRD_KAIREN_DEALRAIL.md) sections 1-5 (Executive Summary → Sponsor Tracks)
-2. Skim [Architecture V2](architecture/ARCHITECTURE_V2_EIP8183.md)
-3. Check [Project Status](strategy/PROJECT_STATUS.md) to see current phase
-4. Follow [Deployment Guide](guides/DEPLOYMENT_GUIDE.md) to set up your environment
+- [`architecture`](architecture): technical evolution and older architecture docs
+- [`strategy`](strategy): planning documents, track ideation, roadmap, and historical notes
+- [`guides`](guides): setup, deployment, and testing instructions
+- [`progress`](progress): session logs and build notes
+- [`reference`](reference): external references and research artifacts
+
+## Read This Before Citing Anything
+
+- Prefer `docs/submission` for claims made to judges.
+- Use `STATUS.md` and `backend/TRANSACTION_LEDGER.md` for canonical deployment and tx evidence.
+- Treat `docs/strategy` as planning context unless a fact is repeated in `docs/submission`.

@@ -24,8 +24,9 @@ type Props = {
 
 const EXAMPLES = [
   'scan automation',
-  'buy benchmark report under 0.12 usdc in 24h',
+  'vend benchmark report under 0.12 usdc in 24h',
   'buy api integration sprint under 0.10 usdc in 24h',
+  'providers compliance checks',
   'sell workflow automation from 0.12 usdc',
   'rails',
   'status',
@@ -38,8 +39,8 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [lines, setLines] = useState<TerminalLine[]>([
     { tone: 'system', text: 'DEALRAIL DESK READY' },
-    { tone: 'system', text: 'verbs: scan <need> | buy <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
-    { tone: 'system', text: 'goal: read real supply first, then choose whether to negotiate, settle, or import provider inventory' },
+    { tone: 'system', text: 'verbs: scan/providers <need> | buy/vend <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
+    { tone: 'system', text: 'goal: route one machine-payable request from supply discovery to escrow and receipt' },
   ]);
 
   const statusLabel = useMemo(() => (running ? 'RUNNING' : 'IDLE'), [running]);
@@ -78,7 +79,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
   }
 
   function normalizeBuyerQuery(command: string) {
-    return stripVerb(command, ['buy', 'buyer'])
+    return stripVerb(command, ['buy', 'buyer', 'vend', 'procure'])
       .replace(/\bunder\s+\d+(?:\.\d+)?\s*usdc\b/gi, '')
       .replace(/\bin\s+\d+\s*(?:h|hr|hrs|hour|hours)\b/gi, '')
       .replace(/\s+/g, ' ')
@@ -99,7 +100,8 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
     appendMany([
       { tone: 'system', text: 'GRAMMAR' },
       { tone: 'system', text: 'scan automation' },
-      { tone: 'system', text: 'buy benchmark report under 0.12 usdc in 24h' },
+      { tone: 'system', text: 'providers benchmark report' },
+      { tone: 'system', text: 'vend benchmark report under 0.12 usdc in 24h' },
       { tone: 'system', text: 'sell workflow automation from 0.12 usdc' },
       { tone: 'system', text: 'rails' },
       { tone: 'system', text: 'status' },
@@ -125,7 +127,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
   }
 
   async function runScan(command: string) {
-    const query = stripVerb(command, ['scan', 'market', 'find providers']);
+    const query = stripVerb(command, ['scan', 'market', 'find providers', 'providers']);
     try {
       const result = await integrationsApi.listProviders({ query: query || undefined });
       const top = result.providers.slice(0, 4);
@@ -193,7 +195,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
         append('warn', 'No matching supply yet. Demand was stored in the opportunity book instead of being dropped.');
         append('ok', `opportunity=${queued.opportunity.id} | providers can pick this up later from the dashboard`);
       } else {
-        append('ok', 'next: compare the shortlist, start reverse auction if enough competition exists, then confirm the escrow path');
+        append('ok', 'next: compare the shortlist, run the negotiation pass if competition exists, then lock the escrow path');
       }
 
       emit('role_buyer', command, note);
@@ -269,7 +271,8 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
       if (normalized === 'clear') {
         setLines([
           { tone: 'system', text: 'DEALRAIL DESK READY' },
-          { tone: 'system', text: 'verbs: scan <need> | buy <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
+          { tone: 'system', text: 'verbs: scan/providers <need> | buy/vend <need> under <budget> usdc in <hours>h | sell <service> from <price> usdc | rails | status' },
+          { tone: 'system', text: 'goal: route one machine-payable request from supply discovery to escrow and receipt' },
         ]);
         emit('clear', command, 'Terminal output cleared');
         return;
@@ -280,12 +283,12 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
         return;
       }
 
-      if (/^(scan|market)\b/i.test(command) || normalized.includes('find providers')) {
+      if (/^(scan|market|providers)\b/i.test(command) || normalized.includes('find providers')) {
         await runScan(command);
         return;
       }
 
-      if (/^(buy|buyer)\b/i.test(command) || /^need\b/i.test(command)) {
+      if (/^(buy|buyer|vend|procure)\b/i.test(command) || /^need\b/i.test(command)) {
         await runBuy(command);
         return;
       }
@@ -307,7 +310,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
         return;
       }
 
-      append('warn', 'Unknown command. Use `help`, `scan`, `buy`, `sell`, `rails`, or `status`.');
+      append('warn', 'Unknown command. Use `help`, `scan`, `providers`, `buy`, `vend`, `sell`, `rails`, or `status`.');
       emit('unknown', command, 'Command not mapped');
     } finally {
       setRunning(false);
@@ -351,7 +354,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
           </div>
           <div>
             <div className="terminal-kicker">Terminal Desk</div>
-            <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">buy / sell / scan / rails / status</div>
+            <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">scan / providers / buy / vend / rails / status</div>
           </div>
         </div>
         <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">{statusLabel}</div>
@@ -362,8 +365,8 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
           <aside className="hidden border-r border-[var(--terminal-border)] px-4 py-5 xl:block">
             <div className="terminal-label">Desk Modes</div>
             <div className="mt-4 space-y-3 text-xs text-[var(--terminal-muted)]">
-              <div>01 Scan supply</div>
-              <div>02 Compare quotes</div>
+              <div>01 Route request</div>
+              <div>02 Scan providers</div>
               <div>03 Lock escrow</div>
               <div>04 Emit receipt</div>
             </div>
@@ -387,7 +390,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
           <div className="terminal-console terminal-screen overflow-hidden rounded-[1.2rem]">
             <div className="flex items-center justify-between border-b border-[var(--terminal-border)] px-4 py-3">
               <div className="terminal-mono text-[11px] uppercase tracking-[0.24em] text-[var(--terminal-accent)]">
-                DealRail / Market Console
+                DealRail / Procurement Console
               </div>
               <div className="terminal-mono text-[10px] text-[var(--terminal-muted)]">ESC to clear mentally, `clear` to clear literally</div>
             </div>
@@ -419,7 +422,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={onKeyDown}
                   className="terminal-input terminal-mono"
-                  placeholder='Try: buy benchmark report under 0.12 usdc in 24h'
+                  placeholder='Try: vend benchmark report under 0.12 usdc in 24h'
                 />
                 <button type="submit" className="terminal-btn terminal-btn-accent" disabled={running}>
                   Run
