@@ -4,6 +4,11 @@ import { Address } from 'viem';
 export const SUPPORTED_SETTLEMENT_CHAIN_IDS = [84532, 11142220] as const;
 
 export const CHAIN_INFO: Record<number, { key: string; label: string; explorerBaseUrl: string }> = {
+  8453: {
+    key: 'base',
+    label: 'Base',
+    explorerBaseUrl: 'https://basescan.org',
+  },
   84532: {
     key: 'baseSepolia',
     label: 'Base Sepolia',
@@ -205,9 +210,20 @@ export const JobStateNames: Record<number, string> = {
   [JobState.EXPIRED]: 'Expired',
 };
 
+function requireKnownAddress(
+  address: Address | undefined,
+  kind: 'escrow' | 'USDC',
+  chainId: number
+): Address {
+  if (!address) {
+    throw new Error(`No ${kind} contract configured for chain ${chainId}`);
+  }
+  return address;
+}
+
 // Helper to get contract address for current chain
 export function getEscrowAddress(chainId: number): Address {
-  return ESCROW_ADDRESSES[chainId] || ESCROW_ADDRESSES[84532];
+  return requireKnownAddress(ESCROW_ADDRESSES[chainId], 'escrow', chainId);
 }
 
 export function getHookAddress(chainId: number): Address {
@@ -216,7 +232,7 @@ export function getHookAddress(chainId: number): Address {
 
 // Helper to get USDC address for current chain
 export function getUSDCAddress(chainId: number): Address {
-  return USDC_ADDRESSES[chainId] || USDC_ADDRESSES[84532];
+  return requireKnownAddress(USDC_ADDRESSES[chainId], 'USDC', chainId);
 }
 
 export function isSupportedSettlementChain(chainId?: number | null): chainId is (typeof SUPPORTED_SETTLEMENT_CHAIN_IDS)[number] {

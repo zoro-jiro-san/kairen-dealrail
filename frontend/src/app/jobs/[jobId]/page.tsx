@@ -1,13 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { integrationsApi, jobsApi, Job, getErrorMessage } from '@/lib/api';
 import { formatDistanceToNow, format } from 'date-fns';
 import Link from 'next/link';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSendTransaction } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
 import { parseUnits, encodePacked, keccak256 } from 'viem';
-import { ESCROW_ABI, USDC_ABI, getEscrowAddress, getUSDCAddress } from '@/lib/contracts';
+import { ESCROW_ABI, USDC_ABI, getChainLabel, getEscrowAddress, getUSDCAddress } from '@/lib/contracts';
 
 const stateColors: Record<string, string> = {
   Open: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -29,8 +29,9 @@ const stateDescriptions: Record<string, string> = {
 
 export default function JobDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const { address, chainId } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,10 +45,13 @@ export default function JobDetailPage() {
   const [fundingStep, setFundingStep] = useState<'idle' | 'approving' | 'approved' | 'funding'>('idle');
   const [postSettlementPayload, setPostSettlementPayload] = useState<any | null>(null);
   const [postSettlementLoading, setPostSettlementLoading] = useState(false);
-
-  const { sendTransactionAsync } = useSendTransaction();
+  const [switchingChain, setSwitchingChain] = useState(false);
 
   const jobId = params?.jobId ? parseInt(params.jobId as string) : null;
+  const requestedChain = (() => {
+    const value = searchParams?.get('chain');
+    return value === 'baseSepolia' || value === 'celoSepolia' ? value : undefined;
+  })();
 
   // Contract write hooks
   const { writeContract, data: hash, isPending: isWritePending } = useWriteContract();
@@ -61,7 +65,7 @@ export default function JobDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      const jobData = await jobsApi.getByJobId(jobId);
+      const jobData = await jobsApi.getByJobId(jobId, requestedChain ? { chain: requestedChain } : undefined);
       setJob(jobData);
     } catch (error) {
       console.error('Failed to load job:', error);
@@ -69,15 +73,41 @@ export default function JobDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [jobId]);
+  }, [jobId, requestedChain]);
 
   useEffect(() => {
     void loadJob();
   }, [loadJob]);
 
+  function ensureWalletReadyForJobWrite(): number {
+    if (!job) {
+      throw new Error('Job details are still loading');
+    }
+    if (!address) {
+      throw new Error(`Connect the wallet that operates on ${getChainLabel(job.chainId)} for this job.`);
+    }
+    if (chainId !== job.chainId) {
+      throw new Error(`Switch your wallet to ${getChainLabel(job.chainId)} before signing job actions.`);
+    }
+    return job.chainId;
+  }
+
+  async function handleSwitchToJobChain() {
+    if (!job) return;
+    setActionError(null);
+    setSwitchingChain(true);
+    try {
+      await switchChainAsync({ chainId: job.chainId });
+    } catch (error) {
+      setActionError(getErrorMessage(error));
+    } finally {
+      setSwitchingChain(false);
+    }
+  }
+
   // Handle transaction confirmation and multi-step flows
   useEffect(() => {
-    if (isConfirmed && jobId && chainId) {
+    if (isConfirmed && jobId && job) {
       // Handle approval confirmation - proceed to funding
       if (fundingStep === 'approving') {
         setFundingStep('approved');
@@ -86,7 +116,7 @@ export default function JobDetailPage() {
         // Call fund after approval
         setTimeout(() => {
           const amount = parseUnits(fundAmount, 6);
-          const escrowAddress = getEscrowAddress(chainId);
+          const escrowAddress = getEscrowAddress(job.chainId);
 
           setFundingStep('funding');
           writeContract({
@@ -107,11 +137,11 @@ export default function JobDetailPage() {
         }, 2000); // Wait 2s for state to propagate
       }
     }
-  }, [chainId, fundAmount, fundingStep, isConfirmed, jobId, loadJob, writeContract]);
+  }, [fundAmount, fundingStep, isConfirmed, job, jobId, loadJob, writeContract]);
 
   // Fund Job action (approve + fund)
   async function handleFundJob() {
-    if (!jobId || !chainId || !address) return;
+    if (!jobId) return;
 
     setActionLoading(true);
     setActionError(null);
@@ -119,9 +149,10 @@ export default function JobDetailPage() {
     setFundingStep('approving');
 
     try {
+      const settlementChainId = ensureWalletReadyForJobWrite();
       const amount = parseUnits(fundAmount, 6); // USDC has 6 decimals
-      const escrowAddress = getEscrowAddress(chainId);
-      const usdcAddress = getUSDCAddress(chainId);
+      const escrowAddress = getEscrowAddress(settlementChainId);
+      const usdcAddress = getUSDCAddress(settlementChainId);
 
       // Step 1: Approve USDC (step 2 happens automatically in useEffect after confirmation)
       setActionSuccess('Step 1/2: Approving USDC...');
@@ -141,16 +172,17 @@ export default function JobDetailPage() {
 
   // Submit Deliverable action
   async function handleSubmitDeliverable() {
-    if (!jobId || !chainId || !deliverableInput) return;
+    if (!jobId || !deliverableInput) return;
 
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
 
     try {
+      const settlementChainId = ensureWalletReadyForJobWrite();
       // Convert deliverable string to bytes32 hash
       const deliverableHash = keccak256(encodePacked(['string'], [deliverableInput]));
-      const escrowAddress = getEscrowAddress(chainId);
+      const escrowAddress = getEscrowAddress(settlementChainId);
 
       setActionSuccess('Submitting deliverable...');
       writeContract({
@@ -168,14 +200,15 @@ export default function JobDetailPage() {
 
   // Complete Job action
   async function handleCompleteJob() {
-    if (!jobId || !chainId) return;
+    if (!jobId) return;
 
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
 
     try {
-      const escrowAddress = getEscrowAddress(chainId);
+      const settlementChainId = ensureWalletReadyForJobWrite();
+      const escrowAddress = getEscrowAddress(settlementChainId);
       const reason = keccak256(encodePacked(['string'], ['Work approved']));
 
       setActionSuccess('Completing job...');
@@ -194,14 +227,15 @@ export default function JobDetailPage() {
 
   // Reject Job action
   async function handleRejectJob() {
-    if (!jobId || !chainId) return;
+    if (!jobId) return;
 
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
 
     try {
-      const escrowAddress = getEscrowAddress(chainId);
+      const settlementChainId = ensureWalletReadyForJobWrite();
+      const escrowAddress = getEscrowAddress(settlementChainId);
       const reason = keccak256(encodePacked(['string'], ['Work rejected']));
 
       setActionSuccess('Rejecting job...');
@@ -219,11 +253,12 @@ export default function JobDetailPage() {
   }
 
   async function handleBuildPostSettlementSwap() {
-    if (!jobId) return;
+    if (!jobId || !job) return;
     setPostSettlementLoading(true);
     setActionError(null);
     try {
       const payload = await integrationsApi.buildPostSettlementSwapTxs(jobId, {
+        chain: job.chain,
         tokenOut: 'WETH',
         fee: 3000,
         slippageBps: 300,
@@ -233,24 +268,6 @@ export default function JobDetailPage() {
       setActionError(getErrorMessage(error));
     } finally {
       setPostSettlementLoading(false);
-    }
-  }
-
-  async function executePostSettlementTx(kind: 'approve' | 'swap') {
-    if (!postSettlementPayload) return;
-    const tx = kind === 'approve'
-      ? postSettlementPayload.execution?.approveTx
-      : postSettlementPayload.execution?.swapTx;
-    if (!tx) return;
-
-    try {
-      await sendTransactionAsync({
-        to: tx.to as `0x${string}`,
-        data: tx.data as `0x${string}`,
-        value: BigInt(tx.value || '0'),
-      });
-    } catch (error) {
-      setActionError(getErrorMessage(error));
     }
   }
 
@@ -292,6 +309,8 @@ export default function JobDetailPage() {
   const isClient = job.client.toLowerCase() === address?.toLowerCase();
   const isProvider = job.provider.toLowerCase() === address?.toLowerCase();
   const isEvaluator = job.evaluator.toLowerCase() === address?.toLowerCase();
+  const walletOnJobChain = chainId === job.chainId;
+  const explorerLabel = job.chainId === 11142220 ? 'Blockscout' : 'BaseScan';
 
   const expiryDate = new Date(job.expiry);
   const timeUntilExpiry = formatDistanceToNow(expiryDate, { addSuffix: true });
@@ -401,6 +420,10 @@ export default function JobDetailPage() {
                 <div className="text-sm text-gray-500 mt-1">{timeUntilExpiry}</div>
               </div>
               <div className="p-4 bg-gray-900/50 rounded-lg">
+                <div className="text-sm text-gray-400 mb-1">Settlement Chain</div>
+                <div className="text-gray-200">{getChainLabel(job.chainId)}</div>
+              </div>
+              <div className="p-4 bg-gray-900/50 rounded-lg">
                 <div className="text-sm text-gray-400 mb-1">Budget (Raw)</div>
                 <div className="font-mono text-gray-200 text-sm break-all">
                   {job.budgetRaw}
@@ -448,6 +471,7 @@ export default function JobDetailPage() {
                 />
               </svg>
               View on BaseScan
+              View on {explorerLabel}
             </a>
           </div>
 
@@ -467,6 +491,26 @@ export default function JobDetailPage() {
               </div>
             )}
 
+            {address && !walletOnJobChain && (
+              <div className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-yellow-300">Wrong wallet network for this job</p>
+                    <p className="mt-1 text-sm text-yellow-200/80">
+                      This job settles on {getChainLabel(job.chainId)}. Wallet writes are blocked until the connected wallet is on that chain.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleSwitchToJobChain}
+                    disabled={switchingChain}
+                    className="rounded bg-yellow-500 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-yellow-400 disabled:cursor-not-allowed disabled:bg-yellow-200"
+                  >
+                    {switchingChain ? 'Switching...' : `Switch to ${getChainLabel(job.chainId)}`}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Transaction Status */}
             {hash && (
               <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
@@ -480,12 +524,12 @@ export default function JobDetailPage() {
                     </p>
                   </div>
                   <a
-                    href={`https://sepolia.basescan.org/tx/${hash}`}
+                    href={`${job.explorerBaseUrl}/tx/${hash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-400 hover:text-blue-300 text-sm underline"
                   >
-                    View on BaseScan
+                    View on {explorerLabel}
                   </a>
                 </div>
               </div>
@@ -522,7 +566,7 @@ export default function JobDetailPage() {
                           />
                           <button
                             onClick={handleFundJob}
-                            disabled={isWritePending || isConfirming}
+                            disabled={isWritePending || isConfirming || !walletOnJobChain}
                             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition-colors"
                           >
                             {isWritePending || isConfirming ? 'Processing...' : 'Fund Job'}
@@ -562,7 +606,7 @@ export default function JobDetailPage() {
                           />
                           <button
                             onClick={handleSubmitDeliverable}
-                            disabled={!deliverableInput || isWritePending || isConfirming}
+                            disabled={!deliverableInput || isWritePending || isConfirming || !walletOnJobChain}
                             className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition-colors"
                           >
                             {isWritePending || isConfirming ? 'Processing...' : 'Submit Deliverable'}
@@ -592,14 +636,14 @@ export default function JobDetailPage() {
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             onClick={handleCompleteJob}
-                            disabled={isWritePending || isConfirming}
+                            disabled={isWritePending || isConfirming || !walletOnJobChain}
                             className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition-colors"
                           >
                             {isWritePending || isConfirming ? 'Processing...' : 'Approve'}
                           </button>
                           <button
                             onClick={handleRejectJob}
-                            disabled={isWritePending || isConfirming}
+                            disabled={isWritePending || isConfirming || !walletOnJobChain}
                             className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition-colors"
                           >
                             {isWritePending || isConfirming ? 'Processing...' : 'Reject'}
@@ -614,36 +658,40 @@ export default function JobDetailPage() {
               {/* COMPLETED STATE */}
               {job.stateCode === 3 && (
                 <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg space-y-3">
-                  <p className="text-green-400">
-                    Job completed. You can now build post-settlement Uniswap payloads from this job.
-                  </p>
-                  <button
-                    onClick={handleBuildPostSettlementSwap}
-                    disabled={postSettlementLoading}
-                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition-colors"
-                  >
-                    {postSettlementLoading ? 'Building...' : 'Build Post-Settlement Swap'}
-                  </button>
-                  {postSettlementPayload && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-300">
-                        Quote: {postSettlementPayload.quote?.amountOut} (min: {postSettlementPayload.execution?.amountOutMinimum})
+                  {job.chain === 'baseSepolia' ? (
+                    <>
+                      <p className="text-green-400">
+                        Job completed. You can now build a Base treasury-routing preview from this settlement.
                       </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => executePostSettlementTx('approve')}
-                          className="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2 px-4 rounded transition-colors"
-                        >
-                          Execute Approve
-                        </button>
-                        <button
-                          onClick={() => executePostSettlementTx('swap')}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded transition-colors"
-                        >
-                          Execute Swap
-                        </button>
-                      </div>
-                    </div>
+                      <button
+                        onClick={handleBuildPostSettlementSwap}
+                        disabled={postSettlementLoading}
+                        className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition-colors"
+                      >
+                        {postSettlementLoading ? 'Building...' : 'Build Routing Preview'}
+                      </button>
+                      {postSettlementPayload && (
+                        <div className="space-y-3 rounded-lg border border-green-500/20 bg-black/10 p-4">
+                          <p className="text-sm text-gray-300">
+                            Preview chain: {postSettlementPayload.quote?.previewChainLabel || 'Base'} | Quote: {postSettlementPayload.quote?.amountOut} | Min out: {postSettlementPayload.execution?.amountOutMinimum}
+                          </p>
+                          {Array.isArray(postSettlementPayload.notes) && (
+                            <div className="space-y-1 text-sm text-gray-400">
+                              {postSettlementPayload.notes.map((note: string) => (
+                                <p key={note}>• {note}</p>
+                              ))}
+                            </div>
+                          )}
+                          <pre className="overflow-auto rounded border border-gray-700 bg-gray-900/60 p-3 text-xs text-gray-300">
+                            {JSON.stringify(postSettlementPayload, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-green-300">
+                      Job completed on {getChainLabel(job.chainId)}. Treasury-routing preview is intentionally disabled here and only enabled for Base Sepolia jobs.
+                    </p>
                   )}
                 </div>
               )}

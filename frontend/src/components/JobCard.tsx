@@ -1,6 +1,7 @@
 'use client';
 
 import { Job } from '@/lib/api';
+import { getChainLabel } from '@/lib/contracts';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 
@@ -33,6 +34,9 @@ export function JobCard({ job, currentAddress }: JobCardProps) {
         <div>
           <div className="text-sm text-gray-400">Job #{job.jobId}</div>
           <div className="mt-1 flex items-center gap-2">
+            <span className="px-2 py-1 text-xs rounded border border-gray-600 text-gray-300">
+              {getChainLabel(job.chainId)}
+            </span>
             <span
               className={`px-2 py-1 text-xs font-semibold rounded border ${
                 stateColors[job.state]
@@ -98,7 +102,7 @@ export function JobCard({ job, currentAddress }: JobCardProps) {
       {/* Actions */}
       <div className="border-t border-gray-700 pt-4">
         <Link
-          href={`/jobs/${job.jobId}`}
+          href={`/jobs/${job.jobId}?chain=${job.chain}`}
           className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors text-center"
         >
           View Details

@@ -206,12 +206,10 @@ export interface FundJobRequest {
 
 export interface SubmitDeliverableRequest {
   deliverable: string; // Bytes32 hash
-  providerPrivateKey: string;
 }
 
 export interface CompleteJobRequest {
   reason: string; // Bytes32 hash or string
-  evaluatorPrivateKey: string;
 }
 
 export interface HealthCheckResponse {
@@ -477,7 +475,7 @@ export const integrationsApi = {
   },
   buildPostSettlementSwapTxs: async (
     jobId: number,
-    params?: { tokenOut?: 'USDC' | 'WETH'; fee?: number; slippageBps?: number }
+    params?: { chain?: 'baseSepolia' | 'celoSepolia'; tokenOut?: 'USDC' | 'WETH'; fee?: number; slippageBps?: number }
   ) => {
     const response = await api.get(`/integrations/uniswap/post-settlement/${jobId}`, { params });
     return response.data;
@@ -521,7 +519,7 @@ export const integrationsApi = {
     minReputation?: number;
     maxBasePriceUsdc?: number;
     sources?: string;
-  }): Promise<{ success: boolean; useCase: string; providers: ProviderCandidate[] }> => {
+  }): Promise<{ success: boolean; useCase: string; catalogMode?: string; providers: ProviderCandidate[] }> => {
     const response = await api.get('/discovery/providers', { params });
     return response.data;
   },

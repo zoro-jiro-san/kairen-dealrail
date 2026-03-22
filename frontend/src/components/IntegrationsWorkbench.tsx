@@ -3,15 +3,8 @@
 import { useEffect, useState } from 'react';
 import { integrationsApi, getErrorMessage } from '@/lib/api';
 import { getEscrowAddress } from '@/lib/contracts';
-import { useAccount, useSendTransaction, useSignTypedData, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useSignTypedData } from 'wagmi';
 import { keccak256, toBytes } from 'viem';
-
-type BuiltTx = {
-  to: string;
-  data: string;
-  value: string;
-  chainId: number;
-};
 
 type Rail = 'x402n' | 'x402' | 'locus' | 'delegation' | 'uniswap';
 
@@ -57,18 +50,16 @@ const railCopy: Record<
     output: 'Delegation payload and optional signature.',
   },
   uniswap: {
-    title: 'Uniswap Treasury Routing',
-    when: 'Use after settlement if treasury rebalancing is needed.',
-    avoid: 'Avoid as the first step of a deal.',
+    title: 'Uniswap Routing Preview',
+    when: 'Use after a Base settlement when you want to preview treasury routing, not claim live execution.',
+    avoid: 'Avoid as the first step of a deal or on non-Base settlement paths.',
     input: 'Amount in, minimum out, recipient.',
-    output: 'Approve and swap transactions.',
+    output: 'Preview approve and swap payloads.',
   },
 };
 
 export function IntegrationsWorkbench() {
   const { address } = useAccount();
-  const { sendTransactionAsync, data: txHash } = useSendTransaction();
-  const { isLoading: txConfirming, isSuccess: txConfirmed } = useWaitForTransactionReceipt({ hash: txHash });
   const { signTypedDataAsync } = useSignTypedData();
 
   const [activeRail, setActiveRail] = useState<Rail>('x402n');
@@ -85,8 +76,6 @@ export function IntegrationsWorkbench() {
   const [delegationOut, setDelegationOut] = useState('');
   const [x402Out, setX402Out] = useState('');
   const [delegationSignature, setDelegationSignature] = useState('');
-  const [approveTx, setApproveTx] = useState<BuiltTx | null>(null);
-  const [swapTx, setSwapTx] = useState<BuiltTx | null>(null);
 
   const [swapAmountIn, setSwapAmountIn] = useState('10');
   const [swapMinOut, setSwapMinOut] = useState('0.001');
@@ -124,20 +113,6 @@ export function IntegrationsWorkbench() {
     })();
   }, []);
 
-  async function executeBuiltTx(tx: BuiltTx | null) {
-    if (!tx) return;
-    setError(null);
-    try {
-      await sendTransactionAsync({
-        to: tx.to as `0x${string}`,
-        data: tx.data as `0x${string}`,
-        value: BigInt(tx.value || '0'),
-      });
-    } catch (err) {
-      setError(getErrorMessage(err));
-    }
-  }
-
   async function buildUniswapTxs() {
     setLoading(true);
     setError(null);
@@ -154,8 +129,6 @@ export function IntegrationsWorkbench() {
         fee: 3000,
         recipient: address || '0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e',
       });
-      setApproveTx(approve.tx);
-      setSwapTx(swap.tx);
       setUniswapOut(JSON.stringify({ approve, swap }, null, 2));
     } catch (err) {
       setError(getErrorMessage(err));
@@ -345,19 +318,15 @@ export function IntegrationsWorkbench() {
     }
 
     return (
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5 space-y-3">
-          <div className="font-semibold">Uniswap Treasury Routing</div>
-          <p className="text-sm leading-6 text-[var(--terminal-muted)]">Use only after settlement when proceeds need treasury routing.</p>
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-5 space-y-3">
+          <div className="font-semibold">Base Treasury Routing Preview</div>
+          <p className="text-sm leading-6 text-[var(--terminal-muted)]">This workspace only builds preview payloads for a Base treasury-routing idea. It does not claim live execution proof.</p>
           <input value={swapAmountIn} onChange={(e) => setSwapAmountIn(e.target.value)} className="terminal-input" placeholder="Amount in USDC" />
           <input value={swapMinOut} onChange={(e) => setSwapMinOut(e.target.value)} className="terminal-input" placeholder="Minimum out" />
-          <button onClick={buildUniswapTxs} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Build Approve + Swap</button>
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-            <button onClick={() => executeBuiltTx(approveTx)} disabled={loading || !approveTx} className="terminal-btn w-full">Execute Approve</button>
-            <button onClick={() => executeBuiltTx(swapTx)} disabled={loading || !swapTx} className="terminal-btn w-full">Execute Swap</button>
-          </div>
+          <button onClick={buildUniswapTxs} disabled={loading} className="terminal-btn terminal-btn-accent w-full">Build Preview Payloads</button>
         </div>
-        <pre className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 overflow-auto text-xs text-[var(--terminal-muted)]">{uniswapOut || 'Uniswap payloads will appear here.'}</pre>
+        <pre className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 overflow-auto text-xs text-[var(--terminal-muted)]">{uniswapOut || 'Preview payloads will appear here.'}</pre>
       </div>
     );
   }
@@ -443,12 +412,6 @@ export function IntegrationsWorkbench() {
       {error && (
         <div className="rounded-2xl border p-4 text-sm text-[var(--terminal-danger)]" style={{ borderColor: 'color-mix(in srgb, var(--terminal-danger) 40%, transparent)', background: 'color-mix(in srgb, var(--terminal-danger) 8%, transparent)' }}>
           {error}
-        </div>
-      )}
-
-      {txHash && (
-        <div className="rounded-2xl border border-[var(--terminal-border)] bg-black/10 p-4 text-sm text-[var(--terminal-muted)]">
-          Tx submitted: {txHash} {txConfirming ? '(confirming...)' : txConfirmed ? '(confirmed)' : ''}
         </div>
       )}
     </section>
