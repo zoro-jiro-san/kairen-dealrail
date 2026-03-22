@@ -2,6 +2,11 @@
 
 This directory has two distinct layers.
 
+If you are reviewing the repo as an agent, start with the live public entrypoint first:
+- `https://dealrail.kairen.xyz/SKILL.md`
+
+Then use this docs index for the canonical repo-side read order.
+
 ## 1. Canonical Submission Docs
 
 Use [`docs/submission`](submission) for hackathon judging, sponsor review, and final narrative packaging.
