@@ -24,6 +24,7 @@ Track briefs:
 - [`submission/tracks/VIRTUALS_ERC8183.md`](submission/tracks/VIRTUALS_ERC8183.md)
 - [`submission/tracks/CELO.md`](submission/tracks/CELO.md)
 - [`submission/tracks/AGENTCASH_X402.md`](submission/tracks/AGENTCASH_X402.md)
+- [`submission/tracks/BASE_AGENT_SERVICES.md`](submission/tracks/BASE_AGENT_SERVICES.md)
 - [`submission/tracks/METAMASK_DELEGATIONS.md`](submission/tracks/METAMASK_DELEGATIONS.md)
 - [`submission/tracks/UNISWAP.md`](submission/tracks/UNISWAP.md)
 - [`submission/tracks/LOCUS.md`](submission/tracks/LOCUS.md)
