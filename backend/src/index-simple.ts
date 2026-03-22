@@ -37,6 +37,86 @@ function getChainSummary(chain?: SupportedChain) {
   return contractService.getChainSummary(chain);
 }
 
+type ManagedRole = 'client' | 'provider' | 'evaluator';
+
+class PublicRouteError extends Error {
+  constructor(
+    public readonly statusCode: number,
+    message: string,
+    public readonly details?: Record<string, unknown>
+  ) {
+    super(message);
+  }
+}
+
+function getManagedPrivateKey(role: ManagedRole): string | null {
+  switch (role) {
+    case 'client':
+      return config.blockchain.deployerPrivateKey || null;
+    case 'provider':
+      return config.blockchain.agentPrivateKey || null;
+    case 'evaluator':
+      return config.blockchain.evaluatorPrivateKey || null;
+  }
+}
+
+function getManagedAddress(role: ManagedRole): string | null {
+  const privateKey = getManagedPrivateKey(role);
+  if (!privateKey) return null;
+
+  try {
+    return new ethers.Wallet(privateKey).address.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+async function resolveManagedJobSigner(jobId: number, role: ManagedRole, chain?: SupportedChain) {
+  const privateKey = getManagedPrivateKey(role);
+  const managedAddress = getManagedAddress(role);
+
+  if (!privateKey || !managedAddress) {
+    throw new PublicRouteError(409, `Managed ${role} signer is not configured on this server.`, {
+      role,
+      executionMode: 'browser_or_cli_wallet_required',
+    });
+  }
+
+  let job: Awaited<ReturnType<typeof contractService.getJob>>;
+  try {
+    job = await contractService.getJob(jobId, chain);
+  } catch {
+    throw new PublicRouteError(404, 'Job not found', { jobId });
+  }
+
+  const jobRoleField = role === 'client' ? 'client' : role === 'provider' ? 'provider' : 'evaluator';
+  const expectedAddress = job[jobRoleField].toLowerCase();
+
+  if (expectedAddress !== managedAddress) {
+    throw new PublicRouteError(409, `Managed ${role} signer does not match this job participant.`, {
+      role,
+      managedAddress,
+      expectedAddress: job[jobRoleField],
+      executionMode: 'browser_or_cli_wallet_required',
+    });
+  }
+
+  return {
+    privateKey,
+    managedAddress,
+  };
+}
+
+export function buildRawPrivateKeyRejection(field: string) {
+  return {
+    error: 'Raw private keys are not accepted by the public API.',
+    details: {
+      field,
+      guidance: 'Use wallet-based writes in the browser or the simulation endpoint instead.',
+    },
+  };
+}
+
 function formatJobResponse(
   jobId: number,
   job: Awaited<ReturnType<typeof contractService.getJob>>,
@@ -241,18 +321,24 @@ app.post('/api/v1/jobs/:jobId/submit', async (req: Request, res: Response) => {
     const { deliverable, providerPrivateKey, chain } = req.body;
     const requestedChain = parseChain(chain);
 
-    if (isNaN(jobId) || !deliverable || !providerPrivateKey) {
-      res.status(400).json({ error: 'Missing jobId, deliverable, or providerPrivateKey' });
+    if (providerPrivateKey) {
+      res.status(400).json(buildRawPrivateKeyRejection('providerPrivateKey'));
+      return;
+    }
+
+    if (isNaN(jobId) || !deliverable) {
+      res.status(400).json({ error: 'Missing jobId or deliverable' });
       return;
     }
 
     const deliverableHash = ethers.keccak256(ethers.toUtf8Bytes(deliverable));
+    const signer = await resolveManagedJobSigner(jobId, 'provider', requestedChain);
 
     const result = await contractService.submitDeliverable({
       jobId,
       deliverableHash,
       chain: requestedChain,
-      providerPrivateKey,
+      providerPrivateKey: signer.privateKey,
     });
     const summary = getChainSummary(requestedChain);
 
@@ -262,10 +348,16 @@ app.post('/api/v1/jobs/:jobId/submit', async (req: Request, res: Response) => {
       chainId: summary.chainId,
       jobId,
       deliverableHash,
+      executionMode: 'managed_demo_signer',
+      signer: signer.managedAddress,
       txHash: result.txHash,
       explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
   } catch (error) {
+    if (error instanceof PublicRouteError) {
+      res.status(error.statusCode).json({ error: error.message, details: error.details });
+      return;
+    }
     console.error('Error submitting deliverable:', error);
     res.status(500).json({ error: 'Failed to submit deliverable', details: (error as Error).message });
   }
@@ -278,16 +370,22 @@ app.post('/api/v1/jobs/:jobId/complete', async (req: Request, res: Response) => 
     const { reason, evaluatorPrivateKey, chain } = req.body;
     const requestedChain = parseChain(chain);
 
-    if (isNaN(jobId) || !evaluatorPrivateKey) {
-      res.status(400).json({ error: 'Missing jobId or evaluatorPrivateKey' });
+    if (evaluatorPrivateKey) {
+      res.status(400).json(buildRawPrivateKeyRejection('evaluatorPrivateKey'));
       return;
     }
 
+    if (isNaN(jobId)) {
+      res.status(400).json({ error: 'Missing or invalid jobId' });
+      return;
+    }
+
+    const signer = await resolveManagedJobSigner(jobId, 'evaluator', requestedChain);
     const result = await contractService.completeJob({
       jobId,
       reason: reason || 'Approved',
       chain: requestedChain,
-      evaluatorPrivateKey,
+      evaluatorPrivateKey: signer.privateKey,
     });
     const summary = getChainSummary(requestedChain);
 
@@ -297,10 +395,16 @@ app.post('/api/v1/jobs/:jobId/complete', async (req: Request, res: Response) => 
       chainId: summary.chainId,
       jobId,
       reason: reason || 'Approved',
+      executionMode: 'managed_demo_signer',
+      signer: signer.managedAddress,
       txHash: result.txHash,
       explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
   } catch (error) {
+    if (error instanceof PublicRouteError) {
+      res.status(error.statusCode).json({ error: error.message, details: error.details });
+      return;
+    }
     console.error('Error completing job:', error);
     res.status(500).json({ error: 'Failed to complete job', details: (error as Error).message });
   }
@@ -313,16 +417,22 @@ app.post('/api/v1/jobs/:jobId/reject', async (req: Request, res: Response) => {
     const { reason, evaluatorPrivateKey, chain } = req.body;
     const requestedChain = parseChain(chain);
 
-    if (isNaN(jobId) || !evaluatorPrivateKey) {
-      res.status(400).json({ error: 'Missing jobId or evaluatorPrivateKey' });
+    if (evaluatorPrivateKey) {
+      res.status(400).json(buildRawPrivateKeyRejection('evaluatorPrivateKey'));
       return;
     }
 
+    if (isNaN(jobId)) {
+      res.status(400).json({ error: 'Missing or invalid jobId' });
+      return;
+    }
+
+    const signer = await resolveManagedJobSigner(jobId, 'evaluator', requestedChain);
     const result = await contractService.rejectJob({
       jobId,
       reason: reason || 'Rejected',
       chain: requestedChain,
-      evaluatorPrivateKey,
+      evaluatorPrivateKey: signer.privateKey,
     });
     const summary = getChainSummary(requestedChain);
 
@@ -332,11 +442,17 @@ app.post('/api/v1/jobs/:jobId/reject', async (req: Request, res: Response) => {
       chainId: summary.chainId,
       jobId,
       reason: reason || 'Rejected',
+      executionMode: 'managed_demo_signer',
+      signer: signer.managedAddress,
       txHash: result.txHash,
       explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
     return;
   } catch (error) {
+    if (error instanceof PublicRouteError) {
+      res.status(error.statusCode).json({ error: error.message, details: error.details });
+      return;
+    }
     console.error('Error rejecting job:', error);
     res.status(500).json({ error: 'Failed to reject job', details: (error as Error).message });
     return;
@@ -350,15 +466,21 @@ app.post('/api/v1/jobs/:jobId/claim-refund', async (req: Request, res: Response)
     const { callerPrivateKey, chain } = req.body;
     const requestedChain = parseChain(chain);
 
-    if (isNaN(jobId) || !callerPrivateKey) {
-      res.status(400).json({ error: 'Missing jobId or callerPrivateKey' });
+    if (callerPrivateKey) {
+      res.status(400).json(buildRawPrivateKeyRejection('callerPrivateKey'));
       return;
     }
 
+    if (isNaN(jobId)) {
+      res.status(400).json({ error: 'Missing or invalid jobId' });
+      return;
+    }
+
+    const signer = await resolveManagedJobSigner(jobId, 'client', requestedChain);
     const result = await contractService.claimRefund({
       jobId,
       chain: requestedChain,
-      callerPrivateKey,
+      callerPrivateKey: signer.privateKey,
     });
     const summary = getChainSummary(requestedChain);
 
@@ -367,11 +489,17 @@ app.post('/api/v1/jobs/:jobId/claim-refund', async (req: Request, res: Response)
       chain: summary.chain,
       chainId: summary.chainId,
       jobId,
+      executionMode: 'managed_demo_signer',
+      signer: signer.managedAddress,
       txHash: result.txHash,
       explorerUrl: `${summary.explorerBaseUrl}/tx/${result.txHash}`,
     });
     return;
   } catch (error) {
+    if (error instanceof PublicRouteError) {
+      res.status(error.statusCode).json({ error: error.message, details: error.details });
+      return;
+    }
     console.error('Error claiming refund:', error);
     res.status(500).json({ error: 'Failed to claim refund', details: (error as Error).message });
     return;
@@ -1096,16 +1224,21 @@ app.get('/api/v1/discovery/providers', async (req: Request, res: Response) => {
           .filter((s) => ['x402n', 'virtuals', 'near', 'mock', 'imported'].includes(s))
       : undefined;
 
+    const requestedSources =
+      (sourceList as Array<'x402n' | 'virtuals' | 'near' | 'mock' | 'imported'> | undefined) ??
+      (config.x402n.mockMode ? ['mock', 'imported'] : undefined);
+
     const providers = await discoveryService.listProviderCandidates({
       query: params.query,
       minReputation: params.minReputation,
       maxBasePriceUsdc: params.maxBasePriceUsdc,
-      sources: sourceList as any,
+      sources: requestedSources,
     });
 
     res.json({
       success: true,
-      useCase: 'Find qualified provider agents before x402n negotiation and escrow commit',
+      catalogMode: config.x402n.mockMode ? 'curated_demo' : 'live_blended',
+      useCase: 'Find qualified provider agents before negotiation and escrow commit',
       providers,
     });
     return;
@@ -1295,17 +1428,19 @@ app.use((err: Error, _req: Request, res: Response, _next: any) => {
 });
 
 // Start server
-const HOST = config.server.host;
-const PORT = config.server.port;
+if (require.main === module) {
+  const HOST = config.server.host;
+  const PORT = config.server.port;
 
-app.listen(PORT, HOST, () => {
-  console.log(`✅ DealRail API server running (Simplified - No Database) on ${HOST}:${PORT}`);
-  console.log(`   Health: http://${HOST}:${PORT}/health`);
-  console.log(`   API: http://${HOST}:${PORT}/api/v1`);
-  console.log(`   Network: ${config.blockchain.activeChain}`);
-  console.log(`   Chain ID: ${config.activeChainConfig.chainId}`);
-  console.log(`   Escrow: ${config.activeChainConfig.contracts.escrowRailERC20}`);
-  console.log();
-});
+  app.listen(PORT, HOST, () => {
+    console.log(`✅ DealRail API server running (Simplified - No Database) on ${HOST}:${PORT}`);
+    console.log(`   Health: http://${HOST}:${PORT}/health`);
+    console.log(`   API: http://${HOST}:${PORT}/api/v1`);
+    console.log(`   Network: ${config.blockchain.activeChain}`);
+    console.log(`   Chain ID: ${config.activeChainConfig.chainId}`);
+    console.log(`   Escrow: ${config.activeChainConfig.contracts.escrowRailERC20}`);
+    console.log();
+  });
+}
 
 export default app;
