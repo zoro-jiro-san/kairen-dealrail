@@ -40,7 +40,7 @@ Derived from the Synthesis submission flow.
 | Virtuals ERC-8183 | High | explanatory polish only | lead with it |
 | Celo | High | demo emphasis only | lead with it |
 | AgentCash / x402 | High | only one canonical proof so far | claim it as truthful testnet proof |
-| Base Agent Services on Base | Medium | public open-market proof missing | mention carefully |
+| Base Agent Services on Base | Medium | public Base directory is live, but open-market proof is still missing | mention the directory, not a fully open market |
 | MetaMask | Low | no delegated tx | do not lead with it |
 | Uniswap | Low | preview only, no swap proof | do not lead with it |
 | Locus | Low | no live proof | do not lead with it |

@@ -49,6 +49,7 @@ flowchart LR
 - Celo Sepolia happy and reject flows
 - ERC-8004 verifier and hook integration
 - x402 paid-request proof
+- public Base service directory
 - live browser desk
 - live backend API
 - published npm package
@@ -59,6 +60,11 @@ flowchart LR
 - offer ranking and negotiation sessions
 
 In mock mode, discovery and negotiation now use the same curated catalog. That means the competition story is coherent, but it is still a curated demo market rather than a fully live open marketplace.
+
+The new Base directory makes that posture explicit instead of burying it:
+- public endpoint surface is real
+- visible supply is real
+- market openness is still limited by the connected feeds
 
 ### What is preview-only
 
@@ -121,16 +127,29 @@ Current limit:
 - Base-only preview
 - not a sponsor-grade Uniswap proof
 
+### Path D: Base-facing public service directory
+
+Use when:
+- a judge or operator wants the clearest Base-specific product surface
+- the goal is to inspect public endpoints, settlement posture, and visible supply
+
+Flow:
+1. open `/base` or call `GET /api/v1/base/agent-services`
+2. inspect public surfaces and settlement rail
+3. confirm whether visible supply is curated or blended
+
 ## Component Map
 
 ### Frontend
 
 - browser desk and terminal demo
+- Base-facing service directory page
 - job detail pages with chain-safe writes
 - integrations workbench with preview-only labeling where needed
 
 Key files:
 - `frontend/src/app/page.tsx`
+- `frontend/src/app/base/page.tsx`
 - `frontend/src/app/jobs/[jobId]/page.tsx`
 - `frontend/src/components/HomeCommandTerminal.tsx`
 - `frontend/src/components/IntegrationsWorkbench.tsx`
@@ -153,10 +172,12 @@ Key files:
 - chain-aware simplified API
 - safe public route boundary
 - coherent discovery and negotiation
+- public Base service directory
 - machine payments, trust, and preview adapters
 
 Key files:
 - `backend/src/index-simple.ts`
+- `backend/src/services/base-agent-services.service.ts`
 - `backend/src/services/contract.service.ts`
 - `backend/src/services/discovery.service.ts`
 - `backend/src/services/x402n.service.ts`

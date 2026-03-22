@@ -50,6 +50,11 @@ Lead with:
 - now backed by a real paid-request tx
 - should be framed as truthful testnet proof, not the primary thesis
 
+### Base
+
+- now has a concrete public surface through the Base service directory
+- should still be framed as a medium-strength secondary track, not as open-market proof
+
 ## Narrative To Use
 
 Tell the story through scenarios:
@@ -66,9 +71,14 @@ The browser desk shows live onchain jobs and blocks wrong-chain signing instead 
 
 The published package and JSON CLI mode let an agent do preflight, status, vend, and evidence lookup against the same live backend the browser uses.
 
+### Scenario 4: Judge wants the Base-specific proof
+
+The `/base` page and `GET /api/v1/base/agent-services` expose the Base-facing surfaces directly: provider directory, opportunity board, x402 proxy, Base job board, and settlement rail.
+
 ## What To Avoid
 
 - claiming a fully live open marketplace
+- describing the public Base directory as stronger than it is
 - claiming sponsor-grade Uniswap or MetaMask proof
 - inflating future Kairen stack plans into present-day proof
 - describing curated demo supply as public market proof
