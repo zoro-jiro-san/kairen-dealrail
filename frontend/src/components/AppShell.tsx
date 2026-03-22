@@ -116,7 +116,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {theme === 'dark' ? 'Light' : 'Dark'}
             </button>
           </div>
+        </div>
+      </header>
 
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+        <section className="shell-lane-panel">
           <div className="shell-mode-row">
             <div className="min-w-0">
               <div className="terminal-kicker">Entry Lane</div>
@@ -169,10 +173,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </>
             )}
           </div>
-        </div>
-      </header>
+        </section>
+      </div>
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">{children}</main>
     </div>
   );
 }

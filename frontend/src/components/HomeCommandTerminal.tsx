@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, KeyboardEvent, useMemo, useState } from 'react';
 import { useAccount, useSendTransaction, useSwitchChain, useWriteContract } from 'wagmi';
 import { Address, isAddress, keccak256, parseEther, parseUnits, toBytes } from 'viem';
@@ -113,6 +114,8 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
     if (!address) return 'wallet offline';
     return `${address.slice(0, 6)}...${address.slice(-4)} on ${getChainLabel(chainId)}`;
   }, [address, chainId]);
+  const visibleExamples = compact ? EXAMPLES.slice(0, 3) : EXAMPLES;
+  const visibleLines = compact ? lines.slice(-4) : lines;
 
   function append(tone: LineTone, text: string) {
     setLines((prev) => [...prev, { tone, text }]);
@@ -689,8 +692,10 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
             <span className="h-2.5 w-2.5 rounded-full bg-[color:color-mix(in_srgb,var(--terminal-muted)_72%,transparent)]" />
           </div>
           <div>
-            <div className="terminal-kicker">Command Desk</div>
-            <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">doctor / services / vend / send / swap / status</div>
+            <div className="terminal-kicker">{compact ? 'Quick Terminal' : 'Command Desk'}</div>
+            <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">
+              {compact ? 'doctor / services / send' : 'doctor / services / vend / send / swap / status'}
+            </div>
           </div>
         </div>
         <div className="terminal-mono text-[11px] text-[var(--terminal-muted)]">{statusLabel}</div>
@@ -700,7 +705,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
         <div className="terminal-console terminal-screen overflow-hidden rounded-[1.2rem]">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--terminal-border)] px-4 py-3">
             <div className="terminal-mono text-[11px] uppercase tracking-[0.24em] text-[var(--terminal-muted)]">
-              DealRail / operator terminal
+              {compact ? 'DealRail / preview' : 'DealRail / operator terminal'}
             </div>
             <div className="terminal-mono text-[10px] text-[var(--terminal-muted)]">
               {walletLabel}
@@ -708,8 +713,8 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
           </div>
 
           <div className="p-4">
-            <div className={`terminal-mono overflow-auto space-y-2 text-xs leading-6 ${compact ? 'h-64' : 'h-[25rem]'}`}>
-              {lines.map((line, idx) => (
+            <div className={`terminal-mono overflow-auto space-y-2 text-xs leading-6 ${compact ? 'h-36' : 'h-[25rem]'}`}>
+              {visibleLines.map((line, idx) => (
                 <div
                   key={`${line.text}-${idx}`}
                   className={
@@ -734,7 +739,7 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={onKeyDown}
                 className="terminal-input terminal-mono"
-                placeholder="Try: send 1 usdc to 0x... on base sepolia"
+                placeholder={compact ? 'Try: doctor or services' : 'Try: send 1 usdc to 0x... on base sepolia'}
               />
               <button type="submit" className="terminal-btn" disabled={running}>
                 Run
@@ -742,27 +747,38 @@ export function HomeCommandTerminal({ compact = false, onAction }: Props) {
             </form>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {EXAMPLES.map((example) => (
+              {visibleExamples.map((example) => (
                 <button key={example} type="button" onClick={() => setInput(example)} className="terminal-command">
                   {example}
                 </button>
               ))}
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="rounded-[1rem] border border-[var(--terminal-border)] bg-black/10 px-4 py-3">
-                <div className="terminal-label">Live now</div>
-                <div className="mt-2 text-sm text-[var(--terminal-muted)]">
-                  `doctor`, `services`, `vend`, and `send` are the clean browser demo path. Wallet sends are real testnet transactions when the wallet is connected.
+            {compact ? (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[1rem] border border-[var(--terminal-border)] bg-black/10 px-4 py-3">
+                <div className="text-sm text-[var(--terminal-muted)]">
+                  Use this as a quick prompt. Open the full terminal for the full command surface.
+                </div>
+                <Link href="/terminal" className="terminal-command">
+                  open /terminal
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="rounded-[1rem] border border-[var(--terminal-border)] bg-black/10 px-4 py-3">
+                  <div className="terminal-label">Live now</div>
+                  <div className="mt-2 text-sm text-[var(--terminal-muted)]">
+                    `doctor`, `services`, `vend`, and `send` are the clean browser demo path. Wallet sends are real testnet transactions when the wallet is connected.
+                  </div>
+                </div>
+                <div className="rounded-[1rem] border border-[var(--terminal-border)] bg-black/10 px-4 py-3">
+                  <div className="terminal-label">Sample only</div>
+                  <div className="mt-2 text-sm text-[var(--terminal-muted)]">
+                    Negotiation and swap stay clearly labeled as sample or agent-oriented flows until the live market and Base testnet swap path are stronger.
+                  </div>
                 </div>
               </div>
-              <div className="rounded-[1rem] border border-[var(--terminal-border)] bg-black/10 px-4 py-3">
-                <div className="terminal-label">Sample only</div>
-                <div className="mt-2 text-sm text-[var(--terminal-muted)]">
-                  Negotiation and swap stay clearly labeled as sample or agent-oriented flows until the live market and Base testnet swap path are stronger.
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

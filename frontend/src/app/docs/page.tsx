@@ -215,7 +215,7 @@ export default function DocsPage() {
           <div className="terminal-kicker">Mode Guide</div>
           <h2 className="mt-2 text-2xl font-semibold">Choose the operating lane first</h2>
           <p className="mt-4 text-sm leading-7 text-[var(--terminal-muted)]">
-            Human and agent paths should not be mixed casually. The top shell keeps the same toggle visible across the product, and this section expands the run order behind each lane.
+            Human and agent paths should not be mixed casually. The separate entry card under the nav keeps the same toggle visible across the product, and this section expands the run order behind each lane.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             {(['human', 'agent'] as const).map((mode) => (

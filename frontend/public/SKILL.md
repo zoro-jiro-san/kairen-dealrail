@@ -10,7 +10,7 @@ Use this index when an agent needs to decide how to operate DealRail without loa
 
 1. Read this file.
 2. If the task is Base-track or public-surface oriented, open `/base`.
-3. If the task is guided operation, open `/docs` and choose the human or agent toggle from the top shell.
+3. If the task is guided operation, open `/docs` and choose the human or agent toggle from the entry card under the nav.
 4. If the task is command-driven, use the CLI or the local `skills.sh` helper.
 
 ## Entry Modes
