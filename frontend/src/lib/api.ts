@@ -13,7 +13,7 @@ function isLocalHostname(hostname: string) {
   return hostname === 'localhost' || hostname === '127.0.0.1';
 }
 
-function getApiOrigin() {
+export function getApiOrigin() {
   if (typeof window !== 'undefined') {
     const browserDefault = `${window.location.protocol}//${window.location.hostname}:3001`;
     const productionDefault = PRODUCTION_API_URL;
@@ -273,6 +273,54 @@ export interface MachinePaymentsStatusResponse {
   endpoints: string[];
 }
 
+export interface BaseAgentServiceSurface {
+  id: 'provider_directory' | 'opportunity_board' | 'x402_proxy' | 'job_board' | 'post_settlement_routing';
+  name: string;
+  method: 'GET' | 'POST' | 'GET/POST';
+  endpoint: string;
+  access: 'public' | 'preview';
+  settlementModel: string;
+  useCase: string;
+}
+
+export interface BaseAgentServicePreview {
+  serviceName: string;
+  description: string;
+  source: 'x402n' | 'virtuals' | 'near' | 'mock' | 'imported';
+  endpoint: string | null;
+  basePriceUsdc: string | null;
+  providerAddress: string;
+  reputationScore: number | null;
+  erc8004Registered: boolean;
+  erc8004AgentId: string | null;
+}
+
+export interface BaseAgentServicesResponse {
+  success: true;
+  track: 'base-agent-services';
+  generatedAt: string;
+  catalogMode: 'curated_demo' | 'live_blended';
+  chain: 'baseSepolia';
+  chainId: number;
+  settlementRail: {
+    escrowAddress: string;
+    stablecoinAddress: string;
+    stablecoinSymbol: string;
+    explorerBaseUrl: string;
+    explorerUrl: string;
+  };
+  discovery: {
+    providerCount: number;
+    liveProviderCount: number;
+    mockProviderCount: number;
+  };
+  paymentModels: string[];
+  publicSurfaces: BaseAgentServiceSurface[];
+  supplyPreview: BaseAgentServicePreview[];
+  executionProviders: Array<{ id: string; mode: string; useCase: string }>;
+  notes: string[];
+}
+
 // ============ API Functions ============
 
 export const jobsApi = {
@@ -458,6 +506,10 @@ export const x402nApi = {
 };
 
 export const integrationsApi = {
+  getBaseAgentServices: async (): Promise<BaseAgentServicesResponse> => {
+    const response = await api.get('/base/agent-services');
+    return response.data;
+  },
   buildUniswapApproveTx: async (payload: { token: 'USDC' | 'WETH'; amount: string }) => {
     const response = await api.post('/integrations/uniswap/build-approve-tx', payload);
     return response.data;
