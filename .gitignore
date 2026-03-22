@@ -6,6 +6,8 @@ node_modules/
 .env.*
 !.env.example
 .envrc
+.dev.vars
+.dev.vars.*
 .wallets.json
 *.key
 *.secret
@@ -13,6 +15,7 @@ node_modules/
 *.seed
 *.mnemonic
 *.keystore
+.npmrc
 
 # OS
 .DS_Store
@@ -48,6 +51,8 @@ deployments/
 frontend/.next/
 frontend/out/
 frontend/.vercel
+frontend/.wrangler/
+frontend/.open-next/
 
 # Prisma
 *.db
@@ -64,5 +69,6 @@ backend/tests/artifacts/
 
 # Misc
 *.pem
+.wrangler/
 .vercel
 .turbo
