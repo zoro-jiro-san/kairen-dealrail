@@ -54,6 +54,17 @@ Canonical run recorded in [`backend/TRANSACTION_LEDGER.md`](../../backend/TRANSA
 - submit: `0xdb6dc84e97d4f2f39e3f5008786dff0fb3908a753d95b7c6017fc3890238235a`
 - reject: `0xb94efcdcfc41f7e3da223b9068e649797a575039d4e2e15b71b9beb19e31efb3`
 
+### x402 Base Sepolia Paid Request
+
+Canonical run recorded in [`backend/TRANSACTION_LEDGER.md`](../../backend/TRANSACTION_LEDGER.md):
+- settlement tx: `0x8dfabc6a77205b0740aa7bc48e230b7516acc76295536d18a6a30db19476940c`
+- network: `eip155:84532`
+- price: `0.01 USDC`
+- payer: `0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e`
+- payTo: `0xef9C7E3Fea4f54CB3C6c8fa0978a0C8aB8f28fcF`
+- proof script: [`backend/tests/proof-x402-testnet.ts`](../../backend/tests/proof-x402-testnet.ts)
+- human-readable note: [`docs/progress/X402_TESTNET_PROOF_2026-03-22.md`](../progress/X402_TESTNET_PROOF_2026-03-22.md)
+
 ## Test Evidence
 
 Canonical test references:
@@ -83,6 +94,5 @@ These integrations are coded but not yet evidenced with sponsor-specific live ar
 - MetaMask delegation execution
 - Uniswap swaps
 - Locus live calls
-- AgentCash or paid x402 requests
 
 Those should be treated as partial until new proof is recorded.

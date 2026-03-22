@@ -116,6 +116,7 @@ This repo avoids inflating integrations. Partial adapters are documented explici
 - Frontend contract map: [`frontend/src/lib/contracts.ts`](frontend/src/lib/contracts.ts)
 - Published CLI package: [`cli/package.json`](cli/package.json)
 - CLI install and usage guide: [`cli/README.md`](cli/README.md)
+- x402 paid-request proof: [`backend/tests/proof-x402-testnet.ts`](backend/tests/proof-x402-testnet.ts) and [`backend/TRANSACTION_LEDGER.md`](backend/TRANSACTION_LEDGER.md)
 
 ## Runtime Posture To Preserve
 
@@ -125,7 +126,7 @@ When describing the repo, keep these truths explicit:
 - the CLI package is live and installable
 - browser desk and terminal UX are working
 - some negotiation and integration rails remain partial or mock-first
-- do not overstate x402, Locus, or discovery supply beyond the recorded evidence
+- do not overstate x402n negotiation, Locus, or discovery supply beyond the recorded evidence
 
 ## Judge Navigation By Interest
 

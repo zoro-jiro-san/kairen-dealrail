@@ -42,7 +42,7 @@ Derived from `https://synthesis.devfolio.co/submission/skill.md`.
 | MetaMask | Not ready for strong claim | Needs one real delegated tx |
 | Uniswap | Not ready for strong claim | Needs one real swap tx |
 | Locus | Not ready for strong claim | Needs one live Locus proof |
-| AgentCash / x402 | Not ready for strong claim | Needs one real paid request |
+| AgentCash / x402 | Ready on testnet | Base Sepolia paid-request proof is now in the ledger |
 
 ## Final Remaining Blockers
 

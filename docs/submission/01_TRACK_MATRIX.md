@@ -13,7 +13,6 @@ Submit only if new proof is added:
 - MetaMask Delegations
 - Uniswap
 - Locus
-- AgentCash / x402
 
 Do not center the submission on:
 - Bankr
@@ -36,7 +35,7 @@ Do not center the submission on:
 | MetaMask: Best Use of Delegations | Real delegated authorization patterns | ERC-7710 payload builder exists | Builder code only, no delegated tx proof | Partial | Needs one real delegated funding or settlement flow |
 | Uniswap: Agentic Finance | Real swaps and tx ids | Quote and tx builder endpoints exist | No swap tx ids recorded in ledger | Partial | Needs one real post-settlement swap tx |
 | Locus: Best Use of Locus | Locus must be core and working | Live/mock bridge exists, mock mode default | No live Locus payment proof recorded | Partial | Only worth adding if live operation is captured |
-| Merit / AgentCash / x402 | Paid x402 requests are core | x402 proxy plus x402n negotiation bridge exist | No paid x402 request evidence in ledger | Partial | Needs one real paid request or x402-native service proof |
+| Merit / AgentCash / x402 | Paid x402 requests are core | x402 proxy, x402n bridge, and real Base Sepolia paid-request proof exist | Base Sepolia x402 settlement tx recorded in ledger | Strong on testnet | Valid stretch track if framed around testnet-paid proof |
 | Bankr | Real execution via Bankr gateway | Bankr service and neutral adapter scaffold exist | No confirmed live Bankr flow | Do not claim strongly | Mention only as future extension if asked |
 | Venice | Private cognition plus public action | No privacy-preserving compute integration | None | Do not claim | Exclude |
 | ENS | ENS as primary identity/communication layer | No canonical ENS implementation in active flow | None | Do not claim | Exclude |
@@ -65,5 +64,5 @@ If there is time before publish, the best stretch upgrades are:
 
 1. Add one real delegated MetaMask flow and tx hash
 2. Add one real Uniswap post-settlement swap tx hash
-3. Add one real Locus or AgentCash paid operation
+3. Add one real Locus paid operation
 4. Package an honest `agent.json` and `agent_log.json` for Protocol Labs autonomy track

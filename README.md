@@ -154,7 +154,7 @@ This repo intentionally separates strong claims from partial claims.
 | MetaMask: Best Use of Delegations | Delegation payload builder implemented, live delegated execution not evidenced | Partial |
 | Uniswap: Agentic Finance | Quote + transaction builders implemented, no swap tx evidence in ledger | Partial |
 | Locus: Best Use of Locus | Bridge implemented, mock-first by default, live evidence not included | Partial |
-| Merit / AgentCash / x402 | Machine-payments adapter surface exists with x402-first posture, no live paid x402 proof captured here | Partial |
+| Merit / AgentCash / x402 | Real Base Sepolia paid-request proof now exists in the ledger, alongside the x402-first adapter surface | Strong on testnet |
 | Bankr, Venice, ENS, Slice, Status, Self, Arkhai, others | Not submission targets in current repo state | Do not claim |
 
 Full matrix:
@@ -286,8 +286,8 @@ Live and verified:
 Present but still mock-first or partial:
 - competition layer posture
 - provider discovery supply
-- x402 paid-path proof in the ledger
 - Locus live payout proof in the ledger
+- Uniswap swap execution proof in the ledger
 
 ## Important Claim Discipline
 

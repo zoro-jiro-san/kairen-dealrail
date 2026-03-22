@@ -37,13 +37,14 @@ Last updated: 2026-03-22 (UTC)
 - Base Sepolia happy path
 - Celo Sepolia happy path
 - Celo Sepolia reject path
+- x402 Base Sepolia paid-request proof
 - published CLI distribution
 - live frontend deployment
 
 ### Implemented but still partial
 - provider discovery depth
 - multi-round negotiation supply
-- x402 machine-payment proof against external paid services
+- Uniswap post-settlement swap proof
 - Locus live payout path
 - delegated execution beyond payload preparation
 

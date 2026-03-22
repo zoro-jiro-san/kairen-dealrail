@@ -85,6 +85,7 @@ Make it specific:
 Point judges to:
 - Base Sepolia tx evidence
 - Celo Sepolia tx evidence
+- Base Sepolia x402 paid-request proof
 - hook and verifier contracts
 - passing contract tests
 
@@ -96,7 +97,7 @@ If there is still time before final publish, do these in order:
 2. Add one honest `agent.json` and `agent_log.json` if you want to target Protocol Labs autonomy more aggressively.
 3. Add one real MetaMask delegated transaction if you want a fourth track.
 4. Add one real Uniswap settlement swap tx if you want a stronger finance angle.
-5. Add one real Locus or AgentCash paid operation only if it becomes truly load-bearing in the demo.
+5. Add one real Locus paid operation only if it becomes truly load-bearing in the demo.
 
 ## Best Chance To Win More Than One Prize
 

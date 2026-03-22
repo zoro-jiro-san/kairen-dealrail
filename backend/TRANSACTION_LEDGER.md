@@ -1,11 +1,32 @@
 # DealRail Testnet Transaction Ledger
 
-Last updated: 2026-03-17 (UTC)
+Last updated: 2026-03-22 (UTC)
 Purpose: canonical reference for all live demo onchain transactions used in submission/demo.
 
 ## Networks
 - Base Sepolia (`84532`): `https://sepolia.basescan.org`
 - Celo Sepolia (`11142220`): `https://celo-sepolia.blockscout.com`
+
+## Machine Payment Proofs
+
+### x402 Base Sepolia paid request (run: `2026-03-22T17:56:53.661Z`)
+
+Purpose: canonical sponsor-grade proof for the AgentCash / x402 track on testnet.
+
+- proof script: `backend/tests/proof-x402-testnet.ts`
+- protocol network: `eip155:84532`
+- price: `0.01 USDC`
+- payer wallet: `0x77712e28F7A4a2EeD0bd7f9F8B8486332a38892e`
+- payTo wallet: `0xef9C7E3Fea4f54CB3C6c8fa0978a0C8aB8f28fcF`
+- settlement tx: `0x8dfabc6a77205b0740aa7bc48e230b7516acc76295536d18a6a30db19476940c`
+- explorer: `https://sepolia.basescan.org/tx/0x8dfabc6a77205b0740aa7bc48e230b7516acc76295536d18a6a30db19476940c`
+- receipt status: `success`
+- onchain transfer amount: `0x2710` raw USDC = `0.01 USDC`
+
+Notes:
+- this proof is a real paid x402 testnet request, not a mock response
+- it strengthens the sponsor claim for AgentCash / x402
+- it does not upgrade x402n negotiation to live mode; x402n remains separate from this proof
 
 ## Active Deployment (March 17, 2026, upgraded ERC-8004 trust loop + hook execution)
 These addresses are the current canonical deployment for both Base Sepolia and Celo Sepolia.
