@@ -26,6 +26,28 @@ This repository is organized as a production-grade project, not a scratchpad.
 
 ## Before Opening A PR
 
+### Local prerequisites
+
+- Node.js 20+
+- npm 10+
+- Foundry (`forge`) for contract tests
+
+Install package dependencies once:
+
+```bash
+npm --prefix backend ci
+npm --prefix frontend ci
+npm --prefix cli ci
+```
+
+If `forge` is missing, install Foundry:
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+source ~/.bashrc   # or ~/.zshrc
+foundryup
+```
+
 Run the relevant checks:
 
 ```bash
@@ -33,7 +55,7 @@ npm run build
 npm run test:contracts
 ```
 
-If you only touched one package, run the package-local build as well.
+If you only touched one package, run the package-local checks as well.
 
 ## Documentation Rules
 
